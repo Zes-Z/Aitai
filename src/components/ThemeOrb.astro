@@ -1,0 +1,46 @@
+---
+import { t } from '../i18n';
+import type { Lang, ThemeId } from '../types';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const themes: Array<{ id: ThemeId; key: 'theme.star' | 'theme.sea' | 'theme.dawn' }> = [
+  { id: 'star', key: 'theme.star' },
+  { id: 'sea', key: 'theme.sea' },
+  { id: 'dawn', key: 'theme.dawn' },
+];
+---
+
+<div class="theme-orb" data-theme-orb data-open="false">
+  <button
+    class="orb-button"
+    data-theme-trigger
+    aria-expanded="false"
+    aria-haspopup="true"
+    aria-label={t('aria.theme', lang)}
+  >
+    <span class="sr-only">{t('theme.switch', lang)}</span>
+  </button>
+
+  <div class="orb-menu" role="group" aria-label={t('theme.switch', lang)}>
+    <div class="orb-title">{t('theme.switch', lang)}</div>
+    {themes.map((theme) => (
+      <button
+        class="orb-option"
+        data-theme-option={theme.id}
+        aria-pressed={theme.id === 'star' ? 'true' : 'false'}
+      >
+        <span class="orb-dot" data-theme={theme.id} aria-hidden="true"></span>
+        <span class="name">{t(theme.key, lang)}</span>
+        <span class="check" aria-hidden="true">✓</span>
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  import { initTheme } from '../scripts/theme';
+  const run = () => initTheme();
+  run();
+  document.addEventListener('astro:page-load', run);
+</script>

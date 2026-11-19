@@ -1,0 +1,84 @@
+---
+import { siteConfig } from '../../SiteConfig';
+import { t } from '../i18n';
+import type { Lang } from '../types';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const email = siteConfig.identity.email;
+const timezone = siteConfig.identity.timezone;
+const socials = siteConfig.identity.socials;
+---
+
+<section id="harbor" class="section harbor" data-section aria-labelledby="harbor-title">
+  <div class="section-inner">
+    <header class="section-head" data-reveal>
+      <div class="eyebrow">{t('harbor.eyebrow', lang)}</div>
+      <div>
+        <h2 id="harbor-title" class="section-title">{t('harbor.title', lang)}</h2>
+        <p class="section-intro">{t('harbor.intro', lang)}</p>
+      </div>
+    </header>
+
+    <div class="harbor-big" aria-hidden="true">会いたい</div>
+
+    <div class="harbor-grid">
+      <article class="harbor-card" data-reveal>
+        <div class="eyebrow">{t('harbor.contact', lang)}</div>
+        <h3>{t('harbor.email', lang)}</h3>
+        <p class="mono">{email}</p>
+        <div class="harbor-actions">
+          <button
+            class="btn btn-primary"
+            data-copy-email={email}
+            data-toast={t('toast.copied', lang)}
+          >
+            {t('harbor.email', lang)}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5h10" /></svg>
+          </button>
+          <a class="btn" href={'mailto:' + email}>{t('hero.email', lang)}</a>
+        </div>
+
+        <div class="social-list">
+          {socials.map((social) => (
+            <a href={social.href} target={social.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
+              {social.label}
+              <span aria-hidden="true">↗</span>
+            </a>
+          ))}
+        </div>
+      </article>
+
+      <article class="harbor-card bottle" data-reveal style="--d:100ms">
+        <div>
+          <div class="eyebrow">{t('harbor.guestbook', lang)}</div>
+          <h3>{t('harbor.guestbookNote', lang)}</h3>
+        </div>
+        <p class="bottle-note">{t('harbor.intro', lang)}</p>
+        <a class="btn" href={'mailto:' + email + '?subject=Hello%20from%20Aitai'}>
+          {t('hero.email', lang)}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 6h16v12H4z" /><path d="M4 7l8 6 8-6" /></svg>
+        </a>
+      </article>
+    </div>
+
+    <footer class="harbor-footer">
+      <div class="footer-left">
+        <span>© {new Date().getFullYear()} {siteConfig.identity.name}</span>
+        <span>{t('footer.rights', lang)}</span>
+        <span>{t('footer.built', lang)}</span>
+      </div>
+      <div class="footer-right">
+        <span class="footer-time">
+          <span data-clock data-tz={timezone}>--:--</span>
+          <span> · </span>
+          <span data-date data-tz={timezone} data-lang={lang}></span>
+        </span>
+        <a class="to-top" href="#tide">
+          {t('harbor.backToTop', lang)}
+          <span aria-hidden="true">↑</span>
+        </a>
+      </div>
+    </footer>
+  </div>
+</section>

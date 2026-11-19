@@ -1,0 +1,96 @@
+---
+import { siteConfig } from '../../SiteConfig';
+import { t } from '../i18n';
+import { withBase } from '../utils/paths';
+import type { Lang } from '../types';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const tagline = siteConfig.site.tagline[lang];
+const mottoLines = siteConfig.hero.motto.map((line) => line[lang]);
+const resume = withBase(siteConfig.identity.resume);
+const avatar = withBase(siteConfig.identity.avatar);
+const cover = withBase(siteConfig.hero.cover);
+const email = siteConfig.identity.email;
+const github = siteConfig.identity.socials.find((s) => s.icon === 'github');
+const status = siteConfig.identity.status[lang];
+const location = siteConfig.identity.location[lang];
+const timezone = siteConfig.identity.timezone;
+---
+
+<section id="tide" class="hero" data-section aria-labelledby="hero-title">
+  <div class="hero-cover" style={'background-image:url(' + cover + ')'} aria-hidden="true"></div>
+  <div class="hero-veil" aria-hidden="true"></div>
+
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="hero-eyebrow eyebrow">AITAI / 会いたい</div>
+      <h1 id="hero-title" class="hero-title">
+        会いたい
+        <span class="latin">KIM</span>
+      </h1>
+      <p class="hero-tagline">{tagline}</p>
+
+      <div class="hero-motto" data-typewriter data-lines={JSON.stringify(mottoLines)}>
+        <span class="sr-only">{mottoLines[0]}</span>
+        <span aria-hidden="true" data-typewriter-text></span>
+        <span class="caret" aria-hidden="true"></span>
+      </div>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary" href={resume} download>
+          {t('hero.downloadCv', lang)}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" /></svg>
+        </a>
+        <a class="btn" href={'mailto:' + email}>
+          {t('hero.email', lang)}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 6h16v12H4z" /><path d="M4 7l8 6 8-6" /></svg>
+        </a>
+        {github && (
+          <a class="btn" href={github.href} target="_blank" rel="noreferrer">
+            {t('hero.github', lang)}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" /></svg>
+          </a>
+        )}
+      </div>
+
+      <div class="hero-meta">
+        <span><i aria-hidden="true"></i>{status}</span>
+        <span>{location}</span>
+        <span>{timezone.replace('_', ' ')}</span>
+      </div>
+    </div>
+
+    <aside class="identity-card" data-tilt data-cursor-label="KIM">
+      <div class="identity-top">
+        <span class="identity-status"><span class="status-dot" aria-hidden="true"></span>{t('hero.available', lang)}</span>
+        <span class="mono faint">KIM / 2026</span>
+      </div>
+
+      <div class="hero-avatar" data-avatar-hero aria-hidden="true">
+        <img src={avatar} alt="" width="120" height="120" />
+      </div>
+
+      <div class="identity-time" data-clock data-tz={timezone}>--:--</div>
+      <div class="identity-date" data-date data-tz={timezone} data-lang={lang}></div>
+
+      <dl class="identity-rows">
+        <div>
+          <dt>{t('hero.now', lang)}</dt>
+          <dd>{status}</dd>
+        </div>
+        <div>
+          <dt>{t('hero.location', lang)}</dt>
+          <dd>{location}</dd>
+        </div>
+      </dl>
+
+      <p class="identity-now">{t('drift.nowBody', lang)}</p>
+    </aside>
+  </div>
+
+  <a class="hero-scroll" href="#drift" aria-label={t('hero.scroll', lang)}>
+    <span class="scroll-line" aria-hidden="true"></span>
+    <span>{t('hero.scroll', lang)}</span>
+  </a>
+</section>

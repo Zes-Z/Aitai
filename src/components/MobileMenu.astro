@@ -1,0 +1,45 @@
+---
+import { siteConfig } from '../../SiteConfig';
+import { t, l10n } from '../i18n';
+import { homePath, withBase } from '../utils/paths';
+import type { Lang } from '../types';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const home = homePath(lang);
+const sections = siteConfig.nav.sections;
+---
+
+<div class="mobile-menu" id="mobile-menu" data-mobile-menu>
+  <button class="icon-btn mobile-menu-close" data-menu-close aria-label={t('aria.close', lang)}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  </button>
+
+  <nav aria-label="Sections">
+    {sections.map((section, index) => (
+      <a href={`${home}#${section.id}`}>
+        {l10n(section.label, lang)}
+        <span>0{index + 1}</span>
+      </a>
+    ))}
+    <a href={withBase(`/${lang}/projects/`)}>
+      {t('nav.projects', lang)}
+      <span>05</span>
+    </a>
+    <a href={withBase(`/${lang}/album/`)}>
+      {t('nav.album', lang)}
+      <span>06</span>
+    </a>
+    <a href={withBase(`/${lang}/thoughts/`)}>
+      {t('nav.thoughts', lang)}
+      <span>07</span>
+    </a>
+  </nav>
+
+  <div class="mobile-menu-foot">
+    <span>{siteConfig.site.tagline[lang]}</span>
+    <span>© {new Date().getFullYear()} {siteConfig.identity.name}</span>
+  </div>
+</div>

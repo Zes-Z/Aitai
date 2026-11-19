@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { siteConfig } from '../../../../SiteConfig';
+import { photos } from '../../../data/sample';
+import { t } from '../../../i18n';
+import { homePath } from '../../../utils/paths';
+import type { Lang } from '../../../types';
+
+export function getStaticPaths() {
+  return siteConfig.site.langs.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: Lang };
+---
+
+<BaseLayout lang={lang} page="detail" title={t('nav.album', lang)} description={t('album.note', lang)}>
+  <section class="detail-page">
+    <div class="detail-inner">
+      <a class="detail-back" href={homePath(lang) + '#realms'}>← {t('act.realms', lang)}</a>
+
+      <header class="index-head">
+        <div>
+          <h1 class="index-title">{t('nav.album', lang)}</h1>
+          <p class="section-intro">{t('album.note', lang)}</p>
+        </div>
+        <span class="mono faint">{String(photos.length).padStart(2, '0')}</span>
+      </header>
+
+      <div class="album-grid">
+        {photos.map((photo) => (
+          <article
+            class="album-item"
+            id={'photo-' + photo.id}
+            data-ratio={photo.ratio}
+            data-reveal
+            style={'--p1:' + photo.palette[0] + ';--p2:' + photo.palette[1] + ';--p3:' + photo.palette[2]}
+          >
+            <div class="album-art"></div>
+            <div class="album-caption">
+              <div class="meta">{photo.date} · {photo.place[lang]}</div>
+              <div class="name">{photo.title[lang]}</div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

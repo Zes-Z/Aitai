@@ -1,0 +1,22 @@
+---
+import { withBase } from '../utils/paths';
+const target = withBase('/zh/');
+---
+
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={'0;url=' + target} />
+    <link rel="canonical" href={target} />
+    <title>AITAI · 会いたい</title>
+    <style>
+      html, body { height: 100%; margin: 0; background: #05060f; color: #e9ecff; }
+      body { display: grid; place-items: center; font-family: Georgia, serif; letter-spacing: 0.2em; }
+      a { color: #8fb3ff; }
+    </style>
+  </head>
+  <body>
+    <a href={target}>AITAI · 会いたい</a>
+  </body>
+</html>

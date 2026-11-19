@@ -1,0 +1,157 @@
+---
+import { t } from '../i18n';
+import { withBase } from '../utils/paths';
+import { projects, photos, thoughts } from '../data/sample';
+import type { Lang } from '../types';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const tabs = [
+  { id: 'projects', key: 'realms.projects' as const, count: projects.length },
+  { id: 'album', key: 'realms.album' as const, count: photos.length },
+  { id: 'thoughts', key: 'realms.thoughts' as const, count: thoughts.length },
+];
+---
+
+<section id="realms" class="section realms" data-section aria-labelledby="realms-title">
+  <div class="section-inner">
+    <header class="section-head" data-reveal>
+      <div class="eyebrow">{t('realms.eyebrow', lang)}</div>
+      <div>
+        <h2 id="realms-title" class="section-title">{t('realms.title', lang)}</h2>
+        <p class="section-intro">{t('realms.intro', lang)}</p>
+      </div>
+    </header>
+
+    <div class="realms-layout">
+      <div class="realm-tabs" role="tablist" aria-label={t('realms.title', lang)}>
+        {tabs.map((tab, index) => (
+          <button
+            class="realm-tab"
+            role="tab"
+            id={'realm-tab-' + tab.id}
+            data-realm-tab={tab.id}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            aria-controls={'realm-' + tab.id}
+            tabindex={index === 0 ? 0 : -1}
+          >
+            <span class="label">{t(tab.key, lang)}</span>
+            <span class="count">{String(tab.count).padStart(2, '0')}</span>
+          </button>
+        ))}
+      </div>
+
+      <div class="realm-panels">
+        <div
+          class="realm-panel"
+          id="realm-projects"
+          data-realm-panel="projects"
+          data-active="true"
+          role="tabpanel"
+          aria-labelledby="realm-tab-projects"
+        >
+          <div class="rail-head">
+            <span>{projects.length} {t('realms.count', lang)}</span>
+            <span class="drag-hint">{t('realms.drag', lang)} →</span>
+          </div>
+          <div class="rail" data-rail tabindex="0" aria-label={t('realms.projects', lang)}>
+            {projects.map((project) => (
+              <a
+                class="rail-card project-card"
+                href={withBase('/' + lang + '/projects/' + project.slug + '/')}
+                style={'--p1:' + project.palette[0] + ';--p2:' + project.palette[1] + ';--p3:' + project.palette[2]}
+                data-cursor-label={t('misc.open', lang)}
+              >
+                <div class="card-art">
+                  <span class="card-index">{project.index}</span>
+                  <span class="card-hover">{t('misc.open', lang)} →</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-meta"><span>{project.year}</span><span>{project.tags[0]}</span></div>
+                  <div class="card-title">{project.title[lang]}</div>
+                  <div class="card-role">{project.role[lang]}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+          <a class="btn" href={withBase('/' + lang + '/projects/')}>
+            {t('realms.viewAll', lang)}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 12h14m-5-5l5 5-5 5" /></svg>
+          </a>
+        </div>
+
+        <div
+          class="realm-panel"
+          id="realm-album"
+          data-realm-panel="album"
+          role="tabpanel"
+          aria-labelledby="realm-tab-album"
+          aria-hidden="true"
+        >
+          <div class="rail-head">
+            <span>{photos.length} {t('realms.count', lang)}</span>
+            <span class="drag-hint">{t('realms.drag', lang)} →</span>
+          </div>
+          <div class="rail" data-rail tabindex="0" aria-label={t('realms.album', lang)}>
+            {photos.map((photo) => (
+              <a
+                class="rail-card album-card"
+                href={withBase('/' + lang + '/album/#photo-' + photo.id)}
+                data-ratio={photo.ratio}
+                style={'--p1:' + photo.palette[0] + ';--p2:' + photo.palette[1] + ';--p3:' + photo.palette[2]}
+                data-cursor-label={t('misc.open', lang)}
+              >
+                <div class="card-art">
+                  <span class="card-index">{photo.date}</span>
+                  <span class="card-hover">{t('misc.open', lang)} →</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-meta"><span>{photo.place[lang]}</span><span>{photo.date}</span></div>
+                  <div class="card-title">{photo.title[lang]}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+          <a class="btn" href={withBase('/' + lang + '/album/')}>
+            {t('realms.viewAll', lang)}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 12h14m-5-5l5 5-5 5" /></svg>
+          </a>
+        </div>
+
+        <div
+          class="realm-panel"
+          id="realm-thoughts"
+          data-realm-panel="thoughts"
+          role="tabpanel"
+          aria-labelledby="realm-tab-thoughts"
+          aria-hidden="true"
+        >
+          <div class="rail-head">
+            <span>{thoughts.length} {t('realms.count', lang)}</span>
+            <span class="drag-hint">{t('realms.drag', lang)} →</span>
+          </div>
+          <div class="rail" data-rail tabindex="0" aria-label={t('realms.thoughts', lang)}>
+            {thoughts.map((thought) => (
+              <a
+                class="thought-card"
+                href={withBase('/' + lang + '/thoughts/' + thought.slug + '/')}
+                style={'--p1:' + thought.palette[0] + ';--p2:' + thought.palette[1] + ';--p3:' + thought.palette[2]}
+                data-cursor-label={t('misc.open', lang)}
+              >
+                <div class="thought-kicker"><span>{thought.date}</span><span>{thought.reading} min</span></div>
+                <h3>{thought.title[lang]}</h3>
+                <p>{thought.excerpt[lang]}</p>
+                <span class="arrow" aria-hidden="true">→</span>
+              </a>
+            ))}
+          </div>
+          <a class="btn" href={withBase('/' + lang + '/thoughts/')}>
+            {t('realms.viewAll', lang)}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 12h14m-5-5l5 5-5 5" /></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

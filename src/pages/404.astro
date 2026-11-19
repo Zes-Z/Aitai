@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { t } from '../i18n';
+import { withBase } from '../utils/paths';
+---
+
+<BaseLayout lang="zh" page="404" title="404">
+  <section class="notfound">
+    <div>
+      <div class="code" aria-hidden="true">404</div>
+      <h1>{t('404.title', 'zh')}</h1>
+      <p>{t('404.desc', 'zh')}</p>
+      <a class="btn btn-primary" href={withBase('/zh/')}>{t('404.home', 'zh')}</a>
+    </div>
+  </section>
+</BaseLayout>

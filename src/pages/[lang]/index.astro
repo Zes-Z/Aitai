@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import WaveDivider from '../../components/WaveDivider.astro';
+import Driftage from '../../components/Driftage.astro';
+import Realms from '../../components/Realms.astro';
+import Harbor from '../../components/Harbor.astro';
+import { siteConfig } from '../../../SiteConfig';
+import type { Lang } from '../../types';
+
+export function getStaticPaths() {
+  return siteConfig.site.langs.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: Lang };
+---
+
+<BaseLayout lang={lang} page="home" description={siteConfig.site.description[lang]}>
+  <Hero lang={lang} />
+  <WaveDivider />
+  <Driftage lang={lang} />
+  <WaveDivider />
+  <Realms lang={lang} />
+  <WaveDivider />
+  <Harbor lang={lang} />
+</BaseLayout>

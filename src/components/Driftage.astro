@@ -1,0 +1,95 @@
+---
+import { siteConfig } from '../../SiteConfig';
+import { t } from '../i18n';
+import { withBase } from '../utils/paths';
+import { stats, skills, timeline } from '../data/sample';
+import type { Lang } from '../types';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const resume = withBase(siteConfig.identity.resume);
+const status = siteConfig.identity.status[lang];
+const doubledSkills = [...skills, ...skills];
+---
+
+<section id="drift" class="section driftage" data-section aria-labelledby="drift-title">
+  <div class="section-inner">
+    <header class="section-head" data-reveal>
+      <div class="eyebrow">{t('drift.eyebrow', lang)}</div>
+      <div>
+        <h2 id="drift-title" class="section-title">{t('drift.title', lang)}</h2>
+        <p class="section-intro">{t('drift.intro', lang)}</p>
+      </div>
+    </header>
+
+    <div class="bento">
+      <article class="bento-card portrait-card" data-reveal>
+        <div class="portrait-art" aria-hidden="true"></div>
+        <div class="portrait-caption">
+          <div>
+            <div class="note">Aitai / 2026</div>
+            <div class="name">KIM</div>
+          </div>
+          <div class="note">{siteConfig.site.tagline[lang]}</div>
+        </div>
+      </article>
+
+      <article class="bento-card now-card" data-tilt data-reveal style="--d:60ms">
+        <div class="bento-label">{t('drift.nowTitle', lang)}</div>
+        <h3 class="bento-title">{status}</h3>
+        <p class="bento-body">{t('drift.nowBody', lang)}</p>
+      </article>
+
+      <article class="bento-card stats-card" data-reveal style="--d:120ms">
+        <div class="bento-label">Numbers</div>
+        <div class="stats-grid">
+          {stats.map((stat) => (
+            <div>
+              <div class="stat-value" data-count={stat.value}>{stat.value}</div>
+              <div class="stat-label">{stat.label[lang]}</div>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article class="bento-card quote-card" data-reveal style="--d:180ms">
+        <div class="bento-label">Quote</div>
+        <div class="quote-text">{t('drift.quote', lang)}</div>
+      </article>
+
+      <article class="bento-card cv-card" data-reveal style="--d:240ms">
+        <div>
+          <div class="bento-label">CV</div>
+          <div class="bento-title">{t('drift.cv', lang)}</div>
+        </div>
+        <a class="btn" href={resume} download>
+          PDF
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" /></svg>
+        </a>
+      </article>
+
+      <article class="bento-card timeline-card" data-reveal style="--d:300ms">
+        <div class="bento-label">{t('drift.timeline', lang)}</div>
+        <div class="timeline-list">
+          {timeline.map((item) => (
+            <div class="timeline-row">
+              <span class="timeline-year">{item.year}</span>
+              <span class="timeline-title">{item.title[lang]}</span>
+              <span class="timeline-place">{item.place[lang]}</span>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article class="bento-card skills-card" data-reveal style="--d:360ms">
+        <div class="bento-label">Skills</div>
+        <div class="bento-title">{t('drift.skills', lang)}</div>
+        <div class="skills-wrap">
+          <div class="skills-track">
+            {doubledSkills.map((skill) => <span>{skill}</span>)}
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

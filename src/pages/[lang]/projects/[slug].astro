@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { siteConfig } from '../../../../SiteConfig';
+import { projects } from '../../../data/sample';
+import { t } from '../../../i18n';
+import { withBase } from '../../../utils/paths';
+import type { Lang } from '../../../types';
+
+export function getStaticPaths() {
+  return siteConfig.site.langs.flatMap((lang) =>
+    projects.map((project) => ({ params: { lang, slug: project.slug } }))
+  );
+}
+
+const { lang, slug } = Astro.params as { lang: Lang; slug: string };
+const index = projects.findIndex((project) => project.slug === slug);
+const project = projects[index] ?? projects[0];
+const next = projects[(index + 1) % projects.length];
+const palette = '--p1:' + project.palette[0] + ';--p2:' + project.palette[1] + ';--p3:' + project.palette[2];
+---
+
+<BaseLayout lang={lang} page="detail" title={project.title[lang]} description={project.summary[lang]}>
+  <article class="detail-page">
+    <div class="detail-inner">
+      <a class="detail-back" href={withBase('/' + lang + '/projects/')}>← {t('nav.projects', lang)}</a>
+
+      <div class="detail-kicker">
+        <span>{project.year}</span>
+        <span>{project.role[lang]}</span>
+        <span>{project.tags.join(' / ')}</span>
+      </div>
+      <h1 class="detail-title">{project.title[lang]}</h1>
+      <p class="detail-summary">{project.summary[lang]}</p>
+
+      <div class="detail-hero" style={palette}>
+        <span class="detail-mark">{project.index}</span>
+      </div>
+
+      <dl class="detail-meta">
+        <div><dt>Year</dt><dd>{project.year}</dd></div>
+        <div><dt>Role</dt><dd>{project.role[lang]}</dd></div>
+        <div><dt>Stack</dt><dd>{project.tags.join(', ')}</dd></div>
+        <div><dt>Index</dt><dd>{project.index} / {String(projects.length).padStart(2, '0')}</dd></div>
+      </dl>
+
+      <div class="detail-body">
+        <p>{project.summary[lang]}</p>
+        <p>{t('project.note', lang)}</p>
+      </div>
+
+      <div class="detail-next">
+        <span>{t('aria.next', lang)}</span>
+        <a href={withBase('/' + lang + '/projects/' + next.slug + '/')}>
+          {next.title[lang]} <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </article>
+</BaseLayout>

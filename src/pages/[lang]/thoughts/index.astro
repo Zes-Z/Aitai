@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { siteConfig } from '../../../../SiteConfig';
+import { thoughts } from '../../../data/sample';
+import { t } from '../../../i18n';
+import { homePath, withBase } from '../../../utils/paths';
+import type { Lang } from '../../../types';
+
+export function getStaticPaths() {
+  return siteConfig.site.langs.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: Lang };
+---
+
+<BaseLayout lang={lang} page="detail" title={t('nav.thoughts', lang)} description={t('thoughts.note', lang)}>
+  <section class="detail-page">
+    <div class="detail-inner">
+      <a class="detail-back" href={homePath(lang) + '#realms'}>← {t('act.realms', lang)}</a>
+
+      <header class="index-head">
+        <div>
+          <h1 class="index-title">{t('nav.thoughts', lang)}</h1>
+          <p class="section-intro">{t('thoughts.note', lang)}</p>
+        </div>
+        <span class="mono faint">{String(thoughts.length).padStart(2, '0')}</span>
+      </header>
+
+      <div class="index-list">
+        {thoughts.map((thought) => (
+          <a class="index-row" href={withBase('/' + lang + '/thoughts/' + thought.slug + '/')}>
+            <span class="year">{thought.date}</span>
+            <span class="name">{thought.title[lang]}</span>
+            <span class="meta">{thought.reading} min</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { siteConfig } from '../../../../SiteConfig';
+import { thoughts } from '../../../data/sample';
+import { t } from '../../../i18n';
+import { withBase } from '../../../utils/paths';
+import type { Lang } from '../../../types';
+
+export function getStaticPaths() {
+  return siteConfig.site.langs.flatMap((lang) =>
+    thoughts.map((thought) => ({ params: { lang, slug: thought.slug } }))
+  );
+}
+
+const { lang, slug } = Astro.params as { lang: Lang; slug: string };
+const index = thoughts.findIndex((thought) => thought.slug === slug);
+const thought = thoughts[index] ?? thoughts[0];
+const next = thoughts[(index + 1) % thoughts.length];
+const paragraphs = thought.body[lang].split('\n\n').filter(Boolean);
+const palette = '--p1:' + thought.palette[0] + ';--p2:' + thought.palette[1] + ';--p3:' + thought.palette[2];
+---
+
+<BaseLayout lang={lang} page="detail" title={thought.title[lang]} description={thought.excerpt[lang]}>
+  <article class="detail-page">
+    <div class="detail-inner">
+      <a class="detail-back" href={withBase('/' + lang + '/thoughts/')}>← {t('nav.thoughts', lang)}</a>
+
+      <div class="detail-kicker">
+        <span>{thought.date}</span>
+        <span>{thought.reading} min read</span>
+        <span>{t('act.realms', lang)}</span>
+      </div>
+      <h1 class="detail-title">{thought.title[lang]}</h1>
+      <p class="detail-summary">{thought.excerpt[lang]}</p>
+
+      <div class="detail-hero" style={palette}>
+        <span class="detail-mark">会</span>
+      </div>
+
+      <div class="detail-body">
+        {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+
+      <div class="detail-next">
+        <span>{t('aria.next', lang)}</span>
+        <a href={withBase('/' + lang + '/thoughts/' + next.slug + '/')}>
+          {next.title[lang]} <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
