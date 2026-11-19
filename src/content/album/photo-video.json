@@ -1,0 +1,362 @@
+{
+  "enoden.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "landscape",
+    "tag": [
+      "海",
+      "黄昏"
+    ],
+    "location": "Kamakura",
+    "place": [
+      "镰仓",
+      "Kamakura",
+      "鎌倉"
+    ],
+    "date": "2026.10.26",
+    "photographer": "zes",
+    "title": [
+      "海边的最后一班电车",
+      "The last train by the sea",
+      "海辺の最終電車"
+    ],
+    "description": "",
+    "text": [
+      "风把电线吹得很响。",
+      "The wind made the wires sing.",
+      "風が電線を鳴らしていた。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/2000s",
+      "iso": "100",
+      "exposureCompensation": "+0.67 EV"
+    },
+    "related": [],
+    "ratio": "landscape",
+    "palette": [
+      "#1a2030",
+      "#6f7f92",
+      "#f0c9a8"
+    ],
+    "src": "./enoden.jpg"
+  },
+  "konbini.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "street",
+    "tag": [
+      "夜",
+      "便利店"
+    ],
+    "location": "Tokyo",
+    "place": [
+      "东京",
+      "Tokyo",
+      "東京"
+    ],
+    "date": "2026.09.08",
+    "photographer": "zes",
+    "title": [
+      "凌晨四点的便利店",
+      "Konbini at 4 a.m.",
+      "午前四時のコンビニ"
+    ],
+    "description": "",
+    "text": [
+      "凌晨四点，只有这里还亮着。",
+      "At 4 a.m., only this place is still lit.",
+      "午前四時、ここだけが明るい。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "35mm",
+      "aperture": "f/2.0",
+      "shutterSpeed": "1/125s",
+      "iso": "1600",
+      "exposureCompensation": "+0.33 EV"
+    },
+    "related": [],
+    "ratio": "portrait",
+    "palette": [
+      "#0a1420",
+      "#2c5f6e",
+      "#9fe8d8"
+    ],
+    "src": "./konbini.jpg"
+  },
+  "bridge.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "street",
+    "tag": [
+      "雨",
+      "京都"
+    ],
+    "location": "Kyoto",
+    "place": [
+      "京都",
+      "Kyoto",
+      "京都"
+    ],
+    "date": "2026.07.19",
+    "photographer": "zes",
+    "title": [
+      "雨后的天桥",
+      "Footbridge after rain",
+      "雨上がりの歩道橋"
+    ],
+    "description": "",
+    "text": [
+      "雨停了，天桥还在滴水。",
+      "The rain stopped. The footbridge kept dripping.",
+      "雨は止んだ。歩道橋はまだ滴っている。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "50mm",
+      "aperture": "f/4",
+      "shutterSpeed": "1/250s",
+      "iso": "400",
+      "exposureCompensation": "0 EV"
+    },
+    "related": [],
+    "ratio": "square",
+    "palette": [
+      "#161020",
+      "#5b3b5e",
+      "#ffb199"
+    ],
+    "src": "./bridge.jpg"
+  },
+  "moon.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "night",
+    "tag": [
+      "月",
+      "窗"
+    ],
+    "location": "Sapporo",
+    "place": [
+      "札幌",
+      "Sapporo",
+      "札幌"
+    ],
+    "date": "2026.02.11",
+    "photographer": "zes",
+    "title": [
+      "窗边的月亮",
+      "Moon by the window",
+      "窓辺の月"
+    ],
+    "description": "",
+    "text": [
+      "月亮像一枚没关掉的灯。",
+      "The moon, a light left on.",
+      "月は、消し忘れた灯り。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/60s",
+      "iso": "800",
+      "exposureCompensation": "-0.33 EV"
+    },
+    "related": [],
+    "ratio": "portrait",
+    "palette": [
+      "#050a18",
+      "#172a5c",
+      "#dcebff"
+    ],
+    "src": "./moon.jpg"
+  },
+  "pool.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "travel",
+    "tag": [
+      "夏",
+      "海"
+    ],
+    "location": "Okinawa",
+    "place": [
+      "冲绳",
+      "Okinawa",
+      "沖縄"
+    ],
+    "date": "2025.08.03",
+    "photographer": "zes",
+    "title": [
+      "夏天的泳池",
+      "Summer pool",
+      "夏のプール"
+    ],
+    "description": "",
+    "text": [
+      "夏天的水，蓝得有点不真实。",
+      "Summer water, a little too blue to be true.",
+      "夏の水は、少し不透明なほど青い。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "28mm",
+      "aperture": "f/8",
+      "shutterSpeed": "1/1000s",
+      "iso": "100",
+      "exposureCompensation": "0 EV"
+    },
+    "related": [],
+    "ratio": "landscape",
+    "palette": [
+      "#04222a",
+      "#0d7a86",
+      "#8ff5e6"
+    ],
+    "src": "./pool.jpg"
+  },
+  "vending.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "night",
+    "tag": [
+      "雪",
+      "冬"
+    ],
+    "location": "Hokkaido",
+    "place": [
+      "北海道",
+      "Hokkaido",
+      "北海道"
+    ],
+    "date": "2025.01.22",
+    "photographer": "zes",
+    "title": [
+      "雪里的自动贩卖机",
+      "Vending machine in snow",
+      "雪の自動販売機"
+    ],
+    "description": "",
+    "text": [
+      "雪落下来，贩卖机是唯一的暖色。",
+      "Snow fell. The vending machine was the only warm color.",
+      "雪が降る。自販機だけが暖かい色。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "50mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/160s",
+      "iso": "640",
+      "exposureCompensation": "+0.67 EV"
+    },
+    "related": [],
+    "ratio": "square",
+    "palette": [
+      "#101826",
+      "#49627a",
+      "#ffe3b0"
+    ],
+    "src": "./vending.jpg"
+  },
+  "stairs.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "street",
+    "tag": [
+      "东京",
+      "夜"
+    ],
+    "location": "Tokyo",
+    "place": [
+      "东京",
+      "Tokyo",
+      "東京"
+    ],
+    "date": "2026.11.02",
+    "photographer": "zes",
+    "title": [
+      "没有人的楼梯",
+      "Stairs with no one",
+      "誰もいない階段"
+    ],
+    "description": "",
+    "text": [
+      "楼梯没有人，脚步声还在。",
+      "No one on the stairs, but the footsteps stayed.",
+      "階段には誰もいない。足音だけが残っている。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "35mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/80s",
+      "iso": "1250",
+      "exposureCompensation": "-0.67 EV"
+    },
+    "related": [],
+    "ratio": "portrait",
+    "palette": [
+      "#0d1018",
+      "#3b2f3f",
+      "#c9b6ff"
+    ],
+    "src": "./stairs.jpg"
+  },
+  "sunrise.jpg": {
+    "draft": false,
+    "type": "photo",
+    "category": "landscape",
+    "tag": [
+      "朝",
+      "海"
+    ],
+    "location": "Tokyo",
+    "place": [
+      "东京",
+      "Tokyo",
+      "東京"
+    ],
+    "date": "2026.11.15",
+    "photographer": "zes",
+    "title": [
+      "第一班电车之前",
+      "Before the first train",
+      "始発の前"
+    ],
+    "description": "",
+    "text": [
+      "第一班电车之前，城市属于海鸥。",
+      "Before the first train, the city belongs to gulls.",
+      "始発の前、街はカモメのもの。"
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/4",
+      "shutterSpeed": "1/500s",
+      "iso": "200",
+      "exposureCompensation": "+0.33 EV"
+    },
+    "related": [],
+    "ratio": "landscape",
+    "palette": [
+      "#1b1420",
+      "#8c4a4a",
+      "#ffd0a8"
+    ],
+    "src": "./sunrise.jpg"
+  }
+}

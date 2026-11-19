@@ -1,16 +1,29 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
 import { siteConfig } from '../../../../SiteConfig';
-import { photos } from '../../../data/sample';
 import { t } from '../../../i18n';
 import { homePath } from '../../../utils/paths';
-import type { Lang } from '../../../types';
+import { LANGS, type Lang } from '../../../types';
 
 export function getStaticPaths() {
   return siteConfig.site.langs.map((lang) => ({ params: { lang } }));
 }
 
 const { lang } = Astro.params as { lang: Lang };
+const langIndex = LANGS.indexOf(lang);
+const allAlbum = await getCollection('album');
+const photos = allAlbum
+  .filter((entry) => !entry.data.draft)
+  .map((entry) => ({
+    id: entry.id,
+    title: entry.data.title[langIndex] ?? entry.data.title[0],
+    place: (entry.data.place ?? [entry.data.location, entry.data.location, entry.data.location])[langIndex] ?? entry.data.location,
+    date: entry.data.date,
+    ratio: entry.data.ratio,
+    palette: entry.data.palette ?? ['#0b1026', '#22306b', '#8fb3ff'],
+  }))
+  .sort((a, b) => b.date.localeCompare(a.date));
 ---
 
 <BaseLayout lang={lang} page="detail" title={t('nav.album', lang)} description={t('album.note', lang)}>
@@ -37,8 +50,8 @@ const { lang } = Astro.params as { lang: Lang };
           >
             <div class="album-art"></div>
             <div class="album-caption">
-              <div class="meta">{photo.date} · {photo.place[lang]}</div>
-              <div class="name">{photo.title[lang]}</div>
+              <div class="meta">{photo.date} · {photo.place}</div>
+              <div class="name">{photo.title}</div>
             </div>
           </article>
         ))}

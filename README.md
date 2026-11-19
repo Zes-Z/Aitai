@@ -4,7 +4,7 @@
 
 当前是 **M2 可运行切片**：Astro 7 + Tailwind 4 + Lenis，首页四幅、三主题切换、头像下潜、三语路由、内容集合、页面转场、项目 / 相册 / 随想详情页已经跑通。
 
-截图：[星空](docs/screenshots/hero.png) · [海月](docs/screenshots/sea.png) · [朝凪](docs/screenshots/dawn.png) · [头像下潜中途](docs/screenshots/avatar-dock.png) · [移动端](docs/screenshots/mobile.png) · [正文](docs/screenshots/thought.png) · [Tide](docs/screenshots/transition-tide.png) · [Constellate](docs/screenshots/transition-constellate.png) · [Develop](docs/screenshots/transition-develop.png)
+截图：[星空](docs/screenshots/hero.png) · [海月](docs/screenshots/sea.png) · [朝凪](docs/screenshots/dawn.png) · [头像下潜中途](docs/screenshots/avatar-dock.png) · [移动端](docs/screenshots/mobile.png) · [相册](docs/screenshots/album.png) · [正文](docs/screenshots/thought.png) · [Tide](docs/screenshots/transition-tide.png) · [Constellate](docs/screenshots/transition-constellate.png) · [Develop](docs/screenshots/transition-develop.png)
 
 ## 启动
 
@@ -28,7 +28,8 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 中
 - **三主题**：星空 / 海月 / 朝凪；主题球、方向菜单、全屏换界、localStorage 持久化、无闪首帧。
 - **头像下潜**：首屏 120px → 下滑吸附左上角 40px（移动端 84 → 32）；Header 玻璃、字标位移、导航显隐共享同一滚动进度；头像跨页持续；详情页直接 docked。
 - **三语**：`/[lang]/`，zh / en / ja；一个键 × 三语的 `messages`；`hreflang` 与三语路由。
-- **内容集合**：`src/content/post/<slug>/{zh,en,ja}.md` 与 `src/content/project/<slug>/{zh,en,ja}.md`，共 21 个 markdown；页面通过 `getCollection` / `render()` 读取，正文由 Astro 渲染。
+- **内容集合**：`src/content/post/<slug>/{zh,en,ja}.md`、`src/content/project/<slug>/{zh,en,ja}.md`，共 21 个 markdown；页面通过 `getCollection` / `render()` 读取，正文由 Astro 渲染。
+- **相册集合**：`src/content/album/photo-video.json` 保留 Zes4U 字段（title / text 为 `[zh,en,ja]` 三语数组），`src/loaders/album.ts` 把每条记录变成独立 entry；相册页与首页影像域都从集合读取。
 - **页面转场**：Tide / Constellate / Develop / Veil 四种；ClientRouter 负责导航，自研 overlay + Web Animations API 负责「封面 + 揭示」；支持返回、中断、reduced-motion；Astro 默认转场已关闭。
 - **内容页**：项目列表 / 详情、相册、随想列表 / 正文，全部静态生成（35 页）。
 - **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、卡片倾斜、轨道拖拽、主题球、移动菜单、复制邮箱 Toast。
@@ -41,7 +42,9 @@ src/
   components/      Header, AvatarDock, ThemeOrb, Hero, Driftage, Realms, Harbor...
   content/post/    随想 markdown（zh / en / ja）
   content/project/ 项目 markdown（zh / en / ja）
-  data/sample.ts   相册、技能、时间线的示例数据
+  content/album/   photo-video.json + 相册媒体
+  loaders/         album.ts（JSON → content entries）
+  data/sample.ts   技能、时间线的示例数据
   i18n/            一个键 × 三语
   pages/[lang]/    首页与详情页
   scripts/         world, theme, avatar-dock, shell, page-transitions
@@ -51,7 +54,7 @@ SiteConfig.ts      身份、站点、导航、主题、动效开关
 
 ## 下一步
 
-1. 把相册从 `src/data/sample.ts` 迁到 `src/content/album` + `photo-video.json` 自定义 loader，接入真实照片与 EXIF。
+1. 给相册接入真实照片、响应式图片与 EXIF 面板；目前 `photo-video.json` 里的 `src` 还是占位文件名。
 2. 把主题切换从单层圆环升级为 6 条分镜（坠星 / 升星 / 浮月 / 沉日 / 暮落 / 破晓），接入 Three.js / TSL。
 3. 补 Peel / 共享元素 / 组件 ↔ 页面转场，接入 Interlude 的旧页快照。
 4. Giscus 留言、命令面板、环境音。
@@ -60,6 +63,6 @@ SiteConfig.ts      身份、站点、导航、主题、动效开关
 ## 说明
 
 - 头像是 `public/avatar.svg` 占位，CV 是 `public/kim cv.pdf`，发布前替换。
-- 图片目前用渐变 / `cover.svg` 占位；内容接入后替换为真实照片。
+- 相册目前用 `palette` 渐变和 `cover.svg` 占位；`photo-video.json` 的 `src` 指向尚未放入的真实照片。
 - 三主题、头像下潜、三语路由、内容集合、四种页面转场与详情页已可交互。
 - 主题切换目前是单层圆环 `Bloom`；6 条完整分镜与 Three.js 世界还在下一步。

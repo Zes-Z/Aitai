@@ -38,11 +38,15 @@ function cancel() {
   current = null;
 }
 
-function animate(el: HTMLElement, frames: Keyframe[], options: KeyframeAnimationOptions) {
+async function animate(el: HTMLElement, frames: Keyframe[], options: KeyframeAnimationOptions): Promise<void> {
   cancel();
   const animation = el.animate(frames, { fill: 'forwards', ...options });
   current = animation;
-  return animation.finished.catch(() => undefined);
+  try {
+    await animation.finished;
+  } catch {
+    // A newer transition cancelled this one.
+  }
 }
 
 function reset() {
