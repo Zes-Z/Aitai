@@ -8,10 +8,9 @@ export const siteConfig = {
   identity: {
     name: 'KIM',
     nameJa: 'キム',
-    avatar: '/avatar.svg',
-    resume: '/kim cv.pdf',
+    avatar: '/avatar.jpg',
     email: 'zes234@proton.me',
-    location: { zh: '东京', en: 'Tokyo', ja: '東京' } satisfies L10n,
+    location: { zh: '京都', en: 'KyoTo', ja: '京都' } satisfies L10n,
     timezone: 'Asia/Tokyo',
     status: {
       zh: '正在做 Aitai',
@@ -21,13 +20,7 @@ export const siteConfig = {
     socials: [
       { label: 'GitHub', href: 'https://github.com/', icon: 'github' },
       { label: 'Email', href: 'mailto:zes234@proton.me', icon: 'mail' },
-      { label: '小红书', href: 'https://www.xiaohongshu.com/', icon: 'xhs' },
-      {
-        label: { zh: '阿里云盘', en: 'Cloud Drive', ja: 'クラウド' },
-        icon: 'cloud',
-        iconSrc: '', // 填入 public/ 图标路径或 HTTPS 图片地址即可替换图标
-        href: '', // 自定义链接待定；留空时显示不可点击的占位图标
-      },
+      { label: 'CV', href: '/kim cv.pdf', icon: 'cv' },
     ] satisfies SocialLink[],
   },
 

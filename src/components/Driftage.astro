@@ -8,7 +8,8 @@ import type { Lang } from '../types';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const resume = withBase(siteConfig.identity.resume);
+const cv = siteConfig.identity.socials.find((social) => social.icon === 'cv');
+const resume = cv?.href ? withBase(cv.href) : undefined;
 const cover = withBase(siteConfig.hero.cover);
 const status = siteConfig.identity.status[lang];
 const location = siteConfig.identity.location[lang];
@@ -78,7 +79,7 @@ const stats = [
         </div>
       </article>
 
-      <a
+      {resume && <a
         class="drift-card drift-cv"
         data-drift-card
         style="--x:38;--y:66;--rot:4deg"
@@ -89,7 +90,7 @@ const stats = [
         <span class="drift-kicker">CV</span>
         <strong>{t('drift.cv', lang)}</strong>
         <span class="drift-arrow" aria-hidden="true">↗</span>
-      </a>
+      </a>}
 
     </div>
 

@@ -28,7 +28,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 中
 
 - **四幅首页**：潮汐线 / 漂流物 / 三域 / 归港。
 - **三主题**：星空 / 海月（海上明月，不是水母）/ 朝凪；默认朝凪（`SiteConfig.theme.default` 可改）；长按主题球直接循环切换、全屏换界、localStorage 持久化、无闪首帧。
-- **头像菜单**：左上角点击在右下方 90° 区域内等角度环绕展开 GitHub / Email / 小红书 / 自定义入口 / CV，长按 460ms 回到当前页面顶部；Space / Home 回顶，↓ 打开链接，Escape 关闭。GitHub / 邮件 / CV 图标沿用 funiki 的 SVG 风格。自定义入口在 `SiteConfig.identity.socials` 配置 `iconSrc` 与 `href`，空链接显示为不可点击的占位。
+- **头像菜单**：读取 `SiteConfig.identity.socials`，点击在右下方 90° 区域内等角度展开，基础半径 80px；长按 460ms 回到当前页面顶部，Space / Home 回顶，↓ 打开链接，Escape 关闭。GitHub / 邮件 / CV 图标沿用 funiki 的 SVG 风格。自定义图标用 `iconSrc`，空链接显示为不可点击的占位；CV 使用 `{ label: 'CV', href: '/kim cv.pdf', icon: 'cv' }`，头像、首屏、漂流物和尾幅的下载入口共用这条配置。
 - **对称边界**：两个角落按钮固定为 46px，顶部与左右边缘使用相等的安全区边距。所有页面的内容留白由按钮内侧边界推导；窄屏标题、列表和相册随内容宽度排版。
 - **三语**：`/[lang]/`，zh / en / ja；一个键 × 三语的 `messages`；`hreflang` 与三语路由。
 - **内容集合**：`src/content/post/<slug>/{zh,en,ja}.md`、`src/content/project/<slug>/{zh,en,ja}.md`，共 21 个 markdown；页面通过 `getCollection` / `render()` 读取，正文由 Astro 渲染。

@@ -8,7 +8,8 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const tagline = siteConfig.site.tagline[lang];
 const mottoLines = siteConfig.hero.motto.map((line) => line[lang]);
-const resume = withBase(siteConfig.identity.resume);
+const cv = siteConfig.identity.socials.find((social) => social.icon === 'cv');
+const resume = cv?.href ? withBase(cv.href) : undefined;
 const avatar = withBase(siteConfig.identity.avatar);
 const cover = withBase(siteConfig.hero.cover);
 const email = siteConfig.identity.email;
@@ -37,10 +38,10 @@ const timezone = siteConfig.identity.timezone;
       </div>
 
       <div class="hero-actions">
-        <a class="btn btn-primary" href={resume} download>
+        {resume && <a class="btn btn-primary" href={resume} download>
           {t('hero.downloadCv', lang)}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" /></svg>
-        </a>
+        </a>}
         <a class="btn" href={'mailto:' + email}>
           {t('hero.email', lang)}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 6h16v12H4z" /><path d="M4 7l8 6 8-6" /></svg>

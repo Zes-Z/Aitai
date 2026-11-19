@@ -8,10 +8,7 @@ import '../styles/avatar-dock.css';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const actions: SocialLink[] = [
-  ...siteConfig.identity.socials,
-  { label: 'CV', icon: 'cv', href: siteConfig.identity.resume, download: true },
-];
+const actions: readonly SocialLink[] = siteConfig.identity.socials;
 ---
 
 <div class="avatar-dock" data-avatar-dock data-open="false">
@@ -38,7 +35,7 @@ const actions: SocialLink[] = [
         const label = l10n(action.label, lang);
         const arc = Math.PI / 2;
         const angle = (index / Math.max(1, actions.length - 1)) * arc;
-        const radius = Math.max(104, (actions.length - 1) * 48 / arc);
+        const radius = Math.max(80, (actions.length - 1) * 48 / arc);
         const style = '--action-x:' + (Math.cos(angle) * radius).toFixed(2) + 'px;--action-y:' + (Math.sin(angle) * radius).toFixed(2) + 'px;--action-index:' + index;
         const external = /^https?:\/\//i.test(action.href);
         const icon = action.iconSrc ? <img src={withBase(action.iconSrc)} alt="" width="20" height="20" /> : <QuickLinkIcon name={action.icon} />;
@@ -50,7 +47,7 @@ const actions: SocialLink[] = [
                 href={withBase(action.href)}
                 target={external ? '_blank' : undefined}
                 rel={external ? 'noopener noreferrer' : undefined}
-                download={action.download || undefined}
+                download={action.download ?? (action.icon === 'cv' || undefined)}
                 aria-label={label}
                 data-avatar-action
               >

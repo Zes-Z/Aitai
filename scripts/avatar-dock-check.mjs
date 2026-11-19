@@ -70,9 +70,8 @@ try {
     assert.equal(await avatar(page).getAttribute('href'), null);
     assert.equal(await page.locator('[data-avatar-actions]').evaluate((el) => el.inert), true);
     await open(page);
-    assert.equal(await page.locator('[data-avatar-action]').count(), 4);
-    assert.equal(await page.locator('[data-avatar-actions] button:disabled').count(), 1);
-    assert.equal(await page.locator('[data-avatar-action][aria-label=小红书]').count(), 1);
+    assert.equal(await page.locator('[data-avatar-action]').count(), await page.locator('#harbor .social-list a').count(), 'Menu and footer share enabled socials');
+    assert.equal(await page.locator('[data-avatar-actions] button:disabled').count(), await page.locator('#harbor .social-list [aria-disabled=true]').count(), 'Menu and footer share pending socials');
     assert.match(await page.locator('[data-avatar-action][aria-label=Email]').getAttribute('href'), /^mailto:/);
     assert.equal(await page.locator('[data-avatar-action][aria-label=CV]').getAttribute('href'), '/Aitai/kim cv.pdf');
     await page.waitForTimeout(750);
