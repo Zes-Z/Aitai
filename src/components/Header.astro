@@ -17,16 +17,16 @@ const sections = siteConfig.nav.sections;
   <div class="header-inner">
     <div class="header-left">
       <span class="header-avatar-slot" data-avatar-header aria-hidden="true"></span>
-      <a class="wordmark" href={home} aria-label="AITAI">
+      <a class="wordmark" href={home} aria-label="AITAI" data-transition="veil">
         AITAI <span class="jp">会いたい</span>
       </a>
       <nav class="header-nav" aria-label="Sections">
         {sections.map((section) => (
           <a href={`${home}#${section.id}`} data-nav-link>{l10n(section.label, lang)}</a>
         ))}
-        <a href={withBase(`/${lang}/projects/`)}>{t('nav.projects', lang)}</a>
-        <a href={withBase(`/${lang}/album/`)}>{t('nav.album', lang)}</a>
-        <a href={withBase(`/${lang}/thoughts/`)}>{t('nav.thoughts', lang)}</a>
+        <a href={withBase(`/${lang}/projects/`)} data-transition="tide">{t('nav.projects', lang)}</a>
+        <a href={withBase(`/${lang}/album/`)} data-transition="develop">{t('nav.album', lang)}</a>
+        <a href={withBase(`/${lang}/thoughts/`)} data-transition="constellate">{t('nav.thoughts', lang)}</a>
       </nav>
     </div>
 

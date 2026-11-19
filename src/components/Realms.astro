@@ -1,11 +1,24 @@
 ---
+import { getCollection } from 'astro:content';
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
-import { projects, photos, thoughts } from '../data/sample';
+import { photos } from '../data/sample';
 import type { Lang } from '../types';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
+
+const allProjects = await getCollection('project');
+const projects = allProjects
+  .filter((entry) => entry.id.endsWith('/' + lang))
+  .map((entry) => ({ slug: entry.id.split('/')[0], ...entry.data }))
+  .sort((a, b) => a.index.localeCompare(b.index));
+
+const allPosts = await getCollection('post');
+const thoughts = allPosts
+  .filter((entry) => entry.id.endsWith('/' + lang))
+  .map((entry) => ({ slug: entry.id.split('/')[0], ...entry.data }))
+  .sort((a, b) => b.date.localeCompare(a.date));
 
 const tabs = [
   { id: 'projects', key: 'realms.projects' as const, count: projects.length },
@@ -60,6 +73,7 @@ const tabs = [
               <a
                 class="rail-card project-card"
                 href={withBase('/' + lang + '/projects/' + project.slug + '/')}
+                data-transition="tide"
                 style={'--p1:' + project.palette[0] + ';--p2:' + project.palette[1] + ';--p3:' + project.palette[2]}
                 data-cursor-label={t('misc.open', lang)}
               >
@@ -69,13 +83,13 @@ const tabs = [
                 </div>
                 <div class="card-body">
                   <div class="card-meta"><span>{project.year}</span><span>{project.tags[0]}</span></div>
-                  <div class="card-title">{project.title[lang]}</div>
-                  <div class="card-role">{project.role[lang]}</div>
+                  <div class="card-title">{project.title}</div>
+                  <div class="card-role">{project.role}</div>
                 </div>
               </a>
             ))}
           </div>
-          <a class="btn" href={withBase('/' + lang + '/projects/')}>
+          <a class="btn" href={withBase('/' + lang + '/projects/')} data-transition="tide">
             {t('realms.viewAll', lang)}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 12h14m-5-5l5 5-5 5" /></svg>
           </a>
@@ -98,6 +112,7 @@ const tabs = [
               <a
                 class="rail-card album-card"
                 href={withBase('/' + lang + '/album/#photo-' + photo.id)}
+                data-transition="develop"
                 data-ratio={photo.ratio}
                 style={'--p1:' + photo.palette[0] + ';--p2:' + photo.palette[1] + ';--p3:' + photo.palette[2]}
                 data-cursor-label={t('misc.open', lang)}
@@ -113,7 +128,7 @@ const tabs = [
               </a>
             ))}
           </div>
-          <a class="btn" href={withBase('/' + lang + '/album/')}>
+          <a class="btn" href={withBase('/' + lang + '/album/')} data-transition="develop">
             {t('realms.viewAll', lang)}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 12h14m-5-5l5 5-5 5" /></svg>
           </a>
@@ -136,17 +151,18 @@ const tabs = [
               <a
                 class="thought-card"
                 href={withBase('/' + lang + '/thoughts/' + thought.slug + '/')}
+                data-transition="constellate"
                 style={'--p1:' + thought.palette[0] + ';--p2:' + thought.palette[1] + ';--p3:' + thought.palette[2]}
                 data-cursor-label={t('misc.open', lang)}
               >
                 <div class="thought-kicker"><span>{thought.date}</span><span>{thought.reading} min</span></div>
-                <h3>{thought.title[lang]}</h3>
-                <p>{thought.excerpt[lang]}</p>
+                <h3>{thought.title}</h3>
+                <p>{thought.excerpt}</p>
                 <span class="arrow" aria-hidden="true">→</span>
               </a>
             ))}
           </div>
-          <a class="btn" href={withBase('/' + lang + '/thoughts/')}>
+          <a class="btn" href={withBase('/' + lang + '/thoughts/')} data-transition="constellate">
             {t('realms.viewAll', lang)}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 12h14m-5-5l5 5-5 5" /></svg>
           </a>

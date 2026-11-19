@@ -1562,6 +1562,89 @@ html.is-switching .site-header {
   transition: filter 0.35s, opacity 0.35s;
 }
 
+
+/* ============================================================
+   page transitions
+   ============================================================ */
+
+.page-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 52;
+  visibility: hidden;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+  will-change: transform, clip-path, opacity;
+}
+.page-transition::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.page-transition::after {
+  content: '会いたい';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-jp);
+  font-size: clamp(6rem, 18vw, 16rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: var(--text);
+  opacity: 0.08;
+  pointer-events: none;
+}
+.page-transition[data-kind='tide'] {
+  background:
+    radial-gradient(120% 80% at 50% 100%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 62%),
+    linear-gradient(180deg, var(--bg-2), var(--bg) 55%);
+}
+.page-transition[data-kind='tide']::before {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 46px,
+    color-mix(in srgb, var(--accent) 12%, transparent) 47px 48px,
+    transparent 49px 50px
+  );
+  opacity: 0.65;
+}
+.page-transition[data-kind='constellate'] {
+  background:
+    radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--text) 22%, transparent) 0 1px, transparent 1.6px) 0 0 / 37px 37px,
+    radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--text) 16%, transparent) 0 1px, transparent 1.6px) 0 0 / 61px 61px,
+    radial-gradient(120% 100% at 50% 50%, var(--bg-2), var(--bg));
+}
+.page-transition[data-kind='develop'] {
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0, color-mix(in srgb, var(--accent) 24%, #fff) 26%, var(--bg) 78%);
+}
+.page-transition[data-kind='veil'] {
+  background: linear-gradient(180deg, var(--bg), var(--bg-2));
+}
+.page-transition[data-kind='veil']::before {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 24%,
+    color-mix(in srgb, var(--accent) 9%, transparent) 24.1% 24.4%,
+    transparent 24.5% 100%
+  );
+  opacity: 0.8;
+}
+
+html.is-transitioning {
+  overflow: hidden;
+}
+html.is-transitioning body {
+  overflow: hidden;
+}
+html.is-transitioning .site-header,
+html.is-transitioning .avatar-dock {
+  pointer-events: none;
+}
+
 /* ============================================================
    reveal / wave
    ============================================================ */

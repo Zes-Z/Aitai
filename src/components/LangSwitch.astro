@@ -17,6 +17,7 @@ const short: Record<Lang, string> = { zh: '中', en: 'EN', ja: '日' };
       hreflang={l}
       lang={l}
       aria-current={l === lang ? 'true' : undefined}
+      data-transition="veil"
     >{short[l]}</a>
   ))}
 </nav>

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
 import { siteConfig } from '../../../../SiteConfig';
-import { thoughts } from '../../../data/sample';
 import { t } from '../../../i18n';
 import { homePath, withBase } from '../../../utils/paths';
 import type { Lang } from '../../../types';
@@ -11,6 +11,11 @@ export function getStaticPaths() {
 }
 
 const { lang } = Astro.params as { lang: Lang };
+const allPosts = await getCollection('post');
+const thoughts = allPosts
+  .filter((entry) => entry.id.endsWith('/' + lang))
+  .map((entry) => ({ slug: entry.id.split('/')[0], ...entry.data }))
+  .sort((a, b) => b.date.localeCompare(a.date));
 ---
 
 <BaseLayout lang={lang} page="detail" title={t('nav.thoughts', lang)} description={t('thoughts.note', lang)}>
@@ -28,9 +33,9 @@ const { lang } = Astro.params as { lang: Lang };
 
       <div class="index-list">
         {thoughts.map((thought) => (
-          <a class="index-row" href={withBase('/' + lang + '/thoughts/' + thought.slug + '/')}>
+          <a class="index-row" href={withBase('/' + lang + '/thoughts/' + thought.slug + '/')} data-transition="constellate">
             <span class="year">{thought.date}</span>
-            <span class="name">{thought.title[lang]}</span>
+            <span class="name">{thought.title}</span>
             <span class="meta">{thought.reading} min</span>
           </a>
         ))}

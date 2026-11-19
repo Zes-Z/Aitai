@@ -7,6 +7,7 @@ import MobileMenu from '../components/MobileMenu.astro';
 import AvatarDock from '../components/AvatarDock.astro';
 import MobileDock from '../components/MobileDock.astro';
 import ThemeTransition from '../components/ThemeTransition.astro';
+import PageTransition from '../components/PageTransition.astro';
 import Cursor from '../components/Cursor.astro';
 import Toast from '../components/Toast.astro';
 import ScrollProgress from '../components/ScrollProgress.astro';
@@ -24,7 +25,7 @@ const isHome = page === 'home';
 ---
 
 <!doctype html>
-<html lang={lang} data-theme="star">
+<html lang={lang} data-theme="star" transition:animate="none">
   <head>
     <BaseHead lang={lang} title={title} description={description} />
   </head>
@@ -42,6 +43,7 @@ const isHome = page === 'home';
 
     <MobileDock lang={lang} />
     <ThemeTransition />
+    <PageTransition />
     <Cursor />
     <Toast />
     <ScrollProgress />
@@ -49,7 +51,9 @@ const isHome = page === 'home';
 
     <script>
       import { initShell } from '../scripts/shell';
+      import { initPageTransitions } from '../scripts/page-transitions';
       initShell();
+      initPageTransitions();
     </script>
   </body>
 </html>

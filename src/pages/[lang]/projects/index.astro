@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
 import { siteConfig } from '../../../../SiteConfig';
-import { projects } from '../../../data/sample';
 import { t } from '../../../i18n';
 import { homePath, withBase } from '../../../utils/paths';
 import type { Lang } from '../../../types';
@@ -11,6 +11,11 @@ export function getStaticPaths() {
 }
 
 const { lang } = Astro.params as { lang: Lang };
+const all = await getCollection('project');
+const projects = all
+  .filter((entry) => entry.id.endsWith('/' + lang))
+  .map((entry) => ({ slug: entry.id.split('/')[0], ...entry.data }))
+  .sort((a, b) => a.index.localeCompare(b.index));
 ---
 
 <BaseLayout lang={lang} page="detail" title={t('nav.projects', lang)}>
@@ -25,10 +30,10 @@ const { lang } = Astro.params as { lang: Lang };
 
       <div class="index-list">
         {projects.map((project) => (
-          <a class="index-row" href={withBase('/' + lang + '/projects/' + project.slug + '/')}>
+          <a class="index-row" href={withBase('/' + lang + '/projects/' + project.slug + '/')} data-transition="tide">
             <span class="year">{project.year}</span>
-            <span class="name">{project.title[lang]}</span>
-            <span class="meta">{project.role[lang]}</span>
+            <span class="name">{project.title}</span>
+            <span class="meta">{project.role}</span>
           </a>
         ))}
       </div>

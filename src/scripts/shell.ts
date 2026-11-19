@@ -187,6 +187,7 @@ function initRails() {
     let moved = false;
     let startX = 0;
     let startScroll = 0;
+    let pointerId: number | null = null;
 
     const onDown = (event: PointerEvent) => {
       if (event.button !== 0) return;
@@ -194,19 +195,26 @@ function initRails() {
       moved = false;
       startX = event.clientX;
       startScroll = rail.scrollLeft;
+      pointerId = event.pointerId;
       rail.classList.add('is-dragging');
-      rail.setPointerCapture?.(event.pointerId);
     };
     const onMove = (event: PointerEvent) => {
       if (!down) return;
       const dx = event.clientX - startX;
-      if (Math.abs(dx) > 6) moved = true;
+      if (!moved && Math.abs(dx) <= 6) return;
+      if (!moved) {
+        moved = true;
+        rail.setPointerCapture?.(event.pointerId);
+      }
       rail.scrollLeft = startScroll - dx;
-      if (moved) event.preventDefault();
+      event.preventDefault();
     };
     const onUp = () => {
+      if (!down) return;
       down = false;
       rail.classList.remove('is-dragging');
+      if (pointerId !== null) rail.releasePointerCapture?.(pointerId);
+      pointerId = null;
       window.setTimeout(() => { moved = false; }, 30);
     };
     const onClick = (event: MouseEvent) => {
@@ -221,15 +229,15 @@ function initRails() {
 
     rail.addEventListener('pointerdown', onDown);
     rail.addEventListener('pointermove', onMove);
-    rail.addEventListener('pointerup', onUp);
-    rail.addEventListener('pointercancel', onUp);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
     rail.addEventListener('click', onClick, true);
     rail.addEventListener('keydown', onKey);
     addCleanup(() => {
       rail.removeEventListener('pointerdown', onDown);
       rail.removeEventListener('pointermove', onMove);
-      rail.removeEventListener('pointerup', onUp);
-      rail.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
       rail.removeEventListener('click', onClick, true);
       rail.removeEventListener('keydown', onKey);
     });

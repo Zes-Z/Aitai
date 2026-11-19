@@ -24,15 +24,15 @@ const sections = siteConfig.nav.sections;
         <span>0{index + 1}</span>
       </a>
     ))}
-    <a href={withBase(`/${lang}/projects/`)}>
+    <a href={withBase(`/${lang}/projects/`)} data-transition="tide">
       {t('nav.projects', lang)}
       <span>05</span>
     </a>
-    <a href={withBase(`/${lang}/album/`)}>
+    <a href={withBase(`/${lang}/album/`)} data-transition="develop">
       {t('nav.album', lang)}
       <span>06</span>
     </a>
-    <a href={withBase(`/${lang}/thoughts/`)}>
+    <a href={withBase(`/${lang}/thoughts/`)} data-transition="constellate">
       {t('nav.thoughts', lang)}
       <span>07</span>
     </a>

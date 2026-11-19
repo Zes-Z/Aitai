@@ -1,57 +1,61 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import { siteConfig } from '../../../../SiteConfig';
-import { projects } from '../../../data/sample';
+import { getCollection, render } from 'astro:content';
 import { t } from '../../../i18n';
 import { withBase } from '../../../utils/paths';
 import type { Lang } from '../../../types';
 
-export function getStaticPaths() {
-  return siteConfig.site.langs.flatMap((lang) =>
-    projects.map((project) => ({ params: { lang, slug: project.slug } }))
-  );
+export async function getStaticPaths() {
+  const projects = await getCollection('project');
+  return projects.map((entry) => {
+    const [slug, lang] = entry.id.split('/');
+    return { params: { lang, slug } };
+  });
 }
 
 const { lang, slug } = Astro.params as { lang: Lang; slug: string };
-const index = projects.findIndex((project) => project.slug === slug);
-const project = projects[index] ?? projects[0];
-const next = projects[(index + 1) % projects.length];
-const palette = '--p1:' + project.palette[0] + ';--p2:' + project.palette[1] + ';--p3:' + project.palette[2];
+const all = (await getCollection('project'))
+  .filter((entry) => entry.id.endsWith('/' + lang))
+  .sort((a, b) => a.data.index.localeCompare(b.data.index));
+const index = all.findIndex((entry) => entry.id === slug + '/' + lang);
+const entry = all[index] ?? all[0];
+const next = all[(index + 1) % all.length];
+const { Content } = await render(entry);
+const palette = '--p1:' + entry.data.palette[0] + ';--p2:' + entry.data.palette[1] + ';--p3:' + entry.data.palette[2];
 ---
 
-<BaseLayout lang={lang} page="detail" title={project.title[lang]} description={project.summary[lang]}>
+<BaseLayout lang={lang} page="detail" title={entry.data.title} description={entry.data.summary}>
   <article class="detail-page">
     <div class="detail-inner">
-      <a class="detail-back" href={withBase('/' + lang + '/projects/')}>← {t('nav.projects', lang)}</a>
+      <a class="detail-back" href={withBase('/' + lang + '/projects/')} data-transition="veil">← {t('nav.projects', lang)}</a>
 
       <div class="detail-kicker">
-        <span>{project.year}</span>
-        <span>{project.role[lang]}</span>
-        <span>{project.tags.join(' / ')}</span>
+        <span>{entry.data.year}</span>
+        <span>{entry.data.role}</span>
+        <span>{entry.data.tags.join(' / ')}</span>
       </div>
-      <h1 class="detail-title">{project.title[lang]}</h1>
-      <p class="detail-summary">{project.summary[lang]}</p>
+      <h1 class="detail-title">{entry.data.title}</h1>
+      <p class="detail-summary">{entry.data.summary}</p>
 
       <div class="detail-hero" style={palette}>
-        <span class="detail-mark">{project.index}</span>
+        <span class="detail-mark">{entry.data.index}</span>
       </div>
 
       <dl class="detail-meta">
-        <div><dt>Year</dt><dd>{project.year}</dd></div>
-        <div><dt>Role</dt><dd>{project.role[lang]}</dd></div>
-        <div><dt>Stack</dt><dd>{project.tags.join(', ')}</dd></div>
-        <div><dt>Index</dt><dd>{project.index} / {String(projects.length).padStart(2, '0')}</dd></div>
+        <div><dt>Year</dt><dd>{entry.data.year}</dd></div>
+        <div><dt>Role</dt><dd>{entry.data.role}</dd></div>
+        <div><dt>Stack</dt><dd>{entry.data.tags.join(', ')}</dd></div>
+        <div><dt>Index</dt><dd>{entry.data.index} / {String(all.length).padStart(2, '0')}</dd></div>
       </dl>
 
       <div class="detail-body">
-        <p>{project.summary[lang]}</p>
-        <p>{t('project.note', lang)}</p>
+        <Content />
       </div>
 
       <div class="detail-next">
         <span>{t('aria.next', lang)}</span>
-        <a href={withBase('/' + lang + '/projects/' + next.slug + '/')}>
-          {next.title[lang]} <span aria-hidden="true">→</span>
+        <a href={withBase('/' + lang + '/projects/' + next.id.split('/')[0] + '/')} data-transition="tide">
+          {next.data.title} <span aria-hidden="true">→</span>
         </a>
       </div>
     </div>
