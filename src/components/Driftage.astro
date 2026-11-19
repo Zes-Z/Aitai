@@ -9,6 +9,7 @@ import type { Lang } from '../types';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const resume = withBase(siteConfig.identity.resume);
+const cover = withBase(siteConfig.hero.cover);
 const status = siteConfig.identity.status[lang];
 const doubledSkills = [...skills, ...skills];
 
@@ -36,7 +37,7 @@ const stats = [
 
     <div class="bento">
       <article class="bento-card portrait-card" data-reveal>
-        <div class="portrait-art" aria-hidden="true"></div>
+        <div class="portrait-art" style={{ backgroundImage: `url("${cover}")` }} aria-hidden="true"></div>
         <div class="portrait-caption">
           <div>
             <div class="note">Aitai / 2026</div>
