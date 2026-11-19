@@ -1,6 +1,6 @@
 ---
 import { siteConfig } from '../../SiteConfig';
-import { t } from '../i18n';
+import { l10n, t } from '../i18n';
 import type { Lang } from '../types';
 
 interface Props { lang: Lang }
@@ -41,10 +41,14 @@ const socials = siteConfig.identity.socials;
 
         <div class="social-list">
           {socials.map((social) => (
-            <a href={social.href} target={social.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
-              {social.label}
-              <span aria-hidden="true">↗</span>
-            </a>
+            social.href ? (
+              <a class="social-link" href={social.href} target={social.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
+                {l10n(social.label, lang)}
+                <span aria-hidden="true">↗</span>
+              </a>
+            ) : (
+              <span class="social-link" aria-disabled="true">{l10n(social.label, lang)}</span>
+            )
           ))}
         </div>
       </article>

@@ -1,4 +1,4 @@
-import type { AvatarLink, L10n, Lang, SocialLink, ThemeId } from './src/types';
+import type { L10n, Lang, SocialLink, ThemeId } from './src/types';
 
 /**
  * AITAI · 全站自定义中心
@@ -22,6 +22,12 @@ export const siteConfig = {
       { label: 'GitHub', href: 'https://github.com/', icon: 'github' },
       { label: 'Email', href: 'mailto:zes234@proton.me', icon: 'mail' },
       { label: '小红书', href: 'https://www.xiaohongshu.com/', icon: 'xhs' },
+      {
+        label: { zh: '阿里云盘', en: 'Cloud Drive', ja: 'クラウド' },
+        icon: 'cloud',
+        iconSrc: '', // 填入 public/ 图标路径或 HTTPS 图片地址即可替换图标
+        href: '', // 自定义链接待定；留空时显示不可点击的占位图标
+      },
     ] satisfies SocialLink[],
   },
 
@@ -72,17 +78,6 @@ export const siteConfig = {
       { id: 'realms', label: { zh: '三域', en: 'Realms', ja: '三つ領域' } satisfies L10n },
       { id: 'harbor', label: { zh: '归港', en: 'Harbor', ja: '帰港' } satisfies L10n },
     ],
-    /** 头像菜单：GitHub / 邮箱 / 自定义入口 / CV */
-    avatarDock: {
-      customLinks: [
-        {
-          label: { zh: '阿里云盘', en: 'Cloud Drive', ja: 'クラウド' },
-          icon: 'cloud',
-          iconSrc: '', // 填入 public/ 图标路径或 HTTPS 图片地址即可替换图标
-          href: '', // 自定义链接待定；留空时显示不可点击的占位图标
-        },
-      ] satisfies AvatarLink[],
-    },
   },
 
   theme: {

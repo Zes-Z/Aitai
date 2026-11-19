@@ -4,17 +4,11 @@ export type L10n = Record<Lang, string>;
 
 export type ThemeId = 'star' | 'sea' | 'dawn';
 
-export type SocialIcon = 'github' | 'mail' | 'xhs' | 'rss';
+export type SocialIcon = 'github' | 'mail' | 'xhs' | 'rss' | 'cloud' | 'cv';
 
 export type SocialLink = {
-  label: string;
-  href: string;
-  icon: SocialIcon;
-};
-
-export type AvatarLink = {
   label: L10n | string;
-  icon: 'github' | 'mail' | 'cloud' | 'cv';
+  icon: SocialIcon;
   /** A public/ path or HTTPS URL overrides the built-in icon. */
   iconSrc?: string;
   /** An empty URL leaves a disabled placeholder until configured. */

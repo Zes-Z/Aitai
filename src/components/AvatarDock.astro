@@ -3,16 +3,13 @@ import { siteConfig } from '../../SiteConfig';
 import { l10n, t } from '../i18n';
 import { withBase } from '../utils/paths';
 import QuickLinkIcon from './QuickLinkIcon.astro';
-import type { AvatarLink, Lang } from '../types';
+import type { SocialLink, Lang } from '../types';
 import '../styles/avatar-dock.css';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const github = siteConfig.identity.socials.find((link) => link.icon === 'github');
-const actions: AvatarLink[] = [
-  ...(github ? [{ label: 'GitHub', icon: 'github' as const, href: github.href }] : []),
-  { label: 'Email', icon: 'mail', href: 'mailto:' + siteConfig.identity.email },
-  ...siteConfig.nav.avatarDock.customLinks,
+const actions: SocialLink[] = [
+  ...siteConfig.identity.socials,
   { label: 'CV', icon: 'cv', href: siteConfig.identity.resume, download: true },
 ];
 ---
@@ -39,8 +36,9 @@ const actions: AvatarLink[] = [
     <ul>
       {actions.map((action, index) => {
         const label = l10n(action.label, lang);
-        const angle = (index / Math.max(1, actions.length - 1)) * Math.PI * 0.45;
-        const radius = Math.max(104, (actions.length - 1) * 48 / (Math.PI * 0.45));
+        const arc = Math.PI / 2;
+        const angle = (index / Math.max(1, actions.length - 1)) * arc;
+        const radius = Math.max(104, (actions.length - 1) * 48 / arc);
         const style = '--action-x:' + (Math.cos(angle) * radius).toFixed(2) + 'px;--action-y:' + (Math.sin(angle) * radius).toFixed(2) + 'px;--action-index:' + index;
         const external = /^https?:\/\//i.test(action.href);
         const icon = action.iconSrc ? <img src={withBase(action.iconSrc)} alt="" width="20" height="20" /> : <QuickLinkIcon name={action.icon} />;

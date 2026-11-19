@@ -49,6 +49,7 @@ async function checkLayout(page, width, path) {
   const label = width + ' ' + path;
   assert.ok(Math.abs(metrics.left.left - (width - metrics.right.right)) < .6, label + ': mirrored offsets');
   assert.ok(Math.abs(metrics.left.top - metrics.right.top) < .6, label + ': same top');
+  assert.ok(Math.abs(metrics.left.top - metrics.left.left) < .6, label + ': equal top and side margins');
   assert.equal(metrics.left.width, 46, label + ': avatar size');
   assert.equal(metrics.right.width, 46, label + ': theme size');
   assert.ok(metrics.scrollWidth <= metrics.width + 1, label + ': no page overflow');
@@ -69,11 +70,30 @@ try {
     assert.equal(await avatar(page).getAttribute('href'), null);
     assert.equal(await page.locator('[data-avatar-actions]').evaluate((el) => el.inert), true);
     await open(page);
-    assert.equal(await page.locator('[data-avatar-action]').count(), 3);
+    assert.equal(await page.locator('[data-avatar-action]').count(), 4);
     assert.equal(await page.locator('[data-avatar-actions] button:disabled').count(), 1);
+    assert.equal(await page.locator('[data-avatar-action][aria-label=小红书]').count(), 1);
     assert.match(await page.locator('[data-avatar-action][aria-label=Email]').getAttribute('href'), /^mailto:/);
     assert.equal(await page.locator('[data-avatar-action][aria-label=CV]').getAttribute('href'), '/Aitai/kim cv.pdf');
-    await page.waitForTimeout(650);
+    await page.waitForTimeout(750);
+    const distribution = await page.locator('.avatar-action-slot').evaluateAll((slots) => {
+      const avatar = document.querySelector('[data-avatar-fixed]').getBoundingClientRect();
+      const cx = avatar.left + avatar.width / 2;
+      const cy = avatar.top + avatar.height / 2;
+      return slots.map((slot) => {
+        const r = slot.getBoundingClientRect();
+        const dx = r.left + r.width / 2 - cx;
+        const dy = r.top + r.height / 2 - cy;
+        return { angle: Math.atan2(dy, dx), radius: Math.hypot(dx, dy) };
+      });
+    });
+    assert.ok(Math.abs(distribution[0].angle) < .01, 'Arc starts directly to the right');
+    assert.ok(Math.abs(distribution.at(-1).angle - Math.PI / 2) < .01, 'Arc ends directly below');
+    const step = Math.PI / 2 / (distribution.length - 1);
+    for (let i = 1; i < distribution.length; i++) {
+      assert.ok(Math.abs(distribution[i].angle - distribution[i - 1].angle - step) < .01, 'Even angular spacing');
+      assert.ok(Math.abs(distribution[i].radius - distribution[0].radius) < .6, 'Shared orbital radius');
+    }
     await page.screenshot({ path: output + '/desktop.png' });
     const [download] = await Promise.all([
       page.waitForEvent('download'),
@@ -82,7 +102,7 @@ try {
     assert.equal(download.suggestedFilename(), 'kim cv.pdf');
     assert.equal(new URL(page.url()).pathname, '/Aitai/zh/');
     assert.equal(await avatar(page).getAttribute('aria-expanded'), 'false');
-    console.log('PASS: radial links, configurable placeholder and base-prefixed CV download.');
+    console.log('PASS: shared social links, uniform 90-degree arc, configurable placeholder and CV download.');
 
     await scrollDown(page);
     const point = await avatar(page).boundingBox();
@@ -135,14 +155,16 @@ try {
     mobile.on('pageerror', (error) => errors.push(error.message));
     await mobile.goto(origin + '/Aitai/zh/', { waitUntil: 'domcontentloaded' });
     await ready(mobile);
-    await mobile.touchscreen.tap(39, 35);
+    const mobileRect = await avatar(mobile).boundingBox();
+    const touchPoint = { x: mobileRect.x + mobileRect.width / 2, y: mobileRect.y + mobileRect.height / 2 };
+    await mobile.touchscreen.tap(touchPoint.x, touchPoint.y);
     assert.equal(await avatar(mobile).getAttribute('aria-expanded'), 'true');
-    await mobile.waitForTimeout(650);
+    await mobile.waitForTimeout(750);
     await mobile.screenshot({ path: output + '/mobile.png' });
     await mobile.touchscreen.tap(280, 220);
     await scrollDown(mobile);
     const touch = await mobileContext.newCDPSession(mobile);
-    await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 39, y: 35 }] });
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [touchPoint] });
     await mobile.waitForFunction(() => scrollY < 3);
     await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     assert.equal(await avatar(mobile).getAttribute('aria-expanded'), 'false');
