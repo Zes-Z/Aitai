@@ -13,12 +13,14 @@ pnpm install
 pnpm dev
 ```
 
-打开 <http://localhost:4321/aitai/zh/>。根路径 `/aitai/` 会跳到 `/aitai/zh/`。
+打开 <http://localhost:4321/Aitai/zh/>。根路径 `/Aitai/` 会跳到 `/Aitai/zh/`。
 
 ```sh
 pnpm build    # astro check + astro build
 pnpm preview  # 预览 dist
 ```
+
+GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 中的 `base: '/Aitai/'` 必须与仓库名的大小写一致；站内链接与资源路径通过此配置生成。推送到 `main` 后，现有 GitHub Actions 工作流会自动构建并部署。
 
 ## 已实现
 

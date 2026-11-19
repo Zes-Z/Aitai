@@ -24,7 +24,7 @@
 | 主题切换 | 6 个有向切换（3 条正转 + 3 条反转），全部独立编排 |
 | 组件 | 54 个，分 P0/P1/P2；v1 先交付 24 个 P0 |
 | 后端 | 无；留言用 Giscus，搜索用构建期索引 |
-| 部署 | GitHub Pages 子路径 `/aitai/` |
+| 部署 | GitHub Pages 子路径 `/Aitai/` |
 
 **三条体验承诺**
 
@@ -1417,7 +1417,7 @@ export const siteConfig = {
       en: 'A trilingual blog about stars, sea moons and dawn.',
       ja: '星と海月と夜明けの、三言語ブログ。',
     } satisfies L10n,
-    siteUrl: 'https://example.github.io/aitai/',
+    siteUrl: 'https://example.github.io/Aitai/',
     defaultLang: 'zh' satisfies Lang,
     langs: ['zh', 'en', 'ja'],
   },
@@ -1492,7 +1492,7 @@ export const siteConfig = {
 | 搜索 | 构建期 JSON 索引 + 自研模糊匹配 | — | 三语搜索 | `Intl.Segmenter` 分词 |
 | 留言 | Giscus | — | GitHub Discussions | 无后端 |
 | SEO | @astrojs/sitemap + @astrojs/rss | — | 三语 sitemap / RSS | — |
-| 部署 | GitHub Pages | — | 静态托管 | base `/aitai/` |
+| 部署 | GitHub Pages | — | 静态托管 | base `/Aitai/` |
 
 ### 10.2 渲染与岛屿策略
 
@@ -1521,7 +1521,7 @@ export const siteConfig = {
 
 ### 10.4 关键实现约定
 
-1. 所有站内链接、图片、字体路径走 `withBase()`，兼容 `/aitai/` 子路径。
+1. 所有站内链接、图片、字体路径走 `withBase()`，兼容 `/Aitai/` 子路径。
 2. 主题在 `<html data-theme>`，首帧前由内联脚本设置；所有颜色读 CSS 变量。
 3. 页面脚本用 `document.addEventListener('astro:page-load', init)`；`before-swap` 里销毁 ScrollTrigger、Lenis 监听、IntersectionObserver。
 4. 持久元素用 `transition:persist`；不要给它们重复绑定事件。
@@ -1537,7 +1537,7 @@ export const siteConfig = {
 - `pnpm dev`：先跑 `sync-gallery` + `optimize-images`，再 `astro dev`。
 - `pnpm build`：`astro check && astro build`；输出 `dist/`。
 - GitHub Actions：push 到 main → build → 部署 `gh-pages`。
-- `astro.config.mjs`：`site`、`base: '/aitai/'`、`trailingSlash: 'always'`、`i18n` 配置。
+- `astro.config.mjs`：`site`、`base: '/Aitai/'`、`trailingSlash: 'always'`、`i18n` 配置。
 - 404 页面放在 `src/pages/404.astro`；GitHub Pages 使用 `404.html`。
 - 环境变量：无密钥；Giscus 的 repoId/categoryId 放 SiteConfig。
 - 预览：`pnpm preview`；部署后检查 base path 下的图片、RSS、sitemap。

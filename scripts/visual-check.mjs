@@ -7,7 +7,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push('PAGEERROR ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('CONSOLE ' + m.text()); });
 
-await page.goto('http://127.0.0.1:4321/aitai/zh/', { waitUntil: 'networkidle' });
+await page.goto('http://127.0.0.1:4321/Aitai/zh/', { waitUntil: 'networkidle' });
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(2500);
 

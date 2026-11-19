@@ -1,7 +1,7 @@
 const rawBase = import.meta.env.BASE_URL || '/';
 export const base = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
 
-/** Prefix a site-absolute path with the deploy base ('/aitai'). */
+/** Prefix a site-absolute path with the deploy base ('/Aitai'). */
 export function withBase(path = '/'): string {
   if (/^(https?:|mailto:|tel:|#)/.test(path)) return path;
   const clean = path.startsWith('/') ? path : `/${path}`;
