@@ -48,7 +48,7 @@ export function initAvatarDock() {
     } else {
       base = slotRect?.width || 40;
       heroLeft = slotRect?.left || 24;
-      heroTop = slotRect?.top || 12;
+      heroTop = slotRect?.top || 16;
     }
     if (slotRect) {
       targetX = slotRect.left;
@@ -56,7 +56,7 @@ export function initAvatarDock() {
       targetSize = slotRect.width || 40;
     } else {
       targetX = 24;
-      targetY = 12;
+      targetY = 16;
       targetSize = 40;
     }
     fixed.style.width = base + 'px';

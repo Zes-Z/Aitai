@@ -1,6 +1,6 @@
-type Kind = 'tide' | 'constellate' | 'develop' | 'veil';
+type Kind = 'tide' | 'constellate' | 'develop' | 'veil' | 'ink';
 
-const KINDS = new Set<Kind>(['tide', 'constellate', 'develop', 'veil']);
+const KINDS = new Set<Kind>(['tide', 'constellate', 'develop', 'veil', 'ink']);
 let booted = false;
 let current: Animation | null = null;
 let kind: Kind = 'veil';
@@ -82,6 +82,38 @@ async function leave(nextKind: Kind, source?: Element) {
     return;
   }
 
+  if (kind === 'ink') {
+    const theme = document.documentElement.dataset.theme || 'star';
+    el.dataset.theme = theme;
+    if (theme === 'sea') {
+      await animate(
+        el,
+        [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }],
+        { duration: 760, easing: 'cubic-bezier(.83,0,.17,1)' }
+      );
+      return;
+    }
+    if (theme === 'dawn') {
+      await animate(
+        el,
+        [{ transform: 'translateX(-100%)' }, { transform: 'translateX(0)' }],
+        { duration: 700, easing: 'cubic-bezier(.83,0,.17,1)' }
+      );
+      return;
+    }
+    const inkAt = '82% 16%';
+    el.style.clipPath = 'circle(0% at ' + inkAt + ')';
+    await animate(
+      el,
+      [
+        { clipPath: 'circle(0% at ' + inkAt + ')' },
+        { clipPath: 'circle(150% at ' + inkAt + ')' },
+      ],
+      { duration: 820, easing: 'cubic-bezier(.83,0,.17,1)' }
+    );
+    return;
+  }
+
   const at = origin.x.toFixed(2) + '% ' + origin.y.toFixed(2) + '%';
 
   if (kind === 'tide') {
@@ -120,6 +152,35 @@ async function enter() {
 
   if (reduced()) {
     await animate(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'ease-in' });
+    reset();
+    return;
+  }
+
+  if (kind === 'ink') {
+    const theme = el.dataset.theme || document.documentElement.dataset.theme || 'star';
+    if (theme === 'sea') {
+      await animate(
+        el,
+        [{ transform: 'translateY(0)' }, { transform: 'translateY(100%)' }],
+        { duration: 720, easing: 'cubic-bezier(.83,0,.17,1)' }
+      );
+    } else if (theme === 'dawn') {
+      await animate(
+        el,
+        [{ transform: 'translateX(0)' }, { transform: 'translateX(100%)' }],
+        { duration: 680, easing: 'cubic-bezier(.83,0,.17,1)' }
+      );
+    } else {
+      const inkAt = '82% 16%';
+      await animate(
+        el,
+        [
+          { clipPath: 'circle(150% at ' + inkAt + ')' },
+          { clipPath: 'circle(0% at ' + inkAt + ')' },
+        ],
+        { duration: 760, easing: 'cubic-bezier(.83,0,.17,1)' }
+      );
+    }
     reset();
     return;
   }

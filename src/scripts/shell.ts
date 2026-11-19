@@ -267,36 +267,6 @@ function initActiveNav() {
   addCleanup(() => io.disconnect());
 }
 
-function initMobileMenu() {
-  const button = document.querySelector<HTMLButtonElement>('[data-menu-button]');
-  const menu = document.querySelector<HTMLElement>('[data-mobile-menu]');
-  if (!button || !menu) return;
-
-  const setOpen = (open: boolean) => {
-    menu.dataset.open = String(open);
-    button.setAttribute('aria-expanded', String(open));
-    document.body.classList.toggle('is-locked', open);
-    if (open) lenis?.stop(); else lenis?.start();
-  };
-  const closeButton = menu.querySelector<HTMLButtonElement>('[data-menu-close]');
-  const onButton = () => setOpen(menu.dataset.open !== 'true');
-  const onClose = () => setOpen(false);
-  const onLink = () => setOpen(false);
-  const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
-
-  button.addEventListener('click', onButton);
-  closeButton?.addEventListener('click', onClose);
-  menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', onLink));
-  document.addEventListener('keydown', onKey);
-  addCleanup(() => {
-    button.removeEventListener('click', onButton);
-    closeButton?.removeEventListener('click', onClose);
-    menu.querySelectorAll('a').forEach((a) => a.removeEventListener('click', onLink));
-    document.removeEventListener('keydown', onKey);
-    document.body.classList.remove('is-locked');
-  });
-}
-
 function initCopy() {
   document.querySelectorAll<HTMLElement>('[data-copy-email]').forEach((el) => {
     const onClick = async (event: Event) => {
@@ -467,6 +437,233 @@ function initRealmTabs() {
   });
 }
 
+type DriftState = {
+  el: HTMLElement;
+  baseX: number;
+  baseY: number;
+  w: number;
+  h: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  rot: number;
+  phase: number;
+  pressed: boolean;
+  dragging: boolean;
+  moved: boolean;
+  resetting: boolean;
+  startX: number;
+  startY: number;
+  originX: number;
+  originY: number;
+  lastX: number;
+  lastY: number;
+};
+
+function initDrift() {
+  const stage = document.querySelector<HTMLElement>('[data-drift-stage]');
+  if (!stage) return;
+  if (window.matchMedia('(max-width: 767px)').matches) return;
+  const stageEl: HTMLElement = stage;
+
+  const cards = Array.from(stageEl.querySelectorAll<HTMLElement>('[data-drift-card]'));
+  if (!cards.length) return;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let stageW = 0;
+  let stageH = 0;
+  let raf = 0;
+
+  const states: DriftState[] = cards.map((el, index) => ({
+    el,
+    baseX: 0,
+    baseY: 0,
+    w: 0,
+    h: 0,
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    rot: Number.parseFloat(el.style.getPropertyValue('--rot')) || 0,
+    phase: index * 1.37,
+    pressed: false,
+    dragging: false,
+    moved: false,
+    resetting: false,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0,
+    lastX: 0,
+    lastY: 0,
+  }));
+
+  function measure() {
+    stageW = stageEl.clientWidth;
+    stageH = stageEl.clientHeight;
+    for (const state of states) {
+      state.baseX = state.el.offsetLeft;
+      state.baseY = state.el.offsetTop;
+      state.w = state.el.offsetWidth;
+      state.h = state.el.offsetHeight;
+    }
+  }
+
+  function bounds(state: DriftState) {
+    const minX = -state.baseX;
+    const maxX = Math.max(minX, stageW - state.baseX - state.w);
+    const minY = -state.baseY;
+    const maxY = Math.max(minY, stageH - state.baseY - state.h);
+    return { minX, maxX, minY, maxY };
+  }
+
+  function render(now: number) {
+    const t = now / 1000;
+    for (const state of states) {
+      if (state.resetting) {
+        state.x += (0 - state.x) * 0.12;
+        state.y += (0 - state.y) * 0.12;
+        if (Math.abs(state.x) < 0.2 && Math.abs(state.y) < 0.2) {
+          state.x = 0;
+          state.y = 0;
+          state.resetting = false;
+        }
+      } else if (!state.dragging) {
+        state.x += state.vx;
+        state.y += state.vy;
+        state.vx *= 0.9;
+        state.vy *= 0.9;
+        if (Math.abs(state.vx) < 0.03) state.vx = 0;
+        if (Math.abs(state.vy) < 0.03) state.vy = 0;
+        const b = bounds(state);
+        if (state.x < b.minX) { state.x = b.minX; state.vx *= -0.35; }
+        if (state.x > b.maxX) { state.x = b.maxX; state.vx *= -0.35; }
+        if (state.y < b.minY) { state.y = b.minY; state.vy *= -0.35; }
+        if (state.y > b.maxY) { state.y = b.maxY; state.vy *= -0.35; }
+      }
+
+      const fx = Math.sin(t * 0.7 + state.phase) * 3;
+      const fy = Math.cos(t * 0.55 + state.phase) * 4;
+      state.el.style.transform =
+        'translate3d(' + (state.x + fx).toFixed(2) + 'px, ' + (state.y + fy).toFixed(2) + 'px, 0) rotate(' + state.rot + 'deg)';
+    }
+    raf = requestAnimationFrame(render);
+  }
+
+  measure();
+
+  if (reduce) {
+    for (const state of states) {
+      state.el.style.transform = 'rotate(' + state.rot + 'deg)';
+    }
+    return;
+  }
+
+  states.forEach((state) => {
+    const el = state.el;
+
+    const onDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      state.pressed = true;
+      state.dragging = false;
+      state.moved = false;
+      state.startX = event.clientX;
+      state.startY = event.clientY;
+      state.originX = state.x;
+      state.originY = state.y;
+      state.lastX = event.clientX;
+      state.lastY = event.clientY;
+    };
+
+    const onMove = (event: PointerEvent) => {
+      const rect = el.getBoundingClientRect();
+      el.style.setProperty('--mx', (((event.clientX - rect.left) / rect.width) * 100).toFixed(1) + '%');
+      el.style.setProperty('--my', (((event.clientY - rect.top) / rect.height) * 100).toFixed(1) + '%');
+
+      if (!state.pressed) return;
+      const dx = event.clientX - state.startX;
+      const dy = event.clientY - state.startY;
+
+      if (!state.dragging && Math.hypot(dx, dy) > 6) {
+        state.dragging = true;
+        el.classList.add('is-dragging');
+        el.setPointerCapture?.(event.pointerId);
+      }
+      if (!state.dragging) return;
+
+      state.x = state.originX + dx;
+      state.y = state.originY + dy;
+      const b = bounds(state);
+      state.x = Math.min(b.maxX, Math.max(b.minX, state.x));
+      state.y = Math.min(b.maxY, Math.max(b.minY, state.y));
+      state.vx = event.clientX - state.lastX;
+      state.vy = event.clientY - state.lastY;
+      state.lastX = event.clientX;
+      state.lastY = event.clientY;
+      event.preventDefault();
+    };
+
+    const onUp = (event: PointerEvent) => {
+      if (!state.pressed) return;
+      state.pressed = false;
+      if (!state.dragging) return;
+      state.dragging = false;
+      el.classList.remove('is-dragging');
+      el.releasePointerCapture?.(event.pointerId);
+      state.moved = true;
+      window.setTimeout(() => { state.moved = false; }, 30);
+    };
+
+    const onLeave = () => {
+      if (!state.dragging) state.pressed = false;
+    };
+
+    const onClick = (event: MouseEvent) => {
+      if (state.moved) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+    el.addEventListener('pointerleave', onLeave);
+    el.addEventListener('click', onClick, true);
+    addCleanup(() => {
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+      el.removeEventListener('pointerleave', onLeave);
+      el.removeEventListener('click', onClick, true);
+    });
+  });
+
+  const reset = stageEl.querySelector<HTMLButtonElement>('[data-drift-reset]');
+  const onReset = () => {
+    states.forEach((state) => {
+      state.resetting = true;
+      state.vx = 0;
+      state.vy = 0;
+    });
+  };
+  reset?.addEventListener('click', onReset);
+
+  const onResize = () => measure();
+  window.addEventListener('resize', onResize);
+  addCleanup(() => {
+    reset?.removeEventListener('click', onReset);
+    window.removeEventListener('resize', onResize);
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  });
+
+  raf = requestAnimationFrame(render);
+}
+
 function initPage() {
   initLenis();
   lenis?.resize();
@@ -476,10 +673,10 @@ function initPage() {
   initReveal();
   initTilt();
   initRails();
+  initDrift();
   initRealmTabs();
   initCounters();
   initActiveNav();
-  initMobileMenu();
   initCopy();
   initAnchors();
   initCursor();

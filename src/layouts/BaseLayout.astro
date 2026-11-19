@@ -2,15 +2,14 @@
 import '../styles/global.css';
 import BaseHead from '../components/BaseHead.astro';
 import WorldCanvas from '../components/WorldCanvas.astro';
-import Header from '../components/Header.astro';
-import MobileMenu from '../components/MobileMenu.astro';
 import AvatarDock from '../components/AvatarDock.astro';
-import MobileDock from '../components/MobileDock.astro';
+import ThemeOrb from '../components/ThemeOrb.astro';
 import ThemeTransition from '../components/ThemeTransition.astro';
 import PageTransition from '../components/PageTransition.astro';
 import Cursor from '../components/Cursor.astro';
 import Toast from '../components/Toast.astro';
 import ScrollProgress from '../components/ScrollProgress.astro';
+import { siteConfig } from '../../SiteConfig';
 import type { Lang } from '../types';
 
 interface Props {
@@ -25,7 +24,7 @@ const isHome = page === 'home';
 ---
 
 <!doctype html>
-<html lang={lang} data-theme="star" transition:animate="none">
+<html lang={lang} data-theme={siteConfig.theme.default} transition:animate="none">
   <head>
     <BaseHead lang={lang} title={title} description={description} />
   </head>
@@ -33,15 +32,12 @@ const isHome = page === 'home';
     <a class="skip-link" href="#main">Skip to content</a>
 
     <WorldCanvas />
-    <Header lang={lang} />
-    <MobileMenu lang={lang} />
     <AvatarDock lang={lang} home={isHome} />
+    <ThemeOrb lang={lang} path={Astro.url.pathname} />
 
     <main id="main" class="site-main" tabindex="-1">
       <slot />
     </main>
-
-    <MobileDock lang={lang} />
     <ThemeTransition />
     <PageTransition />
     <Cursor />

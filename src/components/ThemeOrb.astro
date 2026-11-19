@@ -1,14 +1,26 @@
 ---
 import { t } from '../i18n';
-import type { Lang, ThemeId } from '../types';
+import { withBase } from '../utils/paths';
+import { LANGS, type Lang, type ThemeId } from '../types';
 
-interface Props { lang: Lang }
-const { lang } = Astro.props;
+interface Props {
+  lang: Lang;
+  path: string;
+}
+
+const { lang, path } = Astro.props;
 const themes: Array<{ id: ThemeId; key: 'theme.star' | 'theme.sea' | 'theme.dawn' }> = [
   { id: 'star', key: 'theme.star' },
   { id: 'sea', key: 'theme.sea' },
   { id: 'dawn', key: 'theme.dawn' },
 ];
+const short: Record<Lang, string> = { zh: '中', en: 'EN', ja: '日' };
+const nextLang = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
+
+const langHref = (l: Lang) => {
+  const re = new RegExp('/' + lang + '(?=/|$)');
+  return re.test(path) ? path.replace(re, '/' + l) : withBase('/' + l + '/');
+};
 ---
 
 <div class="theme-orb" data-theme-orb data-open="false">
@@ -17,10 +29,24 @@ const themes: Array<{ id: ThemeId; key: 'theme.star' | 'theme.sea' | 'theme.dawn
     data-theme-trigger
     aria-expanded="false"
     aria-haspopup="true"
-    aria-label={t('aria.theme', lang)}
+    aria-label={t('orb.label', lang)}
+    title={t('orb.label', lang)}
   >
-    <span class="sr-only">{t('theme.switch', lang)}</span>
+    <span class="orb-lang" aria-hidden="true">{short[lang]}</span>
+    <span class="sr-only">{t('orb.label', lang)}</span>
   </button>
+
+  <span class="orb-hint" aria-hidden="true">{t('orb.hint', lang)}</span>
+
+  <a
+    class="orb-lang-jump"
+    data-lang-link={nextLang}
+    href={langHref(nextLang)}
+    data-transition="ink"
+    hidden
+    tabindex="-1"
+    aria-hidden="true"
+  >{nextLang}</a>
 
   <div class="orb-menu" role="group" aria-label={t('theme.switch', lang)}>
     <div class="orb-title">{t('theme.switch', lang)}</div>

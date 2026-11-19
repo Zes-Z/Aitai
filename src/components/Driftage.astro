@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import { siteConfig } from '../../SiteConfig';
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
-import { skills, timeline } from '../data/sample';
+import { skills } from '../data/sample';
 import type { Lang } from '../types';
 
 interface Props { lang: Lang }
@@ -11,6 +11,8 @@ const { lang } = Astro.props;
 const resume = withBase(siteConfig.identity.resume);
 const cover = withBase(siteConfig.hero.cover);
 const status = siteConfig.identity.status[lang];
+const location = siteConfig.identity.location[lang];
+const timezone = siteConfig.identity.timezone;
 const doubledSkills = [...skills, ...skills];
 
 const posts = await getCollection('post');
@@ -29,7 +31,7 @@ const stats = [
 
 <section id="drift" class="section driftage" data-section aria-labelledby="drift-title">
   <div class="section-inner">
-    <header class="section-head" data-reveal>
+    <header class="section-head drift-head" data-reveal>
       <div class="eyebrow">{t('drift.eyebrow', lang)}</div>
       <div>
         <h2 id="drift-title" class="section-title">{t('drift.title', lang)}</h2>
@@ -37,74 +39,67 @@ const stats = [
       </div>
     </header>
 
-    <div class="bento">
-      <article class="bento-card portrait-card" data-reveal>
-        <div class="portrait-art" style={{ backgroundImage: `url("${cover}")` }} aria-hidden="true"></div>
-        <div class="portrait-caption">
-          <div>
-            <div class="note">Aitai / 2026</div>
-            <div class="name">KIM</div>
-          </div>
-          <div class="note">{siteConfig.site.tagline[lang]}</div>
+    <div class="drift-stage" data-drift-stage>
+      <div class="drift-grid" aria-hidden="true"></div>
+
+      <div class="drift-stage-meta">
+        <span class="mono">{t('drift.drag', lang)} · DRIFT</span>
+        <button class="drift-reset" type="button" data-drift-reset>{t('drift.reset', lang)}</button>
+      </div>
+
+      <article class="drift-card drift-portrait" data-drift-card style="--x:5;--y:8;--rot:-3deg" data-cursor-label="KIM">
+        <div class="drift-portrait-art" style={{ backgroundImage: `url("${cover}")` }} aria-hidden="true"></div>
+        <div class="drift-portrait-cap">
+          <span class="mono">AITAI / 2026</span>
+          <strong>KIM</strong>
+          <span>{siteConfig.site.tagline[lang]}</span>
         </div>
       </article>
 
-      <article class="bento-card now-card" data-tilt data-reveal style="--d:60ms">
-        <div class="bento-label">{t('drift.nowTitle', lang)}</div>
-        <h3 class="bento-title">{status}</h3>
-        <p class="bento-body">{t('drift.nowBody', lang)}</p>
+      <article class="drift-card drift-now" data-drift-card style="--x:47;--y:10;--rot:2deg">
+        <div class="drift-kicker">{t('drift.nowTitle', lang)}</div>
+        <h3>{status}</h3>
+        <p>{t('drift.nowBody', lang)}</p>
+        <div class="drift-now-meta">
+          <span data-clock data-tz={timezone}>--:--</span>
+          <span>{location}</span>
+        </div>
       </article>
 
-      <article class="bento-card stats-card" data-reveal style="--d:120ms">
-        <div class="bento-label">Numbers</div>
-        <div class="stats-grid">
+      <article class="drift-card drift-numbers" data-drift-card style="--x:66;--y:53;--rot:-2deg">
+        <div class="drift-kicker">NUMBERS</div>
+        <div class="drift-stat-grid">
           {stats.map((stat) => (
             <div>
-              <div class="stat-value" data-count={stat.value}>{stat.value}</div>
-              <div class="stat-label">{stat.label[lang]}</div>
+              <b data-count={stat.value}>{stat.value}</b>
+              <span>{stat.label[lang]}</span>
             </div>
           ))}
         </div>
       </article>
 
-      <article class="bento-card quote-card" data-reveal style="--d:180ms">
-        <div class="bento-label">Quote</div>
-        <div class="quote-text">{t('drift.quote', lang)}</div>
-      </article>
+      <a
+        class="drift-card drift-cv"
+        data-drift-card
+        style="--x:38;--y:66;--rot:4deg"
+        href={resume}
+        download
+        data-cursor-label="PDF"
+      >
+        <span class="drift-kicker">CV</span>
+        <strong>{t('drift.cv', lang)}</strong>
+        <span class="drift-arrow" aria-hidden="true">↗</span>
+      </a>
 
-      <article class="bento-card cv-card" data-reveal style="--d:240ms">
-        <div>
-          <div class="bento-label">CV</div>
-          <div class="bento-title">{t('drift.cv', lang)}</div>
-        </div>
-        <a class="btn" href={resume} download>
-          PDF
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" /></svg>
-        </a>
-      </article>
+    </div>
 
-      <article class="bento-card timeline-card" data-reveal style="--d:300ms">
-        <div class="bento-label">{t('drift.timeline', lang)}</div>
-        <div class="timeline-list">
-          {timeline.map((item) => (
-            <div class="timeline-row">
-              <span class="timeline-year">{item.year}</span>
-              <span class="timeline-title">{item.title[lang]}</span>
-              <span class="timeline-place">{item.place[lang]}</span>
-            </div>
-          ))}
+    <div class="drift-skills" data-reveal>
+      <span class="drift-skills-label mono">SKILLS</span>
+      <div class="drift-skills-track">
+        <div class="skills-track">
+          {doubledSkills.map((skill) => <span>{skill}</span>)}
         </div>
-      </article>
-
-      <article class="bento-card skills-card" data-reveal style="--d:360ms">
-        <div class="bento-label">Skills</div>
-        <div class="bento-title">{t('drift.skills', lang)}</div>
-        <div class="skills-wrap">
-          <div class="skills-track">
-            {doubledSkills.map((skill) => <span>{skill}</span>)}
-          </div>
-        </div>
-      </article>
+      </div>
     </div>
   </div>
 </section>

@@ -1,3 +1,4 @@
+import { siteConfig } from '../../SiteConfig';
 import type { ThemeId } from '../types';
 import { themeBg, themeColor, isTheme } from '../theme/palettes';
 
@@ -7,6 +8,7 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let timers: number[] = [];
 let switching = false;
 let docBound = false;
+let pressTimer = 0;
 
 function applyTheme(theme: ThemeId) {
   const root = document.documentElement;
@@ -37,9 +39,19 @@ function openOrb() {
   orb.querySelector<HTMLElement>('[data-theme-trigger]')?.setAttribute('aria-expanded', 'true');
 }
 
+function cycleLanguage() {
+  const order = ['zh', 'en', 'ja'];
+  const current = document.documentElement.lang || 'zh';
+  const next = order[(order.indexOf(current) + 1) % order.length];
+  const link = document.querySelector<HTMLAnchorElement>('[data-lang-link="' + next + '"]');
+  if (!link) return;
+  closeOrb();
+  link.click();
+}
+
 export function getTheme(): ThemeId {
   const value = document.documentElement.dataset.theme;
-  return isTheme(value) ? value : 'star';
+  return isTheme(value) ? value : siteConfig.theme.default;
 }
 
 export function switchTheme(next: ThemeId, origin?: HTMLElement) {
@@ -100,12 +112,45 @@ export function initTheme() {
 
   if (!orb.dataset.bound) {
     orb.dataset.bound = 'true';
+    let longPressed = false;
+
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      longPressed = false;
+      window.clearTimeout(pressTimer);
+      pressTimer = window.setTimeout(() => {
+        longPressed = true;
+        openOrb();
+      }, 460);
+    };
+    const onUp = () => {
+      window.clearTimeout(pressTimer);
+    };
+
+    trigger?.addEventListener('pointerdown', onDown);
+    trigger?.addEventListener('pointerup', onUp);
+    trigger?.addEventListener('pointercancel', onUp);
+    trigger?.addEventListener('pointerleave', onUp);
+    trigger?.addEventListener('contextmenu', (event) => event.preventDefault());
     trigger?.addEventListener('click', (event) => {
       event.stopPropagation();
-      const isOpen = orb.dataset.open === 'true';
-      if (isOpen) closeOrb();
-      else openOrb();
+      if (longPressed) {
+        longPressed = false;
+        return;
+      }
+      if (orb.dataset.open === 'true') {
+        closeOrb();
+        return;
+      }
+      cycleLanguage();
     });
+    trigger?.addEventListener('keydown', (event) => {
+      if (event.key === ' ' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        openOrb();
+      }
+    });
+
     options.forEach((el) => {
       el.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -126,6 +171,7 @@ export function initTheme() {
       if (event.key === 'Escape') closeOrb();
     });
     document.addEventListener('astro:before-swap', (event) => {
+      window.clearTimeout(pressTimer);
       const nextDocument = (event as unknown as { newDocument?: Document }).newDocument;
       if (!nextDocument?.documentElement) return;
       const theme = getTheme();

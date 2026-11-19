@@ -10,7 +10,7 @@ export const siteConfig = {
     nameJa: 'キム',
     avatar: '/avatar.svg',
     resume: '/kim cv.pdf',
-    email: 'hello@example.com',
+    email: 'zes234@proton.me',
     location: { zh: '东京', en: 'Tokyo', ja: '東京' } satisfies L10n,
     timezone: 'Asia/Tokyo',
     status: {
@@ -20,7 +20,7 @@ export const siteConfig = {
     } satisfies L10n,
     socials: [
       { label: 'GitHub', href: 'https://github.com/', icon: 'github' },
-      { label: 'Email', href: 'mailto:hello@example.com', icon: 'mail' },
+      { label: 'Email', href: 'mailto:zes234@proton.me', icon: 'mail' },
       { label: '小红书', href: 'https://www.xiaohongshu.com/', icon: 'xhs' },
     ] satisfies SocialLink[],
   },
@@ -84,7 +84,7 @@ export const siteConfig = {
 
   theme: {
     order: ['star', 'sea', 'dawn'] as const satisfies readonly ThemeId[],
-    default: 'star' as ThemeId,
+    default: 'dawn' as ThemeId,
     autoByTime: false,
     intensity: 1,
     world: 'canvas' as 'canvas' | 'webgl',

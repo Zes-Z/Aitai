@@ -1,15 +1,13 @@
 import type { ThemeId } from '../types';
 
 type Star = { x: number; y: number; r: number; a: number; p: number; s: number };
-type Bubble = { x: number; y: number; r: number; s: number; p: number };
-type Jelly = { x: number; y: number; r: number; p: number; s: number; hue: number };
+type Cloud = { x: number; y: number; w: number; h: number; a: number; s: number };
 type Mote = { x: number; y: number; r: number; p: number; s: number };
 type Bird = { x: number; y: number; s: number; p: number; flap: number };
-type Ray = { x: number; w: number; a: number; p: number };
 
 const palette = {
   star: { star: '#e9ecff', glow: '#8fb3ff', gold: '#ffd9a0' },
-  sea: { star: '#6fe7de', glow: '#2bc4c9', gold: '#dcebff' },
+  sea: { star: '#dcebff', glow: '#6fe7de', gold: '#fff6e6' },
   dawn: { star: '#4f7fa8', glow: '#e98b6a', gold: '#f2c879' },
 };
 
@@ -45,11 +43,9 @@ export function initWorld() {
   let targetY = 0;
 
   let stars: Star[] = [];
-  let bubbles: Bubble[] = [];
-  let jellies: Jelly[] = [];
+  let clouds: Cloud[] = [];
   let motes: Mote[] = [];
   let birds: Bird[] = [];
-  let rays: Ray[] = [];
   let shooting = { x: 0, y: 0, vx: 0, vy: 0, life: 0, wait: 2 };
 
   function build() {
@@ -62,20 +58,13 @@ export function initWorld() {
       p: rand(0, Math.PI * 2),
       s: rand(0.15, 1.1),
     }));
-    bubbles = Array.from({ length: Math.round(80 * count) }, () => ({
+    clouds = Array.from({ length: Math.round(5 * count) }, () => ({
       x: Math.random(),
-      y: Math.random(),
-      r: rand(0.8, 4),
-      s: rand(0.008, 0.03),
-      p: rand(0, Math.PI * 2),
-    }));
-    jellies = Array.from({ length: Math.round(16 * count) }, () => ({
-      x: Math.random(),
-      y: rand(0.1, 0.9),
-      r: rand(14, 46),
-      p: rand(0, Math.PI * 2),
-      s: rand(0.2, 0.6),
-      hue: rand(0, 1),
+      y: rand(0.1, 0.52),
+      w: rand(0.1, 0.32) * w,
+      h: rand(18, 52),
+      a: rand(0.025, 0.07),
+      s: rand(0.15, 0.7),
     }));
     motes = Array.from({ length: Math.round(90 * count) }, () => ({
       x: Math.random(),
@@ -90,12 +79,6 @@ export function initWorld() {
       s: rand(5, 12),
       p: rand(0, Math.PI * 2),
       flap: rand(0, Math.PI * 2),
-    }));
-    rays = Array.from({ length: 6 }, () => ({
-      x: Math.random(),
-      w: rand(0.04, 0.12),
-      a: rand(0.02, 0.06),
-      p: rand(0, Math.PI * 2),
     }));
   }
 
@@ -127,10 +110,16 @@ export function initWorld() {
       ctx.fill();
     }
 
-    // shooting star
     shooting.wait -= 0.016;
     if (shooting.life <= 0 && shooting.wait <= 0) {
-      shooting = { x: rand(0.1, 0.7) * w, y: rand(0.05, 0.4) * h, vx: rand(5, 9), vy: rand(1.4, 2.6), life: 1, wait: rand(5, 10) };
+      shooting = {
+        x: rand(0.1, 0.7) * w,
+        y: rand(0.05, 0.4) * h,
+        vx: rand(5, 9),
+        vy: rand(1.4, 2.6),
+        life: 1,
+        wait: rand(5, 10),
+      };
     }
     if (shooting.life > 0) {
       shooting.x += shooting.vx;
@@ -152,71 +141,147 @@ export function initWorld() {
 
   function drawSea(t: number) {
     const c = palette.sea;
+    const horizon = h * 0.58;
+    const mx = w * 0.72 + pointerX * 10;
+    const my = h * 0.2 + pointerY * 8;
+    const moonR = Math.min(w, h) * 0.058;
+
     ctx.save();
+
+    // sea body
+    const sea = ctx.createLinearGradient(0, horizon, 0, h);
+    sea.addColorStop(0, 'rgba(6, 32, 42, 0.3)');
+    sea.addColorStop(0.35, 'rgba(3, 16, 24, 0.55)');
+    sea.addColorStop(1, 'rgba(1, 6, 10, 0.82)');
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = sea;
+    ctx.fillRect(0, horizon, w, h - horizon);
+
+    // horizon glow
+    const horizonGlow = ctx.createLinearGradient(0, horizon - 34, 0, horizon + 34);
+    horizonGlow.addColorStop(0, 'rgba(220, 235, 255, 0)');
+    horizonGlow.addColorStop(0.5, 'rgba(220, 235, 255, 0.2)');
+    horizonGlow.addColorStop(1, 'rgba(111, 231, 222, 0)');
+    ctx.fillStyle = horizonGlow;
+    ctx.fillRect(0, horizon - 34, w, 68);
+
+    // slow clouds across the sky
+    ctx.globalCompositeOperation = 'source-over';
+    for (const cloud of clouds) {
+      const x = (((cloud.x + t * cloud.s * 0.004) % 1.2) - 0.1) * w;
+      const y = cloud.y * h;
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, cloud.w);
+      grad.addColorStop(0, 'rgba(220, 235, 255, ' + cloud.a * fade + ')');
+      grad.addColorStop(1, 'rgba(220, 235, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(x, y, cloud.w, cloud.h, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.globalCompositeOperation = 'lighter';
 
-    // caustic rays
-    for (const ray of rays) {
-      const x = ray.x * w + Math.sin(t * 0.1 + ray.p) * 40;
-      const grad = ctx.createLinearGradient(x, 0, x + w * 0.18, h);
-      grad.addColorStop(0, 'rgba(111,231,222,' + ray.a + ')');
-      grad.addColorStop(1, 'rgba(111,231,222,0)');
-      ctx.fillStyle = grad;
-      ctx.globalAlpha = fade;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x + ray.w * w, 0);
-      ctx.lineTo(x + ray.w * w + 120, h);
-      ctx.lineTo(x + 120, h);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // jellyfish
-    for (const j of jellies) {
-      const x = j.x * w + Math.sin(t * j.s + j.p) * 26 + pointerX * 18;
-      const y = j.y * h + Math.cos(t * j.s * 0.8 + j.p) * 18 + pointerY * 12;
-      const r = j.r;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.globalAlpha = (0.28 + j.hue * 0.28) * fade;
+    // stars reflected in the upper sky
+    for (const s of stars) {
+      if (s.y > 0.54) continue;
+      const x = s.x * w + pointerX * 8;
+      const y = s.y * h + pointerY * 6;
+      const tw = 0.5 + 0.5 * Math.sin(t * s.s + s.p);
+      ctx.globalAlpha = s.a * tw * 0.7 * fade;
       ctx.fillStyle = c.star;
-      ctx.shadowColor = c.glow;
-      ctx.shadowBlur = 22;
       ctx.beginPath();
-      ctx.moveTo(-r, 0);
-      ctx.bezierCurveTo(-r, -r * 0.95, r, -r * 0.95, r, 0);
-      ctx.bezierCurveTo(r * 0.6, r * 0.22, -r * 0.6, r * 0.22, -r, 0);
+      ctx.arc(x, y, s.r * 0.75, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = c.star;
-      ctx.globalAlpha = 0.16 * fade;
-      for (let k = -2; k <= 2; k++) {
-        ctx.beginPath();
-        ctx.moveTo(k * r * 0.28, r * 0.05);
-        ctx.bezierCurveTo(
-          k * r * 0.2 + Math.sin(t + j.p + k) * 6, r * 0.7,
-          k * r * 0.5 + Math.cos(t * 0.8 + j.p + k) * 8, r * 1.2,
-          k * r * 0.3 + Math.sin(t * 0.6 + k) * 10, r * 1.8
-        );
-        ctx.stroke();
-      }
-      ctx.restore();
     }
 
-    // bubbles
-    for (const b of bubbles) {
-      b.y -= b.s * 0.01;
-      if (b.y < -0.05) b.y = 1.05;
-      const x = b.x * w + Math.sin(t * 0.6 + b.p) * 12;
-      const y = b.y * h;
-      ctx.globalAlpha = 0.28 * fade;
-      ctx.strokeStyle = c.gold;
-      ctx.lineWidth = 0.8;
+    // moon glow
+    const glow = ctx.createRadialGradient(mx, my, 0, mx, my, Math.min(w, h) * 0.46);
+    glow.addColorStop(0, 'rgba(220, 235, 255, 0.3)');
+    glow.addColorStop(0.24, 'rgba(111, 231, 222, 0.12)');
+    glow.addColorStop(1, 'rgba(111, 231, 222, 0)');
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+
+    // the moon
+    const disc = ctx.createRadialGradient(
+      mx - moonR * 0.35, my - moonR * 0.35, moonR * 0.08,
+      mx, my, moonR
+    );
+    disc.addColorStop(0, '#fffaf0');
+    disc.addColorStop(0.7, '#e9f2f6');
+    disc.addColorStop(1, '#cfe3ea');
+    ctx.globalAlpha = 0.96 * fade;
+    ctx.fillStyle = disc;
+    ctx.beginPath();
+    ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.16 * fade;
+    ctx.fillStyle = '#9fb8c4';
+    ctx.beginPath();
+    ctx.arc(mx - moonR * 0.3, my + moonR * 0.22, moonR * 0.14, 0, Math.PI * 2);
+    ctx.arc(mx + moonR * 0.28, my - moonR * 0.3, moonR * 0.09, 0, Math.PI * 2);
+    ctx.fill();
+
+    // moon path on the water
+    const pathW = Math.max(44, w * 0.15);
+    for (let i = 0; i < 34; i++) {
+      const p = i / 34;
+      const y = horizon + p * (h - horizon);
+      const spread = pathW * (0.25 + p * 1.55);
+      const a = (1 - p) * 0.22 * (0.55 + 0.45 * Math.sin(t * 1.3 + i * 0.9));
+      ctx.globalAlpha = a * fade;
+      ctx.fillStyle = c.gold;
       ctx.beginPath();
-      ctx.arc(x, y, b.r, 0, Math.PI * 2);
+      ctx.ellipse(
+        mx + Math.sin(i * 2.3 + t * 0.7) * spread * 0.12,
+        y,
+        spread,
+        1.1 + p * 2.6,
+        0, 0, Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // long, slow tide lines
+    for (let i = 0; i < 24; i++) {
+      const p = i / 24;
+      const y = horizon + p * (h - horizon);
+      const amp = 1.4 + p * 7;
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += 14) {
+        const wave = y + Math.sin((x / w) * Math.PI * 5 + t * (0.35 + p * 0.5) + i * 0.7) * amp;
+        if (x === 0) ctx.moveTo(x, wave);
+        else ctx.lineTo(x, wave);
+      }
+      ctx.globalAlpha = (0.065 + p * 0.13) * fade;
+      ctx.strokeStyle = i % 4 === 0 ? c.gold : c.star;
+      ctx.lineWidth = i % 4 === 0 ? 1 : 0.6;
       ctx.stroke();
     }
+
+    // a small boat on the moon path
+    ctx.globalCompositeOperation = 'source-over';
+    const bx = mx - 26;
+    const by = horizon + 4;
+    ctx.globalAlpha = 0.42 * fade;
+    ctx.fillStyle = '#02070b';
+    ctx.beginPath();
+    ctx.moveTo(bx - 16, by);
+    ctx.lineTo(bx + 16, by);
+    ctx.lineTo(bx + 9, by + 5);
+    ctx.lineTo(bx - 11, by + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(bx - 1, by - 14, 2, 14);
+    ctx.beginPath();
+    ctx.moveTo(bx + 1, by - 14);
+    ctx.lineTo(bx + 11, by - 2);
+    ctx.lineTo(bx + 1, by - 2);
+    ctx.closePath();
+    ctx.fill();
+
     ctx.restore();
   }
 
@@ -224,7 +289,6 @@ export function initWorld() {
     const c = palette.dawn;
     ctx.save();
 
-    // sun glow
     const sx = w * 0.72;
     const sy = h * 0.22;
     const sun = ctx.createRadialGradient(sx, sy, 0, sx, sy, Math.min(w, h) * 0.55);
@@ -235,7 +299,6 @@ export function initWorld() {
     ctx.fillStyle = sun;
     ctx.fillRect(0, 0, w, h);
 
-    // mist bands
     for (let i = 0; i < 3; i++) {
       const y = h * (0.42 + i * 0.12) + Math.sin(t * 0.08 + i) * 10;
       const grad = ctx.createLinearGradient(0, y, w, y + 30);
@@ -247,7 +310,6 @@ export function initWorld() {
       ctx.fillRect(0, y, w, 40);
     }
 
-    // motes
     for (const m of motes) {
       const x = m.x * w + Math.sin(t * m.s + m.p) * 18;
       const y = m.y * h + Math.cos(t * m.s * 0.7 + m.p) * 12;
@@ -258,11 +320,10 @@ export function initWorld() {
       ctx.fill();
     }
 
-    // birds
     ctx.strokeStyle = c.star;
     ctx.lineWidth = 1;
     for (const b of birds) {
-      const x = (b.x * w + t * 7) % (w + 100) - 50;
+      const x = ((b.x * w + t * 7) % (w + 100)) - 50;
       const y = b.y * h + Math.sin(t * 0.3 + b.p) * 8;
       const s = b.s;
       ctx.globalAlpha = 0.3 * fade;

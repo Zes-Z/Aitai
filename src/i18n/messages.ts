@@ -29,8 +29,10 @@ export const messages = {
   'hero.available': { zh: '可接新项目', en: 'Open to work', ja: '新しい仕事、受付中' },
 
   'drift.eyebrow': { zh: '02 / 漂流物', en: '02 / Driftage', ja: '02 / 漂流物' },
-  'drift.title': { zh: '关于我，以及一些正在发生的事。', en: 'About me, and a few things in motion.', ja: 'わたしのこと、いま動いていること。' },
-  'drift.intro': { zh: '把日常拆成一些漂在海上的物件：一张照片、一张便签、一枚数字、一段简历、一句引用。', en: 'A life split into things drifting at sea: a photo, a note, a number, a CV, a quote.', ja: '日常を、海に漂うものに分けてみる。写真、メモ、数字、履歴書、ひとつの言葉。' },
+  'drift.title': { zh: '漂在海上的东西。', en: 'Things adrift.', ja: '海に漂うもの。' },
+  'drift.intro': { zh: '拖动它们，或者只是看看。', en: 'Drag them, or just watch.', ja: 'ドラッグしても、ただ眺めても。' },
+  'drift.drag': { zh: '拖动', en: 'Drag', ja: 'ドラッグ' },
+  'drift.reset': { zh: '复位', en: 'Reset', ja: 'リセット' },
   'drift.nowTitle': { zh: '现在', en: 'Now', ja: 'いま' },
   'drift.nowBody': { zh: '在做 Aitai；在听坂本龍一；在学把话说短。', en: 'Building Aitai; listening to Ryuichi Sakamoto; learning to say less.', ja: 'Aitai をつくっている。坂本龍一を聴いている。短く話すことを学んでいる。' },
   'drift.cv': { zh: '看简历', en: 'Read my CV', ja: '履歴書を読む' },
@@ -68,6 +70,8 @@ export const messages = {
   'theme.dawn': { zh: '朝凪', en: 'Morning Calm', ja: '朝凪' },
   'theme.switch': { zh: '切换世界', en: 'Switch world', ja: '世界を変える' },
   'lang.switch': { zh: '语言', en: 'Language', ja: '言語' },
+  'orb.label': { zh: '单击切换语言，长按选择主题', en: 'Tap to switch language. Hold to choose a world.', ja: 'タップで言語、長押しで世界を切り替え' },
+  'orb.hint': { zh: '单击 / 长按', en: 'Tap / Hold', ja: 'タップ / 長押し' },
 
   'aria.theme': { zh: '切换主题世界', en: 'Switch theme world', ja: 'テーマの世界を切り替える' },
   'aria.menu': { zh: '打开菜单', en: 'Open menu', ja: 'メニューを開く' },
