@@ -12,7 +12,7 @@ export const themeColor: Record<ThemeId, string> = {
   dawn: '#f7f0e8',
 };
 
-export const themeOrder: ThemeId[] = ['star', 'sea', 'dawn'];
+export const themeOrder: ThemeId[] = ['dawn', 'sea', 'star'];
 
 export function isTheme(value: string | null | undefined): value is ThemeId {
   return value === 'star' || value === 'sea' || value === 'dawn';

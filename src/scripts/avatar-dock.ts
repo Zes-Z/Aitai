@@ -1,151 +1,160 @@
-import { siteConfig } from '../../SiteConfig';
-
-const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const smooth = (t: number) => t * t * (3 - 2 * t);
+import type Lenis from 'lenis';
 
 let cleanup: (() => void) | null = null;
 
 export function initAvatarDock() {
+  const dock = document.querySelector<HTMLElement>('[data-avatar-dock]');
+  const trigger = dock?.querySelector<HTMLButtonElement>('[data-avatar-fixed]');
+  const menu = dock?.querySelector<HTMLElement>('[data-avatar-actions]');
+  if (!dock || !trigger || !menu) return;
+  if (trigger.dataset.bound === 'true') return;
   cleanup?.();
   cleanup = null;
 
-  const fixedEl = document.querySelector<HTMLAnchorElement>('[data-avatar-fixed]');
-  if (!fixedEl) return;
-  const fixed: HTMLAnchorElement = fixedEl;
+  const controller = new AbortController();
+  const options = { signal: controller.signal };
+  const links = Array.from(menu.querySelectorAll<HTMLAnchorElement>('[data-avatar-action]'));
+  let timer = 0;
+  let pointer: number | null = null;
+  let startX = 0;
+  let startY = 0;
+  let suppressClick = false;
 
-  const hero = document.querySelector<HTMLElement>('[data-avatar-hero]');
-  const headerSlot = document.querySelector<HTMLElement>('[data-avatar-header]');
-  const header = document.querySelector<HTMLElement>('[data-header]');
-  const root = document.documentElement;
-
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isHome = document.body.dataset.page === 'home';
-  const homeHref = fixed.dataset.home || '/';
-  const labelAbout = fixed.dataset.labelAbout || 'About';
-  const labelTop = fixed.dataset.labelTop || 'Back to top';
-
-  let base = 120;
-  let heroLeft = 0;
-  let heroTop = 0;
-  let targetX = 24;
-  let targetY = 12;
-  let targetSize = 40;
-  let lastY = window.scrollY;
-  let raf = 0;
-  let docked = false;
-  let sleepTimer = 0;
-
-  const setVar = (name: string, value: string) => root.style.setProperty(name, value);
-
-  function measure() {
-    const heroRect = hero?.getBoundingClientRect();
-    const slotRect = headerSlot?.getBoundingClientRect();
-    if (heroRect) {
-      base = Math.max(48, Math.round(heroRect.width));
-      heroLeft = heroRect.left;
-      heroTop = heroRect.top + window.scrollY;
-    } else {
-      base = slotRect?.width || 40;
-      heroLeft = slotRect?.left || 24;
-      heroTop = slotRect?.top || 16;
-    }
-    if (slotRect) {
-      targetX = slotRect.left;
-      targetY = slotRect.top;
-      targetSize = slotRect.width || 40;
-    } else {
-      targetX = 24;
-      targetY = 16;
-      targetSize = 40;
-    }
-    fixed.style.width = base + 'px';
-    fixed.style.height = base + 'px';
-    if (reduce) fixed.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+  function setOpen(open: boolean, focusFirst = false) {
+    dock!.dataset.open = String(open);
+    trigger!.setAttribute('aria-expanded', String(open));
+    menu!.setAttribute('aria-hidden', String(!open));
+    menu!.inert = !open;
+    if (open && focusFirst) links[0]?.focus();
   }
 
-  function update() {
-    const y = window.scrollY;
-    const start = siteConfig.nav.avatarDock.start;
-    const end = siteConfig.nav.avatarDock.end;
-    const arc = siteConfig.nav.avatarDock.arc;
+  function endPress() {
+    window.clearTimeout(timer);
+    delete trigger!.dataset.pressing;
+    if (pointer !== null && trigger!.hasPointerCapture(pointer)) trigger!.releasePointerCapture(pointer);
+    pointer = null;
+  }
 
-    let p = hero ? smooth(clamp((y - start) / (end - start))) : 1;
-    if (reduce && hero) p = y >= end ? 1 : 0;
+  function cancelPress() {
+    suppressClick = true;
+    endPress();
+  }
 
-    const heroY = heroTop - y;
-    const x = hero ? lerp(heroLeft, targetX, p) : targetX;
-    const yy = hero ? lerp(heroY, targetY, p) - Math.sin(Math.PI * p) * arc : targetY;
-    const scale = hero ? lerp(1, targetSize / base, p) : 1;
+  function scrollToTop() {
+    setOpen(false);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const lenis = (window as unknown as { __lenis?: Lenis }).__lenis;
+    if (lenis) lenis.scrollTo(0, { duration: .9, immediate: reduce });
+    else window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  }
 
-    fixed.style.transform = `translate3d(${x.toFixed(2)}px, ${yy.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
-    setVar('--glass', String(clamp((p - 0.08) / 0.45)));
-    setVar('--nav-opacity', String(clamp((p - 0.45) / 0.4)));
-    setVar('--wordmark-x', (p * 44).toFixed(1) + 'px');
-    setVar('--ring-w', (2 / Math.max(scale, 0.1)).toFixed(2) + 'px');
-    setVar('--ring-opacity', String(0.85 - p * 0.45));
-
-    const wasDocked = docked;
-    if (p >= 0.95) docked = true;
-    else if (p <= 0.9) docked = false;
-    if (wasDocked !== docked) root.dataset.docked = String(docked);
-
-    if (docked) {
-      fixed.href = isHome ? '#tide' : homeHref;
-      fixed.setAttribute('aria-label', labelTop);
-      fixed.dataset.state = 'docked';
-    } else {
-      fixed.href = '#drift';
-      fixed.setAttribute('aria-label', labelAbout);
-      fixed.dataset.state = 'hero';
+  trigger.addEventListener('pointerdown', (event) => {
+    if (!event.isPrimary || event.button !== 0) return;
+    if (document.documentElement.classList.contains('is-transitioning')) {
+      suppressClick = true;
+      return;
     }
-
-    if (header) {
-      if (docked && y > lastY + 6 && y > 240) {
-        header.dataset.sleep = 'true';
-        window.clearTimeout(sleepTimer);
-        sleepTimer = window.setTimeout(() => {
-          if (docked && header.dataset.sleep === 'true') header.dataset.sleep = 'false';
-        }, 600);
-      } else if (y < lastY - 14 || !docked) {
-        header.dataset.sleep = 'false';
-        window.clearTimeout(sleepTimer);
+    endPress();
+    suppressClick = false;
+    pointer = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    trigger.dataset.pressing = 'true';
+    trigger.setPointerCapture(event.pointerId);
+    timer = window.setTimeout(() => {
+      suppressClick = true;
+      delete trigger.dataset.pressing;
+      scrollToTop();
+    }, 460);
+  }, options);
+  trigger.addEventListener('pointermove', (event) => {
+    if (pointer === event.pointerId && Math.hypot(event.clientX - startX, event.clientY - startY) > 12) cancelPress();
+  }, options);
+  trigger.addEventListener('pointerup', endPress, options);
+  trigger.addEventListener('pointercancel', cancelPress, options);
+  trigger.addEventListener('lostpointercapture', endPress, options);
+  trigger.addEventListener('contextmenu', (event) => event.preventDefault(), options);
+  trigger.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (suppressClick || document.documentElement.classList.contains('is-transitioning')) {
+      suppressClick = false;
+      return;
+    }
+    setOpen(dock.dataset.open !== 'true');
+  }, options);
+  trigger.addEventListener('keydown', (event) => {
+    if (event.key === ' ' || event.key === 'Home') {
+      event.preventDefault();
+      if (!event.repeat) {
+        cancelPress();
+        scrollToTop();
       }
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      cancelPress();
+      setOpen(true, true);
+    } else if (event.key === 'Enter') {
+      suppressClick = false;
     }
-    lastY = y;
-  }
+  }, options);
+  trigger.addEventListener('keyup', (event) => {
+    if (event.key === ' ') event.preventDefault();
+  }, options);
+  trigger.addEventListener('blur', () => {
+    if (pointer !== null) cancelPress();
+  }, options);
 
-  function schedule() {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      update();
-    });
-  }
+  menu.addEventListener('keydown', (event) => {
+    const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      links[(index + 1) % links.length]?.focus();
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+      event.preventDefault();
+      links[(index - 1 + links.length) % links.length]?.focus();
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      links[event.key === 'Home' ? 0 : links.length - 1]?.focus();
+    }
+  }, options);
+  links.forEach((link) => link.addEventListener('click', () => { setOpen(false); }, options));
 
-  function onResize() {
-    measure();
-    update();
-  }
+  document.addEventListener('pointerdown', (event) => {
+    if (!dock.contains(event.target as Node)) setOpen(false);
+  }, options);
+  document.addEventListener('focusin', (event) => {
+    if (!dock.contains(event.target as Node)) setOpen(false);
+  }, options);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && dock.dataset.open === 'true') {
+      event.preventDefault();
+      setOpen(false);
+      trigger.focus();
+    }
+  }, options);
+  document.addEventListener('astro:before-preparation', () => {
+    cancelPress();
+    setOpen(false);
+  }, options);
+  document.addEventListener('astro:before-swap', () => { cleanup?.(); }, options);
+  window.addEventListener('blur', () => {
+    cancelPress();
+    setOpen(false);
+  }, options);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cancelPress();
+      setOpen(false);
+    }
+  }, options);
 
-  measure();
-  update();
-  root.classList.add('avatar-ready');
-  fixed.classList.add('is-ready');
-  if (!isHome && !hero) {
-    root.dataset.docked = 'true';
-    docked = true;
-  }
-
-  window.addEventListener('scroll', schedule, { passive: true });
-  window.addEventListener('resize', onResize, { passive: true });
-  document.fonts?.ready.then(onResize);
-
+  setOpen(false);
+  trigger.dataset.bound = 'true';
   cleanup = () => {
-    window.removeEventListener('scroll', schedule);
-    window.removeEventListener('resize', onResize);
-    window.clearTimeout(sleepTimer);
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
+    cancelPress();
+    setOpen(false);
+    delete trigger.dataset.bound;
+    controller.abort();
   };
 }

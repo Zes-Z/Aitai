@@ -1,4 +1,4 @@
-import type { L10n, Lang, SocialLink, ThemeId } from './src/types';
+import type { AvatarLink, L10n, Lang, SocialLink, ThemeId } from './src/types';
 
 /**
  * AITAI · 全站自定义中心
@@ -72,18 +72,21 @@ export const siteConfig = {
       { id: 'realms', label: { zh: '三域', en: 'Realms', ja: '三つ領域' } satisfies L10n },
       { id: 'harbor', label: { zh: '归港', en: 'Harbor', ja: '帰港' } satisfies L10n },
     ],
-    /** 头像下潜：首屏大图 → 左上角 Header 锚点 */
+    /** 头像菜单：GitHub / 邮箱 / 自定义入口 / CV */
     avatarDock: {
-      start: 80,
-      end: 360,
-      hysteresis: 0.05,
-      arc: 16,
-      clickWhenDocked: 'top' as 'top' | 'menu',
+      customLinks: [
+        {
+          label: { zh: '阿里云盘', en: 'Cloud Drive', ja: 'クラウド' },
+          icon: 'cloud',
+          iconSrc: '', // 填入 public/ 图标路径或 HTTPS 图片地址即可替换图标
+          href: '', // 自定义链接待定；留空时显示不可点击的占位图标
+        },
+      ] satisfies AvatarLink[],
     },
   },
 
   theme: {
-    order: ['star', 'sea', 'dawn'] as const satisfies readonly ThemeId[],
+    order: ['dawn', 'sea', 'star'] as const satisfies readonly ThemeId[],
     default: 'dawn' as ThemeId,
     autoByTime: false,
     intensity: 1,

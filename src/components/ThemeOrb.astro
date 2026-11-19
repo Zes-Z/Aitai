@@ -1,7 +1,9 @@
 ---
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
-import { LANGS, type Lang, type ThemeId } from '../types';
+import { LANGS, type Lang } from '../types';
+import OrbArt from './OrbArt.astro';
+import '../styles/theme-orb.css';
 
 interface Props {
   lang: Lang;
@@ -9,12 +11,6 @@ interface Props {
 }
 
 const { lang, path } = Astro.props;
-const themes: Array<{ id: ThemeId; key: 'theme.star' | 'theme.sea' | 'theme.dawn' }> = [
-  { id: 'star', key: 'theme.star' },
-  { id: 'sea', key: 'theme.sea' },
-  { id: 'dawn', key: 'theme.dawn' },
-];
-const short: Record<Lang, string> = { zh: '中', en: 'EN', ja: '日' };
 const nextLang = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
 
 const langHref = (l: Lang) => {
@@ -23,45 +19,28 @@ const langHref = (l: Lang) => {
 };
 ---
 
-<div class="theme-orb" data-theme-orb data-open="false">
+<div class="theme-orb" data-theme-orb>
   <button
+    type="button"
     class="orb-button"
     data-theme-trigger
-    aria-expanded="false"
-    aria-haspopup="true"
+    data-language-href={langHref(nextLang)}
+    data-transition="ink"
+    data-label={t('orb.label', lang)}
+    data-theme-name-star={t('theme.star', lang)}
+    data-theme-name-sea={t('theme.sea', lang)}
+    data-theme-name-dawn={t('theme.dawn', lang)}
     aria-label={t('orb.label', lang)}
-    title={t('orb.label', lang)}
+    aria-keyshortcuts="Enter Space ArrowDown"
   >
-    <span class="orb-lang" aria-hidden="true">{short[lang]}</span>
-    <span class="sr-only">{t('orb.label', lang)}</span>
+    <OrbArt />
+    <svg class="orb-hold" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <circle cx="24" cy="24" r="22.5" pathLength="1" />
+    </svg>
   </button>
 
   <span class="orb-hint" aria-hidden="true">{t('orb.hint', lang)}</span>
-
-  <a
-    class="orb-lang-jump"
-    data-lang-link={nextLang}
-    href={langHref(nextLang)}
-    data-transition="ink"
-    hidden
-    tabindex="-1"
-    aria-hidden="true"
-  >{nextLang}</a>
-
-  <div class="orb-menu" role="group" aria-label={t('theme.switch', lang)}>
-    <div class="orb-title">{t('theme.switch', lang)}</div>
-    {themes.map((theme) => (
-      <button
-        class="orb-option"
-        data-theme-option={theme.id}
-        aria-pressed={theme.id === 'star' ? 'true' : 'false'}
-      >
-        <span class="orb-dot" data-theme={theme.id} aria-hidden="true"></span>
-        <span class="name">{t(theme.key, lang)}</span>
-        <span class="check" aria-hidden="true">✓</span>
-      </button>
-    ))}
-  </div>
+  <span class="sr-only" data-theme-status role="status"></span>
 </div>
 
 <script>

@@ -1,14 +1,18 @@
+import { navigate } from 'astro:transitions/client';
 import { siteConfig } from '../../SiteConfig';
 import type { ThemeId } from '../types';
 import { themeBg, themeColor, isTheme } from '../theme/palettes';
 
 const STORAGE_KEY = 'aitai-theme';
-const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const HOLD_MS = 460;
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let timers: number[] = [];
 let switching = false;
+let navigating = false;
 let docBound = false;
-let pressTimer = 0;
+let pendingTheme: ThemeId | null = null;
+let cancelPress: (() => void) | undefined;
 
 function applyTheme(theme: ThemeId) {
   const root = document.documentElement;
@@ -19,34 +23,49 @@ function applyTheme(theme: ThemeId) {
   if (meta) meta.content = themeColor[theme];
 }
 
-function updateOrb(theme: ThemeId) {
-  document.querySelectorAll<HTMLElement>('[data-theme-option]').forEach((el) => {
-    el.setAttribute('aria-pressed', String(el.dataset.themeOption === theme));
-  });
-}
-
-function closeOrb() {
+function updateOrb(theme: ThemeId, announce = false) {
   const orb = document.querySelector<HTMLElement>('[data-theme-orb]');
-  if (!orb) return;
-  orb.dataset.open = 'false';
-  orb.querySelector<HTMLElement>('[data-theme-trigger]')?.setAttribute('aria-expanded', 'false');
+  const trigger = orb?.querySelector<HTMLButtonElement>('[data-theme-trigger]');
+  if (!trigger) return;
+  const name = trigger.getAttribute('data-theme-name-' + theme) || theme;
+  trigger.setAttribute('aria-label', trigger.dataset.label + ' · ' + name);
+  const status = orb?.querySelector<HTMLElement>('[data-theme-status]');
+  if (status && announce) status.textContent = name;
 }
 
-function openOrb() {
-  const orb = document.querySelector<HTMLElement>('[data-theme-orb]');
-  if (!orb) return;
-  orb.dataset.open = 'true';
-  orb.querySelector<HTMLElement>('[data-theme-trigger]')?.setAttribute('aria-expanded', 'true');
+function commitTheme(theme: ThemeId) {
+  applyTheme(theme);
+  updateOrb(theme, true);
+  window.dispatchEvent(new CustomEvent('aitai:theme', { detail: { theme } }));
 }
 
-function cycleLanguage() {
-  const order = ['zh', 'en', 'ja'];
-  const current = document.documentElement.lang || 'zh';
-  const next = order[(order.indexOf(current) + 1) % order.length];
-  const link = document.querySelector<HTMLAnchorElement>('[data-lang-link="' + next + '"]');
-  if (!link) return;
-  closeOrb();
-  link.click();
+function clearTransition() {
+  timers.forEach((timer) => window.clearTimeout(timer));
+  timers = [];
+  document.querySelector('[data-theme-transition]')?.classList.remove('is-active', 'is-fading');
+  document.documentElement.classList.remove('is-switching');
+  switching = false;
+  pendingTheme = null;
+}
+
+function finishTransition() {
+  if (pendingTheme && pendingTheme !== getTheme()) commitTheme(pendingTheme);
+  clearTransition();
+}
+
+function cycleLanguage(trigger: HTMLButtonElement) {
+  const href = trigger.dataset.languageHref;
+  if (!href || switching || navigating) return;
+  navigating = true;
+  // Passing the button preserves its Ink transition and the current detail route.
+  void navigate(href, { sourceElement: trigger }).finally(() => { navigating = false; });
+}
+
+function cycleTheme(trigger: HTMLButtonElement) {
+  if (switching || navigating) return;
+  const order = siteConfig.theme.order;
+  const next = order[(order.indexOf(getTheme()) + 1) % order.length];
+  switchTheme(next, trigger);
 }
 
 export function getTheme(): ThemeId {
@@ -55,128 +74,160 @@ export function getTheme(): ThemeId {
 }
 
 export function switchTheme(next: ThemeId, origin?: HTMLElement) {
-  const current = getTheme();
-  if (next === current || switching) return;
-  closeOrb();
+  if (next === getTheme() || switching) return;
 
-  if (REDUCED) {
-    applyTheme(next);
-    updateOrb(next);
-    window.dispatchEvent(new CustomEvent('aitai:theme', { detail: { theme: next } }));
+  const overlay = document.querySelector<HTMLElement>('[data-theme-transition]');
+  if (reduced() || !overlay) {
+    commitTheme(next);
     return;
   }
 
-  const overlay = document.querySelector<HTMLElement>('[data-theme-transition]');
-  const root = document.documentElement;
   switching = true;
+  pendingTheme = next;
+  const rect = (origin || document.querySelector<HTMLElement>('[data-theme-trigger]'))?.getBoundingClientRect();
+  const tx = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+  const ty = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+  overlay.style.setProperty('--tx', tx + 'px');
+  overlay.style.setProperty('--ty', ty + 'px');
+  overlay.style.setProperty('--to-bg', themeBg[next]);
+  overlay.classList.remove('is-fading');
+  overlay.classList.add('is-active');
+  document.documentElement.classList.add('is-switching');
 
-  if (overlay) {
-    const rect = (origin || document.querySelector<HTMLElement>('[data-theme-trigger]'))?.getBoundingClientRect();
-    const tx = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
-    const ty = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
-    overlay.style.setProperty('--tx', tx + 'px');
-    overlay.style.setProperty('--ty', ty + 'px');
-    overlay.style.setProperty('--to-bg', themeBg[next]);
-    overlay.classList.remove('is-fading');
-    overlay.classList.add('is-active');
-  }
-  root.classList.add('is-switching');
-
+  timers.push(window.setTimeout(() => { commitTheme(next); }, 340));
   timers.push(window.setTimeout(() => {
-    applyTheme(next);
-    updateOrb(next);
-    window.dispatchEvent(new CustomEvent('aitai:theme', { detail: { theme: next } }));
-  }, 340));
-
-  timers.push(window.setTimeout(() => {
-    overlay?.classList.add('is-fading');
-    root.classList.remove('is-switching');
+    overlay.classList.add('is-fading');
+    document.documentElement.classList.remove('is-switching');
   }, 760));
+  timers.push(window.setTimeout(clearTransition, 1240));
+}
 
-  timers.push(window.setTimeout(() => {
-    overlay?.classList.remove('is-active', 'is-fading');
-    switching = false;
-  }, 1240));
+function bindTrigger(trigger: HTMLButtonElement) {
+  let pressTimer = 0;
+  let pointer: number | null = null;
+  let startX = 0;
+  let startY = 0;
+  let suppressClick = false;
+
+  const endPress = () => {
+    window.clearTimeout(pressTimer);
+    delete trigger.dataset.pressing;
+    if (pointer !== null && trigger.hasPointerCapture(pointer)) trigger.releasePointerCapture(pointer);
+    pointer = null;
+  };
+  cancelPress = () => {
+    suppressClick = true;
+    endPress();
+  };
+
+  trigger.addEventListener('pointerdown', (event) => {
+    if (!event.isPrimary || event.button !== 0) return;
+    if (switching || navigating) {
+      suppressClick = true;
+      return;
+    }
+    endPress();
+    pointer = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    suppressClick = false;
+    trigger.dataset.pressing = 'true';
+    trigger.setPointerCapture(event.pointerId);
+    pressTimer = window.setTimeout(() => {
+      suppressClick = true;
+      delete trigger.dataset.pressing;
+      cycleTheme(trigger);
+    }, HOLD_MS);
+  });
+  trigger.addEventListener('pointermove', (event) => {
+    if (pointer !== event.pointerId) return;
+    // A drag or touch scroll must not turn into either a hold or a language click.
+    if (Math.hypot(event.clientX - startX, event.clientY - startY) > 12) {
+      suppressClick = true;
+      endPress();
+    }
+  });
+  trigger.addEventListener('pointerup', endPress);
+  trigger.addEventListener('pointercancel', () => {
+    suppressClick = true;
+    endPress();
+  });
+  trigger.addEventListener('lostpointercapture', () => {
+    window.clearTimeout(pressTimer);
+    delete trigger.dataset.pressing;
+    pointer = null;
+  });
+  trigger.addEventListener('contextmenu', (event) => event.preventDefault());
+  trigger.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (suppressClick || switching || navigating) {
+      suppressClick = false;
+      return;
+    }
+    cycleLanguage(trigger);
+  });
+  trigger.addEventListener('keydown', (event) => {
+    if (event.key === ' ' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!event.repeat) {
+        suppressClick = true;
+        endPress();
+        cycleTheme(trigger);
+      }
+    } else if (event.key === 'Escape') {
+      suppressClick = true;
+      endPress();
+    } else if (event.key === 'Enter') {
+      // Reset a cancelled pointer gesture before the native keyboard click.
+      suppressClick = false;
+    }
+  });
+  trigger.addEventListener('keyup', (event) => {
+    if (event.key === ' ') event.preventDefault();
+  });
+  trigger.addEventListener('blur', () => {
+    if (pointer !== null) {
+      suppressClick = true;
+      endPress();
+    }
+  });
 }
 
 export function initTheme() {
-  const orb = document.querySelector<HTMLElement>('[data-theme-orb]');
   const theme = getTheme();
-  updateOrb(theme);
   applyTheme(theme);
+  updateOrb(theme);
 
-  if (!orb) return;
-
-  const trigger = orb.querySelector<HTMLElement>('[data-theme-trigger]');
-  const options = orb.querySelectorAll<HTMLElement>('[data-theme-option]');
-
-  if (!orb.dataset.bound) {
-    orb.dataset.bound = 'true';
-    let longPressed = false;
-
-    const onDown = (event: PointerEvent) => {
-      if (event.pointerType === 'mouse' && event.button !== 0) return;
-      longPressed = false;
-      window.clearTimeout(pressTimer);
-      pressTimer = window.setTimeout(() => {
-        longPressed = true;
-        openOrb();
-      }, 460);
-    };
-    const onUp = () => {
-      window.clearTimeout(pressTimer);
-    };
-
-    trigger?.addEventListener('pointerdown', onDown);
-    trigger?.addEventListener('pointerup', onUp);
-    trigger?.addEventListener('pointercancel', onUp);
-    trigger?.addEventListener('pointerleave', onUp);
-    trigger?.addEventListener('contextmenu', (event) => event.preventDefault());
-    trigger?.addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (longPressed) {
-        longPressed = false;
-        return;
-      }
-      if (orb.dataset.open === 'true') {
-        closeOrb();
-        return;
-      }
-      cycleLanguage();
-    });
-    trigger?.addEventListener('keydown', (event) => {
-      if (event.key === ' ' || event.key === 'ArrowDown') {
-        event.preventDefault();
-        openOrb();
-      }
-    });
-
-    options.forEach((el) => {
-      el.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const next = el.dataset.themeOption;
-        if (isTheme(next)) switchTheme(next, el);
-      });
-    });
+  const trigger = document.querySelector<HTMLButtonElement>('[data-theme-trigger]');
+  if (trigger && !trigger.dataset.bound) {
+    trigger.dataset.bound = 'true';
+    bindTrigger(trigger);
   }
 
   if (!docBound) {
     docBound = true;
-    document.addEventListener('click', (event) => {
-      const currentOrb = document.querySelector<HTMLElement>('[data-theme-orb]');
-      if (!currentOrb || currentOrb.dataset.open !== 'true') return;
-      if (!currentOrb.contains(event.target as Node)) closeOrb();
-    });
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeOrb();
+    document.addEventListener('astro:before-preparation', () => {
+      cancelPress?.();
+      finishTransition();
     });
     document.addEventListener('astro:before-swap', (event) => {
-      window.clearTimeout(pressTimer);
+      cancelPress?.();
+      finishTransition();
       const nextDocument = (event as unknown as { newDocument?: Document }).newDocument;
       if (!nextDocument?.documentElement) return;
       const theme = getTheme();
       nextDocument.documentElement.dataset.theme = theme;
       nextDocument.documentElement.style.colorScheme = theme === 'dawn' ? 'light' : 'dark';
+    });
+    document.addEventListener('astro:page-load', () => { navigating = false; });
+    window.addEventListener('blur', () => { cancelPress?.(); });
+    document.addEventListener('visibilitychange', () => {
+      document.documentElement.classList.toggle('orb-paused', document.hidden);
+      if (document.hidden) {
+        cancelPress?.();
+        finishTransition();
+      }
     });
   }
 }

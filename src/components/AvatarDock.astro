@@ -1,26 +1,76 @@
 ---
 import { siteConfig } from '../../SiteConfig';
-import { t } from '../i18n';
-import { homePath, withBase } from '../utils/paths';
-import type { Lang } from '../types';
+import { l10n, t } from '../i18n';
+import { withBase } from '../utils/paths';
+import QuickLinkIcon from './QuickLinkIcon.astro';
+import type { AvatarLink, Lang } from '../types';
+import '../styles/avatar-dock.css';
 
-interface Props { lang: Lang; home?: boolean }
-const { lang, home = true } = Astro.props;
-const href = home ? '#drift' : homePath(lang);
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const github = siteConfig.identity.socials.find((link) => link.icon === 'github');
+const actions: AvatarLink[] = [
+  ...(github ? [{ label: 'GitHub', icon: 'github' as const, href: github.href }] : []),
+  { label: 'Email', icon: 'mail', href: 'mailto:' + siteConfig.identity.email },
+  ...siteConfig.nav.avatarDock.customLinks,
+  { label: 'CV', icon: 'cv', href: siteConfig.identity.resume, download: true },
+];
 ---
 
-<a
-  class="avatar-dock"
-  data-avatar-fixed
-  href={href}
-  data-home={homePath(lang)}
-  data-label-about={t('aria.about', lang)}
-  data-label-top={t('aria.scrollTop', lang)}
-  aria-label={t('aria.about', lang)}
->
-  <img src={withBase(siteConfig.identity.avatar)} alt="" width="120" height="120" />
-  <span class="avatar-ring" aria-hidden="true"></span>
-</a>
+<div class="avatar-dock" data-avatar-dock data-open="false">
+  <button
+    type="button"
+    class="avatar-button"
+    data-avatar-fixed
+    aria-label={t('avatar.label', lang)}
+    aria-expanded="false"
+    aria-controls="avatar-actions"
+    aria-keyshortcuts="Enter Space ArrowDown Home"
+  >
+    <img src={withBase(siteConfig.identity.avatar)} alt="" width="120" height="120" />
+    <span class="avatar-ring" aria-hidden="true"></span>
+    <svg class="avatar-hold" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <circle cx="24" cy="24" r="22.5" pathLength="1" />
+    </svg>
+  </button>
+  <span class="avatar-hint" aria-hidden="true">{t('orb.hint', lang)}</span>
+
+  <nav id="avatar-actions" class="avatar-actions" data-avatar-actions aria-label={t('avatar.links', lang)} aria-hidden="true" inert>
+    <ul>
+      {actions.map((action, index) => {
+        const label = l10n(action.label, lang);
+        const angle = (index / Math.max(1, actions.length - 1)) * Math.PI * 0.45;
+        const radius = Math.max(104, (actions.length - 1) * 48 / (Math.PI * 0.45));
+        const style = '--action-x:' + (Math.cos(angle) * radius).toFixed(2) + 'px;--action-y:' + (Math.sin(angle) * radius).toFixed(2) + 'px;--action-index:' + index;
+        const external = /^https?:\/\//i.test(action.href);
+        const icon = action.iconSrc ? <img src={withBase(action.iconSrc)} alt="" width="20" height="20" /> : <QuickLinkIcon name={action.icon} />;
+        return (
+          <li class="avatar-action-slot" style={style}>
+            {action.href ? (
+              <a
+                class="avatar-action"
+                href={withBase(action.href)}
+                target={external ? '_blank' : undefined}
+                rel={external ? 'noopener noreferrer' : undefined}
+                download={action.download || undefined}
+                aria-label={label}
+                data-avatar-action
+              >
+                {icon}
+                <span class="avatar-action-label" aria-hidden="true">{label}</span>
+              </a>
+            ) : (
+              <button class="avatar-action" type="button" disabled aria-label={label + ' · ' + t('avatar.pending', lang)}>
+                {icon}
+                <span class="avatar-action-label" aria-hidden="true">{label} · {t('avatar.pending', lang)}</span>
+              </button>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+</div>
 
 <script>
   import { initAvatarDock } from '../scripts/avatar-dock';
