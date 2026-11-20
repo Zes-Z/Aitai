@@ -1,216 +1,157 @@
-type Kind = 'tide' | 'constellate' | 'develop' | 'veil' | 'ink';
+import { siteConfig } from '../../SiteConfig';
+import type Lenis from 'lenis';
+import { isTheme } from '../theme/palettes';
+import { createLanguageEffect, languageStyle, type Effect, type TransitionContext } from '../transitions/language';
 
-const KINDS = new Set<Kind>(['tide', 'constellate', 'develop', 'veil', 'ink']);
+type Kind = 'tide' | 'constellate' | 'develop' | 'veil' | 'language';
+type Preparation = Event & {
+  from: URL;
+  to: URL;
+  sourceElement?: Element;
+  direction: 'forward' | 'back';
+  navigationType: 'push' | 'replace' | 'traverse';
+  signal: AbortSignal;
+  loader: () => Promise<void>;
+};
+type Swap = Event & { newDocument: Document; viewTransition?: ViewTransition };
+type Session = {
+  root: HTMLElement;
+  kind: Kind;
+  controller: AbortController;
+  animations: Set<Animation>;
+  inert: Map<HTMLElement, boolean>;
+  effect: Effect;
+  phase: 'leaving' | 'covered' | 'swapped' | 'entering';
+  focusTrigger: boolean;
+  scroll?: { x: number; y: number };
+  safety: number;
+};
+
+const KINDS = new Set<Kind>(['tide', 'constellate', 'develop', 'veil', 'language']);
+const SCROLL_KEYS = new Set([' ', 'PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown']);
 let booted = false;
-let current: Animation | null = null;
-let kind: Kind = 'veil';
-let origin = { x: 50, y: 52 };
-let safety = 0;
+let active: Session | null = null;
 
-function overlay() {
-  return document.querySelector<HTMLElement>('[data-page-transition]');
+function lenis() {
+  return (window as Window & { __lenis?: Lenis }).__lenis;
 }
 
-function reduced() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function restoreScroll(session: Session) {
+  if (!session.scroll) return;
+  window.scrollTo({ left: session.scroll.x, top: session.scroll.y, behavior: 'instant' });
+  // Keep Lenis' target in sync so restarting it cannot pull the viewport back.
+  lenis()?.resize();
+  if (history.state) history.replaceState({ ...history.state, scrollX, scrollY }, '');
 }
 
-function lock(on: boolean) {
-  document.documentElement.classList.toggle('is-transitioning', on);
-  const lenis = (window as unknown as { __lenis?: { start?: () => void; stop?: () => void } }).__lenis;
-  if (on) lenis?.stop?.();
-  else lenis?.start?.();
-}
-
-function setOrigin(source?: Element) {
-  const rect = source?.getBoundingClientRect();
-  if (!rect || !rect.width) {
-    origin = { x: 50, y: 52 };
-    return;
+function lock(session: Session) {
+  document.documentElement.classList.add('is-transitioning');
+  document.documentElement.dataset.transitionMode = session.kind;
+  for (const el of document.querySelectorAll<HTMLElement>('.site-main, [data-avatar-dock], [data-theme-orb]')) {
+    if (!session.inert.has(el)) session.inert.set(el, el.inert);
+    el.inert = true;
   }
-  const x = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
-  const y = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
-  origin = { x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)) };
+  lenis()?.stop();
 }
 
-function cancel() {
-  current?.cancel();
-  current = null;
-}
-
-async function animate(el: HTMLElement, frames: Keyframe[], options: KeyframeAnimationOptions): Promise<void> {
-  cancel();
-  const animation = el.animate(frames, { fill: 'forwards', ...options });
-  current = animation;
-  try {
-    await animation.finished;
-  } catch {
-    // A newer transition cancelled this one.
-  }
-}
-
-function reset() {
-  cancel();
-  const el = overlay();
-  if (el) {
-    el.style.visibility = 'hidden';
-    el.style.transform = '';
-    el.style.clipPath = '';
-    el.style.opacity = '';
-    el.dataset.kind = 'veil';
-  }
+function finish(session: Session, restoreFocus = false) {
+  if (active !== session) return;
+  active = null;
+  session.controller.abort();
+  window.clearTimeout(session.safety);
+  for (const animation of session.animations) animation.cancel();
+  session.root.replaceChildren();
+  session.root.style.visibility = 'hidden';
+  session.root.style.transform = '';
+  session.root.style.clipPath = '';
+  session.root.style.opacity = '';
+  session.root.dataset.phase = 'idle';
+  for (const [element, wasInert] of session.inert) element.inert = wasInert;
   document.documentElement.classList.remove('is-transitioning');
-  lock(false);
-  window.clearTimeout(safety);
+  delete document.documentElement.dataset.transitionMode;
+  if (restoreFocus) restoreScroll(session);
+  lenis()?.start();
+  if (restoreFocus && session.focusTrigger) document.querySelector<HTMLElement>('[data-theme-trigger]')?.focus({ preventScroll: true });
 }
 
-async function leave(nextKind: Kind, source?: Element) {
-  const el = overlay();
-  if (!el) return;
-
-  kind = nextKind;
-  setOrigin(source);
-  el.dataset.kind = kind;
-  el.style.visibility = 'visible';
-  el.style.transform = '';
-  el.style.clipPath = '';
-  el.style.opacity = '1';
-  lock(true);
-
-  if (reduced()) {
-    await animate(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: 'ease-out' });
-    return;
-  }
-
-  if (kind === 'ink') {
-    const theme = document.documentElement.dataset.theme || 'star';
-    el.dataset.theme = theme;
-    if (theme === 'sea') {
-      await animate(
-        el,
-        [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }],
-        { duration: 760, easing: 'cubic-bezier(.83,0,.17,1)' }
-      );
-      return;
-    }
-    if (theme === 'dawn') {
-      await animate(
-        el,
-        [{ transform: 'translateX(-100%)' }, { transform: 'translateX(0)' }],
-        { duration: 700, easing: 'cubic-bezier(.83,0,.17,1)' }
-      );
-      return;
-    }
-    const inkAt = '82% 16%';
-    el.style.clipPath = 'circle(0% at ' + inkAt + ')';
-    await animate(
-      el,
-      [
-        { clipPath: 'circle(0% at ' + inkAt + ')' },
-        { clipPath: 'circle(150% at ' + inkAt + ')' },
-      ],
-      { duration: 820, easing: 'cubic-bezier(.83,0,.17,1)' }
-    );
-    return;
-  }
-
-  const at = origin.x.toFixed(2) + '% ' + origin.y.toFixed(2) + '%';
-
-  if (kind === 'tide') {
-    await animate(
-      el,
-      [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }],
-      { duration: 780, easing: 'cubic-bezier(.83,0,.17,1)' }
-    );
-    return;
-  }
-
-  if (kind === 'veil') {
-    await animate(
-      el,
-      [{ transform: 'translateY(-100%)' }, { transform: 'translateY(0)' }],
-      { duration: 640, easing: 'cubic-bezier(.83,0,.17,1)' }
-    );
-    return;
-  }
-
-  const duration = kind === 'constellate' ? 880 : 720;
-  el.style.clipPath = 'circle(0% at ' + at + ')';
-  await animate(
-    el,
-    [
-      { clipPath: 'circle(0% at ' + at + ')' },
-      { clipPath: 'circle(150% at ' + at + ')' },
-    ],
-    { duration, easing: 'cubic-bezier(.83,0,.17,1)' }
-  );
+function legacy(kind: Kind, source: Element | undefined, ctx: TransitionContext): Effect {
+  const rect = source?.getBoundingClientRect();
+  const x = rect ? (rect.left + rect.width / 2) / innerWidth * 100 : 50;
+  const y = rect ? (rect.top + rect.height / 2) / innerHeight * 100 : 52;
+  const at = x.toFixed(2) + '% ' + y.toFixed(2) + '%';
+  const small = 'circle(0% at ' + at + ')';
+  const full = 'circle(150% at ' + at + ')';
+  const ease = 'cubic-bezier(.83,0,.17,1)';
+  return {
+    async leave() {
+      if (ctx.reduced) {
+        await ctx.animate(ctx.root, [{ opacity: 0 }, { opacity: 1 }], { duration: 100 });
+      } else if (kind === 'tide' || kind === 'veil') {
+        await ctx.animate(ctx.root, [{ transform: kind === 'tide' ? 'translateY(100%)' : 'translateY(-100%)' }, { transform: 'translateY(0)' }], { duration: kind === 'tide' ? 780 : 640, easing: ease });
+      } else {
+        ctx.root.style.clipPath = small;
+        await ctx.animate(ctx.root, [{ clipPath: small }, { clipPath: full }], { duration: kind === 'constellate' ? 880 : 720, easing: ease });
+      }
+    },
+    async enter() {
+      if (ctx.reduced) {
+        await ctx.animate(ctx.root, [{ opacity: 1 }, { opacity: 0 }], { duration: 100 });
+      } else if (kind === 'tide' || kind === 'veil') {
+        await ctx.animate(ctx.root, [{ transform: 'translateY(0)' }, { transform: kind === 'tide' ? 'translateY(-100%)' : 'translateY(100%)' }], { duration: kind === 'tide' ? 720 : 660, easing: ease });
+      } else {
+        await ctx.animate(ctx.root, [{ clipPath: full }, { clipPath: small }], { duration: kind === 'constellate' ? 760 : 620, easing: ease });
+      }
+    },
+  };
 }
 
-async function enter() {
-  const el = overlay();
-  if (!el) return;
+function changesLanguage(from: URL, to: URL) {
+  const locale = (url: URL) => url.pathname.match(/\/(zh|en|ja)(?=\/|$)/)?.[1];
+  const a = locale(from);
+  const b = locale(to);
+  return !!a && !!b && a !== b;
+}
 
-  if (reduced()) {
-    await animate(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'ease-in' });
-    reset();
-    return;
+function bounded(promise: Promise<unknown>, signal: AbortSignal, timeout: number) {
+  return new Promise<void>((resolve) => {
+    let done = false;
+    const end = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      signal.removeEventListener('abort', end);
+      resolve();
+    };
+    const timer = window.setTimeout(end, timeout);
+    if (signal.aborted) end();
+    else signal.addEventListener('abort', end, { once: true });
+    void promise.then(end, end);
+  });
+}
+
+async function enter(session: Session) {
+  if (active !== session || session.phase !== 'swapped') return;
+  session.phase = 'entering';
+  session.root.dataset.phase = 'preparing';
+  lock(session);
+  let complete = false;
+  try {
+    // New page scripts and reveal observers get one paint before being frozen.
+    await bounded(new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))), session.controller.signal, 150);
+    const images = Array.from(document.images).filter((image) => {
+      const r = image.getBoundingClientRect();
+      return r.width && r.height && r.bottom > 0 && r.top < innerHeight;
+    });
+    await bounded(Promise.allSettled([document.fonts.ready, ...images.map((image) => image.decode())]), session.controller.signal, 900);
+    if (active !== session || session.controller.signal.aborted) return;
+    // Fonts/images can change page height; restore before taking the incoming copy.
+    restoreScroll(session);
+    session.root.dataset.phase = 'entering';
+    await session.effect.enter();
+    complete = !session.controller.signal.aborted;
+  } finally {
+    finish(session, complete);
   }
-
-  if (kind === 'ink') {
-    const theme = el.dataset.theme || document.documentElement.dataset.theme || 'star';
-    if (theme === 'sea') {
-      await animate(
-        el,
-        [{ transform: 'translateY(0)' }, { transform: 'translateY(100%)' }],
-        { duration: 720, easing: 'cubic-bezier(.83,0,.17,1)' }
-      );
-    } else if (theme === 'dawn') {
-      await animate(
-        el,
-        [{ transform: 'translateX(0)' }, { transform: 'translateX(100%)' }],
-        { duration: 680, easing: 'cubic-bezier(.83,0,.17,1)' }
-      );
-    } else {
-      const inkAt = '82% 16%';
-      await animate(
-        el,
-        [
-          { clipPath: 'circle(150% at ' + inkAt + ')' },
-          { clipPath: 'circle(0% at ' + inkAt + ')' },
-        ],
-        { duration: 760, easing: 'cubic-bezier(.83,0,.17,1)' }
-      );
-    }
-    reset();
-    return;
-  }
-
-  const at = origin.x.toFixed(2) + '% ' + origin.y.toFixed(2) + '%';
-
-  if (kind === 'tide') {
-    await animate(
-      el,
-      [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }],
-      { duration: 720, easing: 'cubic-bezier(.83,0,.17,1)' }
-    );
-  } else if (kind === 'veil') {
-    await animate(
-      el,
-      [{ transform: 'translateY(0)' }, { transform: 'translateY(100%)' }],
-      { duration: 660, easing: 'cubic-bezier(.83,0,.17,1)' }
-    );
-  } else {
-    await animate(
-      el,
-      [
-        { clipPath: 'circle(150% at ' + at + ')' },
-        { clipPath: 'circle(0% at ' + at + ')' },
-      ],
-      { duration: kind === 'constellate' ? 760 : 620, easing: 'cubic-bezier(.83,0,.17,1)' }
-    );
-  }
-
-  reset();
 }
 
 export function initPageTransitions() {
@@ -218,34 +159,103 @@ export function initPageTransitions() {
   booted = true;
 
   document.addEventListener('astro:before-preparation', (event) => {
-    const e = event as unknown as {
-      sourceElement?: Element;
-      loader: () => Promise<void>;
-      navigationType?: string;
-    };
-    const source = e.sourceElement;
-    const attr = source?.getAttribute('data-transition') as Kind | null;
-    const nextKind: Kind = attr && KINDS.has(attr) ? attr : 'veil';
-    const original = e.loader;
-
-    window.clearTimeout(safety);
-    safety = window.setTimeout(() => {
-      if (document.documentElement.classList.contains('is-transitioning')) reset();
-    }, 6000);
-
-    e.loader = async () => {
-      await Promise.all([original(), leave(nextKind, source)]);
-    };
-  });
-
-  document.addEventListener('astro:after-swap', () => {
-    requestAnimationFrame(() => { void enter(); });
-  });
-
-  document.addEventListener('astro:page-load', () => {
-    const el = overlay();
-    if (el && !document.documentElement.classList.contains('is-transitioning')) {
-      el.style.visibility = 'hidden';
+    const e = event as Preparation;
+    if (active) finish(active);
+    const root = document.querySelector<HTMLElement>('[data-page-transition]');
+    if (!root || e.signal.aborted) return;
+    const attr = e.sourceElement?.closest('[data-transition]')?.getAttribute('data-transition') as Kind | null;
+    const kind = attr === 'language' || changesLanguage(e.from, e.to)
+      ? 'language'
+      : attr && KINDS.has(attr) ? attr : 'veil';
+    const controller = new AbortController();
+    const theme = isTheme(document.documentElement.dataset.theme) ? document.documentElement.dataset.theme : siteConfig.theme.default;
+    const computed = getComputedStyle(document.documentElement);
+    for (const token of ['bg', 'bg-2', 'bg-3', 'text', 'accent', 'accent-2', 'accent-3', 'glow']) {
+      root.style.setProperty('--pt-' + token, computed.getPropertyValue('--' + token).trim());
     }
+    root.dataset.kind = kind;
+    root.dataset.theme = theme;
+    root.dataset.direction = e.direction;
+    root.dataset.phase = 'leaving';
+    root.style.opacity = '1';
+    root.style.transform = '';
+    root.style.clipPath = '';
+    const session: Session = {
+      root, kind, controller, animations: new Set(), inert: new Map(),
+      phase: 'leaving', focusTrigger: !!e.sourceElement?.matches('[data-theme-trigger]'),
+      // A history traversal uses the destination entry, not the page being left.
+      scroll: kind === 'language' ? e.navigationType === 'traverse'
+        ? { x: history.state?.scrollX ?? scrollX, y: history.state?.scrollY ?? scrollY }
+        : { x: scrollX, y: scrollY } : undefined,
+      safety: 0, effect: undefined as unknown as Effect,
+    };
+    active = session;
+    const ctx: TransitionContext = {
+      root, direction: e.direction === 'back' ? -1 : 1,
+      reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      signal: controller.signal,
+      async animate(element, frames, options) {
+        if (active !== session || controller.signal.aborted) return;
+        const animation = element.animate(frames, { fill: 'forwards', ...options });
+        session.animations.add(animation);
+        try { await animation.finished; } catch { /* cancellation belongs to this navigation only */ }
+      },
+    };
+    try {
+      root.dataset.effect = kind === 'language' ? languageStyle[theme] : kind;
+      session.effect = kind === 'language'
+        ? createLanguageEffect(languageStyle[theme], ctx)
+        : legacy(kind, e.sourceElement, ctx);
+    } catch {
+      ctx.reduced = true;
+      session.effect = createLanguageEffect('frame', ctx);
+    }
+    root.style.visibility = 'visible';
+    lock(session);
+    e.signal.addEventListener('abort', () => finish(session), { once: true });
+    session.safety = window.setTimeout(() => finish(session), 12000);
+    const original = e.loader;
+    e.loader = async () => {
+      try {
+        await Promise.all([original(), session.effect.leave()]);
+        if (e.defaultPrevented || e.signal.aborted || controller.signal.aborted) finish(session);
+        else if (active === session) {
+          session.phase = 'covered';
+          root.dataset.phase = 'covered';
+        }
+      } catch (error) {
+        finish(session);
+        throw error;
+      }
+    };
   });
+
+  document.addEventListener('astro:before-swap', (event) => {
+    if (!active) return;
+    const e = event as Swap;
+    // Our persistent DOM layer owns the visual transition, including in fallback browsers.
+    void e.viewTransition?.ready.catch(() => {});
+    e.viewTransition?.skipTransition();
+    e.newDocument.documentElement.classList.add('is-transitioning');
+    e.newDocument.documentElement.dataset.transitionMode = active.kind;
+  });
+  document.addEventListener('astro:after-swap', () => {
+    if (!active) return;
+    active.phase = 'swapped';
+    lock(active);
+    // Astro resets new routes to the top immediately before this event.
+    restoreScroll(active);
+  });
+  document.addEventListener('astro:page-load', () => {
+    if (active) void enter(active).catch((error) => console.warn('Transition reveal skipped:', error));
+  });
+  document.addEventListener('wheel', (event) => { if (active) event.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', (event) => { if (active) event.preventDefault(); }, { passive: false });
+  document.addEventListener('keydown', (event) => {
+    if (active && SCROLL_KEYS.has(event.key) && !event.altKey && !event.metaKey && !event.ctrlKey) event.preventDefault();
+  });
+  window.addEventListener('pagehide', () => { if (active) finish(active); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && active) finish(active); });
+  window.addEventListener('resize', () => { if (active) finish(active); });
+  window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { if (active) finish(active); });
 }

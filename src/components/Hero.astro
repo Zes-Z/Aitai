@@ -11,7 +11,6 @@ const mottoLines = siteConfig.hero.motto.map((line) => line[lang]);
 const cv = siteConfig.identity.socials.find((social) => social.icon === 'cv');
 const resume = cv?.href ? withBase(cv.href) : undefined;
 const avatar = withBase(siteConfig.identity.avatar);
-const cover = withBase(siteConfig.hero.cover);
 const email = siteConfig.identity.email;
 const github = siteConfig.identity.socials.find((s) => s.icon === 'github');
 const status = siteConfig.identity.status[lang];
@@ -20,7 +19,6 @@ const timezone = siteConfig.identity.timezone;
 ---
 
 <section id="tide" class="hero" data-section aria-labelledby="hero-title">
-  <div class="hero-cover" style={'background-image:url(' + cover + ')'} aria-hidden="true"></div>
   <div class="hero-veil" aria-hidden="true"></div>
 
   <div class="hero-inner">
@@ -89,8 +87,10 @@ const timezone = siteConfig.identity.timezone;
     </aside>
   </div>
 
-  <a class="hero-scroll" href="#drift" aria-label={t('hero.scroll', lang)}>
+  <a class="hero-scroll" href="#drift">
     <span class="scroll-line" aria-hidden="true"></span>
-    <span>{t('hero.scroll', lang)}</span>
+    {siteConfig.theme.order.map((theme) => (
+      <span class="hero-scroll-label" data-scroll-theme={theme}>{t(`hero.scroll.${theme}`, lang)}</span>
+    ))}
   </a>
 </section>

@@ -57,7 +57,7 @@ function cycleLanguage(trigger: HTMLButtonElement) {
   const href = trigger.dataset.languageHref;
   if (!href || switching || navigating) return;
   navigating = true;
-  // Passing the button preserves its Ink transition and the current detail route.
+  // Passing the button selects the current world's language transition.
   void navigate(href, { sourceElement: trigger }).finally(() => { navigating = false; });
 }
 

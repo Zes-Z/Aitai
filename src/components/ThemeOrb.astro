@@ -25,7 +25,7 @@ const langHref = (l: Lang) => {
     class="orb-button"
     data-theme-trigger
     data-language-href={langHref(nextLang)}
-    data-transition="ink"
+    data-transition="language"
     data-label={t('orb.label', lang)}
     data-theme-name-star={t('theme.star', lang)}
     data-theme-name-sea={t('theme.sea', lang)}
@@ -45,7 +45,8 @@ const langHref = (l: Lang) => {
 
 <script>
   import { initTheme } from '../scripts/theme';
-  const run = () => initTheme();
+  import { initOrbArt } from '../scripts/orb-art';
+  const run = () => { initTheme(); initOrbArt(); };
   run();
   document.addEventListener('astro:page-load', run);
 </script>

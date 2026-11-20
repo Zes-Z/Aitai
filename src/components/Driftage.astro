@@ -10,7 +10,6 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const cv = siteConfig.identity.socials.find((social) => social.icon === 'cv');
 const resume = cv?.href ? withBase(cv.href) : undefined;
-const cover = withBase(siteConfig.hero.cover);
 const status = siteConfig.identity.status[lang];
 const location = siteConfig.identity.location[lang];
 const timezone = siteConfig.identity.timezone;
@@ -49,7 +48,6 @@ const stats = [
       </div>
 
       <article class="drift-card drift-portrait" data-drift-card style="--x:5;--y:8;--rot:-3deg" data-cursor-label="KIM">
-        <div class="drift-portrait-art" style={{ backgroundImage: `url("${cover}")` }} aria-hidden="true"></div>
         <div class="drift-portrait-cap">
           <span class="mono">AITAI / 2026</span>
           <strong>KIM</strong>

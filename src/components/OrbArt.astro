@@ -1,115 +1,14 @@
-<!-- Original SVG artwork. Visual references: React Bits Orb / Black Hole.
-     These are native Astro assets; no React runtime or third-party source is bundled. -->
 <span class="orb-scene orb-scene--dawn" aria-hidden="true">
   <span class="orb-solar-orbit"></span>
   <span class="orb-sun"></span>
 </span>
 
-<svg class="orb-scene orb-scene--sea" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-  <defs>
-    <radialGradient id="orb-moon-light" cx="29%" cy="24%" r="79%">
-      <stop offset="0" stop-color="#fffef2" />
-      <stop offset=".3" stop-color="#e6f1ef" />
-      <stop offset=".58" stop-color="#b4cdd2" />
-      <stop offset=".83" stop-color="#496f85" />
-      <stop offset="1" stop-color="#10293b" />
-    </radialGradient>
-    <radialGradient id="orb-moon-halo">
-      <stop offset="0" stop-color="#c6f4fa" stop-opacity=".4" />
-      <stop offset="1" stop-color="#79d4e8" stop-opacity="0" />
-    </radialGradient>
-    <linearGradient id="orb-water" x1="0" y1="0" x2=".15" y2="1">
-      <stop offset="0" stop-color="#20758b" />
-      <stop offset=".2" stop-color="#0b465f" />
-      <stop offset="1" stop-color="#010e20" />
-    </linearGradient>
-    <linearGradient id="orb-wave-light">
-      <stop offset="0" stop-color="#8debdc" stop-opacity="0" />
-      <stop offset=".45" stop-color="#c3fbf1" stop-opacity=".9" />
-      <stop offset="1" stop-color="#8debdc" stop-opacity=".1" />
-    </linearGradient>
-    <clipPath id="orb-moon-clip"><circle cx="32" cy="28" r="18" /></clipPath>
-    <filter id="orb-regolith">
-      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="12" />
-      <feColorMatrix type="saturate" values="0" />
-      <feComposite in2="SourceGraphic" operator="in" />
-    </filter>
-    <filter id="orb-crater-softness"><feGaussianBlur stdDeviation=".3" /></filter>
-  </defs>
-  <g class="orb-moon-glow">
-    <circle cx="29" cy="26" r="30" fill="url(#orb-moon-halo)" />
-  </g>
-  <g class="orb-moon">
-    <circle cx="32" cy="28" r="18" fill="url(#orb-moon-light)" />
-    <g clip-path="url(#orb-moon-clip)" fill="#52768b" filter="url(#orb-crater-softness)">
-      <path d="M20 17c5-4 8-2 7 2s-6 4-5 8-4 5-6 1 0-8 4-11Z" opacity=".2" />
-      <ellipse cx="36" cy="35" rx="7" ry="5" opacity=".21" transform="rotate(-24 36 35)" />
-      <circle cx="31" cy="22" r="3.2" opacity=".15" />
-      <circle cx="23" cy="32" r="2.5" opacity=".22" />
-      <circle cx="39" cy="18" r="1.7" opacity=".24" />
-      <circle cx="27" cy="39" r="1.6" opacity=".16" />
-      <circle cx="41" cy="29" r="2.6" opacity=".15" />
-      <g fill="none" stroke="#effff8" stroke-width=".55" opacity=".3">
-        <path d="M20.5 31.5a2.5 2.5 0 0 1 4-1.5M28 22a3 3 0 0 1 5-2M37 18a1.7 1.7 0 0 1 2-1.5" />
-      </g>
-    </g>
-    <circle cx="32" cy="28" r="18" fill="#c9d9db" filter="url(#orb-regolith)" opacity=".16" style="mix-blend-mode:soft-light" />
-    <circle cx="32" cy="28" r="17.7" fill="none" stroke="#d5f3f4" stroke-opacity=".26" stroke-width=".5" />
-  </g>
-  <g class="orb-tide">
-    <g class="orb-wave-back">
-      <path d="M-32 2Q-16-5 0 2T32 2T64 2T96 2V84H-32Z" fill="#4ea4b4" fill-opacity=".35" />
-    </g>
-    <g class="orb-wave-front">
-      <path d="M-32 2Q-16 7 0 2T32 2T64 2T96 2V84H-32Z" fill="url(#orb-water)" />
-      <path d="M-32 2Q-16 7 0 2T32 2T64 2T96 2" fill="none" stroke="url(#orb-wave-light)" stroke-width=".9" />
-      <path d="M5 10Q18 7 31 10M22 17Q34 14 45 17M8 26Q16 24 25 26" fill="none" stroke="#91e0da" stroke-opacity=".17" stroke-width=".65" />
-    </g>
-  </g>
-</svg>
-
-<svg class="orb-scene orb-scene--star" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-  <defs>
-    <radialGradient id="orb-hole-halo">
-      <stop offset=".3" stop-color="#ffddac" stop-opacity=".24" />
-      <stop offset=".62" stop-color="#bd6636" stop-opacity=".17" />
-      <stop offset="1" stop-color="#713d72" stop-opacity="0" />
-    </radialGradient>
-    <linearGradient id="orb-disk-light" x1="0" y1=".3" x2="1" y2=".7">
-      <stop offset="0" stop-color="#9f4723" stop-opacity=".3" />
-      <stop offset=".25" stop-color="#f3a45a" />
-      <stop offset=".48" stop-color="#fff7de" />
-      <stop offset=".7" stop-color="#ffd293" />
-      <stop offset="1" stop-color="#bc5529" stop-opacity=".35" />
-    </linearGradient>
-    <radialGradient id="orb-event-horizon" cx="35%" cy="24%" r="75%">
-      <stop offset="0" stop-color="#0c0c13" />
-      <stop offset=".72" stop-color="#020207" />
-      <stop offset="1" stop-color="#000003" />
-    </radialGradient>
-    <filter id="orb-bloom" x="-70%" y="-100%" width="240%" height="300%">
-      <feGaussianBlur stdDeviation="1.4" />
-    </filter>
-  </defs>
-  <circle cx="32" cy="31" r="31" fill="url(#orb-hole-halo)" />
-  <g transform="rotate(-19 32 32)">
-    <g class="orb-accretion">
-      <ellipse cx="32" cy="32" rx="29" ry="7.8" fill="none" stroke="url(#orb-disk-light)" stroke-width="5" filter="url(#orb-bloom)" opacity=".65" />
-      <ellipse cx="32" cy="32" rx="28" ry="7" fill="none" stroke="url(#orb-disk-light)" stroke-width="2.2" />
-      <ellipse cx="32" cy="32" rx="27" ry="6.5" fill="none" stroke="#fff6de" stroke-width=".3" opacity=".6" />
-      <ellipse cx="32" cy="32" rx="29.2" ry="8.6" fill="none" stroke="#efad6a" stroke-width=".35" opacity=".5" />
-      <ellipse class="orb-disk-flow" cx="32" cy="32" rx="26" ry="6.1" fill="none" stroke="#fff3cb" stroke-width=".6" stroke-dasharray="14 8 2 5" opacity=".65" />
-      <ellipse cx="32" cy="32" rx="30.5" ry="9.5" fill="none" stroke="#c4794c" stroke-width=".5" opacity=".38" />
-    </g>
-    <circle cx="32" cy="31" r="13.8" fill="url(#orb-event-horizon)" />
-    <g class="orb-photon-ring" fill="none">
-      <circle cx="32" cy="31" r="14.1" stroke="#ffc685" stroke-width="2" filter="url(#orb-bloom)" opacity=".8" />
-      <circle cx="32" cy="31" r="13.9" stroke="url(#orb-disk-light)" stroke-width=".95" />
-      <path d="M17.9 30C17.9 11.5 46.1 11.5 46.1 30" stroke="#ffe8be" stroke-width="1.3" opacity=".85" />
-    </g>
-    <path d="M3 32C15 40.8 49 40.8 61 32" fill="none" stroke="url(#orb-disk-light)" stroke-width="4" filter="url(#orb-bloom)" />
-    <path d="M3 32C15 40.8 49 40.8 61 32" fill="none" stroke="url(#orb-disk-light)" stroke-width="1.7" />
-    <path d="M7 33.5C20 38.6 44 38.6 57 33.5" fill="none" stroke="#fff8df" stroke-width=".55" opacity=".85" />
-  </g>
-</svg>
+<canvas
+  class="orb-scene orb-scene--dynamic"
+  data-orb-canvas
+  width="96"
+  height="96"
+  aria-hidden="true"
+  transition:persist="orb-art"
+></canvas>
 <span class="orb-glass" aria-hidden="true"></span>

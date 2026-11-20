@@ -29,8 +29,8 @@ export const siteConfig = {
     titleJa: '会いたい',
     tagline: {
       zh: '一些没能说出口的想念。',
-      en: 'A place for the almost-said.',
-      ja: '言えなかった言葉の置き場所。',
+      en: 'The almost-said.',
+      ja: '言えなかった言葉。',
     } satisfies L10n,
     description: {
       zh: '一个关于星空、海月与黎明的三语个人博客。',
@@ -43,7 +43,6 @@ export const siteConfig = {
   },
 
   hero: {
-    cover: '/cover.svg',
     motto: [
       {
         zh: '把日常，过成值得记下的片段。',
@@ -61,7 +60,11 @@ export const siteConfig = {
         ja: '世界は変わる。わたしはここに。',
       },
     ] satisfies L10n[],
-    scrollCue: { zh: '向下，潜入夜里', en: 'Scroll to dive', ja: '下へ、夜へ潜る' } satisfies L10n,
+    scrollCue: {
+      dawn: { zh: '向下，迎接清晨', en: 'Scroll down to greet the morning', ja: '下へ、朝を迎える' },
+      sea: { zh: '向下，沉入海水', en: 'Scroll down to dive into the sea', ja: '下へ、海に潜る' },
+      star: { zh: '向下，飞入星空', en: 'Scroll down to soar into the stars', ja: '下へ、星空へ飛び立つ' },
+    } satisfies Record<ThemeId, L10n>,
   },
 
   nav: {

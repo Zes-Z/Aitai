@@ -15,7 +15,7 @@ const siteTitle = `${siteConfig.site.title} · ${siteConfig.site.titleJa}`;
 const pageTitle = title ? `${title} · ${siteConfig.site.title}` : siteTitle;
 const pageDescription = description || siteConfig.site.description[lang];
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
-const ogImage = new URL(withBase(siteConfig.hero.cover), Astro.site ?? Astro.url);
+const ogImage = new URL(withBase(siteConfig.identity.avatar), Astro.site ?? Astro.url);
 const langs = siteConfig.site.langs;
 const defaultTheme = siteConfig.theme.default;
 

@@ -17,6 +17,7 @@
 
 ### 转场动画资源
 * https://save.design/elements/page-transitions?utm_source=chatgpt.com
+* https://interlude.crnacura.workers.dev/
 * https://www.landing.love/effect/page-transition/?utm_source=chatgpt.com
 * https://webflow.com/made-in-webflow/page-transitions?utm_source=chatgpt.com
 

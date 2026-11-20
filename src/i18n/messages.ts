@@ -1,4 +1,5 @@
 import type { L10n } from '../types';
+import { siteConfig } from '../../SiteConfig';
 
 /**
  * 一个键 × 三语。新增语言时只改这里和 Lang 类型。
@@ -20,7 +21,9 @@ export const messages = {
 
   'hero.greeting': { zh: '你好，我是 KIM。', en: "Hi, I'm KIM.", ja: 'こんにちは、KIM です。' },
   'hero.role': { zh: '设计、前端，以及一些没做完的事', en: 'Design, front-end, and a few unfinished things', ja: 'デザインとフロントエンド、あと未完のこと' },
-  'hero.scroll': { zh: '向下，潜入夜里', en: 'Scroll to dive', ja: '下へ、夜へ潜る' },
+  'hero.scroll.dawn': siteConfig.hero.scrollCue.dawn,
+  'hero.scroll.sea': siteConfig.hero.scrollCue.sea,
+  'hero.scroll.star': siteConfig.hero.scrollCue.star,
   'hero.now': { zh: '现在', en: 'Now', ja: 'いま' },
   'hero.location': { zh: '位置', en: 'Location', ja: '場所' },
   'hero.downloadCv': { zh: '下载简历', en: 'Download CV', ja: '履歴書をダウンロード' },

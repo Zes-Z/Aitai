@@ -1,6 +1,4 @@
-/* Native SVG / CSS interpretation of React Bits Orb and classic black-hole imagery.
-   References: https://reactbits.dev/backgrounds/orb
-               https://pro.reactbits.dev/docs/components/black-hole */
+/* CSS sun with procedural moon/tide and 3D black-hole canvas scenes. */
 .theme-orb {
   position: fixed;
   top: var(--corner-top);
@@ -42,8 +40,8 @@
 }
 .orb-scene { display: none; overflow: hidden; }
 :root[data-theme='dawn'] .orb-scene--dawn,
-:root[data-theme='sea'] .orb-scene--sea,
-:root[data-theme='star'] .orb-scene--star { display: block; }
+:root[data-theme='sea'] .orb-scene--dynamic,
+:root[data-theme='star'] .orb-scene--dynamic { display: block; }
 .orb-glass {
   z-index: 2;
   background: radial-gradient(ellipse at 25% 12%, rgb(255 255 255 / .3), transparent 32%);
@@ -89,18 +87,7 @@
   background: repeating-conic-gradient(from 12deg, transparent 0deg 17deg, rgb(255 255 234 / .18) 21deg, transparent 27deg);
   mix-blend-mode: soft-light;
 }
-.orb-scene--sea {
-  background: radial-gradient(circle at 37% 24%, #194358 0%, #071b2c 64%, #010b18 100%);
-}
-.orb-moon, .orb-moon-glow { animation: orb-moonlight 10s ease-in-out infinite; }
-.orb-moon-glow { animation-name: orb-moon-halo; }
-.orb-tide { animation: orb-tide 10s cubic-bezier(.45, 0, .55, 1) infinite; }
-.orb-wave-front { animation: orb-wave 4.5s ease-in-out infinite alternate; }
-.orb-wave-back { animation: orb-wave 5.2s ease-in-out infinite alternate-reverse; }
-.orb-scene--star { background: radial-gradient(circle at 45% 40%, #171420, #05050d 72%); }
-.orb-accretion { animation: orb-accretion 6s ease-in-out infinite; }
-.orb-disk-flow { animation: orb-disk-flow 8s linear infinite; }
-.orb-photon-ring { animation: orb-photon-ring 6s ease-in-out infinite; }
+.orb-scene--dynamic { background: #031018; }
 .orb-hold {
   z-index: 3;
   overflow: visible;
@@ -143,35 +130,9 @@
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(9px, -7px) scale(1.25); }
 }
-@keyframes orb-tide {
-  0%, 12%, 100% { transform: translateY(50px); }
-  48%, 58% { transform: translateY(1px); }
-}
-@keyframes orb-moonlight {
-  0%, 12%, 100% { opacity: 1; filter: brightness(1.12); }
-  48%, 58% { opacity: .18; filter: brightness(.48); }
-}
-@keyframes orb-moon-halo {
-  0%, 12%, 100% { opacity: .9; }
-  48%, 58% { opacity: .06; }
-}
-@keyframes orb-wave {
-  from { transform: translateX(-8px); }
-  to { transform: translateX(8px); }
-}
-@keyframes orb-accretion {
-  0%, 100% { opacity: .83; }
-  50% { opacity: 1; }
-}
-@keyframes orb-photon-ring {
-  0%, 100% { opacity: .85; }
-  50% { opacity: 1; }
-}
-@keyframes orb-disk-flow { to { stroke-dashoffset: -116; } }
 @keyframes orb-hold { to { stroke-dashoffset: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
   .theme-orb *, .theme-orb *::after { animation: none !important; transition: none !important; }
-  .orb-tide { transform: translateY(50px); }
   .orb-hold { display: none; }
 }
