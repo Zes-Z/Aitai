@@ -151,7 +151,7 @@ void main() {
   vec2 q = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
   if (uFrame.x > 0.5) q.x = -q.x;
   if (uFrame.y > 0.5) q.y = -q.y;
-  vec2 source = uFrame.z > 0.5 ? vec2(aspect * 0.5 + 0.42, 0.3) : vec2(aspect * 0.5 - 0.075, 0.46);
+  vec2 source = uFrame.z > 0.5 ? vec2(aspect * 0.5 + 0.42, 0.3) : vec2(aspect * 0.5 + 0.1, 0.62);
   float heading = (uFrame.z > 0.5 ? 3.42 : -2.48) + uAim + 0.035 * sin(uTime * 0.21) * uSway;
   vec2 v = q - source;
   float r = length(v);
@@ -210,7 +210,7 @@ const parseColor = (value: string): number[] => {
 };
 
 const geometryFor = (frame: Frame, aspect: number) => ({
-  source: frame.side ? [aspect * 0.5 + 0.42, 0.3] : [aspect * 0.5 - 0.075, 0.46],
+  source: frame.side ? [aspect * 0.5 + 0.42, 0.3] : [aspect * 0.5 + 0.1, 0.62],
   heading: frame.side ? 3.42 : -2.48
 });
 
