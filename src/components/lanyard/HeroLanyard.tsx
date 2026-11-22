@@ -45,7 +45,7 @@ export default function HeroLanyard({ faces, backImage }: Props) {
       cornerRadius={0.16}
       size={0.38}
       anchor="right"
-      strapLength={0.3}
+      strapLength={0.6}
       strapColor={STRAP_COLOR[theme]}
       strapWidth={0.72}
       metal="silver"
