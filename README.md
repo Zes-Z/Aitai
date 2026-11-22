@@ -2,7 +2,7 @@
 
 一个可以在「星空 / 海月 / 朝凪」三个世界之间下潜、浮起、等待天亮的三语个人博客。
 
-当前是 **M3 可运行切片**：Astro 7 + Tailwind 4 + Lenis，首页为「潮汐线 / 内容流 / 归港」三段、三主题切换、头像快捷菜单、三语路由、内容集合与详情页已经跑通。顶部导航已移除，右上角的球单击切语言、长按切主题。
+当前是 **M3 可运行切片**：Astro 7 + Tailwind 4 + Lenis，首页为「潮汐线 / 内容流 / 归港」三段、三主题切换、头像快捷菜单、三语路由、内容集合与站内 Sheet 渲染已经跑通。顶部导航已移除，右上角的球单击切语言、长按切主题。
 
 ## 启动
 
@@ -30,14 +30,14 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **对称边界**：头像按钮与主题球都是 46px，顶部与左右边缘使用相等的安全区边距。所有页面的内容留白由按钮内侧边界推导；窄屏标题、列表和相册随内容宽度排版。
 - **三语**：`/[lang]/`，zh / en / ja；一个键 × 三语的 `messages`；`hreflang` 与三语路由。
 - **内容集合**：`src/content/post/<slug>/{zh,en,ja}.md`、`src/content/project/<slug>/{zh,en,ja}.md`，共 21 个 markdown；页面通过 `getCollection` / `render()` 读取，正文由 Astro 渲染。
-- **相册集合**：`src/content/album/photo-video.json` 保留 Zes4U 字段（title / text 为 `[zh,en,ja]` 三语数组），`src/loaders/album.ts` 把每条记录变成独立 entry；相册页与首页影像域都从集合读取。
+- **相册集合**：`src/content/album/photo-video.json` 保留 Zes4U 字段（title / text 为 `[zh,en,ja]` 三语数组），`src/loaders/album.ts` 把每条记录变成独立 entry；首页内容流直接从集合读取。
 - **页面转场**：Tide / Constellate / Develop / Veil 四种；ClientRouter 负责导航，自研 overlay + Web Animations API 负责「封面 + 揭示」；支持返回、中断、reduced-motion；Astro 默认转场已关闭。
 - **语言切换**：朝凪用暖杏色 `Frame`，外框先展开、新页面随后显露；海月用深青色双层 `Curtain`，幕布升起覆盖旧页、再收起揭示新页；星空用蓝紫色 `Slices`，桌面五列、手机三列错峰推进新旧页面。Frame / Slices 使用隔离的静态页面快照，包含当时的背景画布；语言切换保留滚动位置，目标页较短时限制在可滚动范围内，返回时恢复各页保存的位置并反向播放。切换期间锁定输入，结束后恢复语言按钮焦点。支持中断恢复、慢速加载及减少动态效果。
-- **内容页**：项目列表 / 详情、相册、随想列表 / 正文，全部静态生成（35 页）。
+- **页面范围**：只生成三语首页、根跳转与 404，共 5 页；项目/相册/随想的归档页和详情页已移除。
 - **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、轨道拖拽、复制邮箱 Toast；浏览器页面滚动条隐藏。
 - **角落长按**：控制球与左上角头像不再依赖 `setPointerCapture`，改用窗口级 `pointerup/pointercancel` + 420ms 指针抬起兜底；鼠标允许 36px 抖动、触控 18px，避免轻微移动取消长按；按钮 `touch-action: none`。
 - **首页 Lanyard**：ReactBits Lanyard 原始源码直接挂在 hero 的全屏透明画布上；landscape、`anchor=right`、`elasticity=.1`、`damping=.3`、`gravity=.25`、`breeze=0`、`intro=false`、`strapLength=.6`（视觉上带子更长、卡片上下居中）、plain strap。正面**只有三行**：名字·年龄·居住地 / 座右铭 / 职业内容；没有 header、标签、编号、分割线、条码、页脚或水印。背面使用 `SiteConfig.identity.lanyard.backImage` 指向的图片（默认 ReactBits 原始封底图）；图片放在 `public/lanyard/`，推荐 1440×1024，其他比例会按 `cover` 裁切。年龄和职业在 `SiteConfig.identity` 中修改。≤1400px 收窄文案列，≤1100px 隐藏卡片。
-- **内容流**：移植 funiki 02 Life in Frames 的 **depth field**——图片按深度散落、滚动穿越、鼠标磁性倾斜、可拖拽；reduced-motion / 无 JS 时回退到 justified 图片墙。项目、album、随想按日期混合，无任何标题与提示。album 的单图 / 视频点击打开站内 `<dialog>` 媒体查看器；project / 随想进入各自的 md 详情页。数据有真实封面时渲染 `<Image>`，没有封面时沿用条目的 palette 生成渐变封面；视频条目保留播放三角。
+- **内容流**：移植 funiki 02 Life in Frames 的 **depth field**——图片按深度散落、滚动穿越、鼠标磁性倾斜、可拖拽；reduced-motion / 无 JS 时回退到 justified 图片墙。项目、album、随想按日期混合，无任何标题与提示。album 的单图 / 视频点击打开站内 `<dialog>` 媒体查看器；project / 随想点击后用全屏 Sheet 原地渲染 md（模板 + `<Content />`），不跳转页面。数据有真实封面时渲染 `<Image>`，没有封面时沿用条目的 palette 生成渐变封面；视频条目保留播放三角。
 - **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月直接使用 ReactBits Crystalized Ball（`eclipse` / `#DDEBFA` / 3 strands / 500 particles，按 46px 容器把 size 调到 0.9）；星空是 WebGL 三维光线追踪的黑洞与吸积盘。朝凪是轻量 CSS，海月是 ogl，星空是持久化 WebGL。
 - **内容模型**：只认 Text / Media / Complex Post 三种对象；Zes4U 的封面 + 章节 + 三语 md 结构、loader 规则与目录树见 [REQUIREMENTS §9.0](REQUIREMENTS.md#90-三种内容对象m4-定稿)。
 - **统一背景画布**：三个主题的背景都是固定全屏层，hero 不再有独立渐变遮罩；内容流与归港全部透明，三段共用同一张背景资源。
@@ -57,7 +57,7 @@ src/
   loaders/         album.ts（JSON → content entries）
   data/sample.ts   技能示例数据
   i18n/            一个键 × 三语
-  pages/[lang]/    首页与详情页
+  pages/[lang]/    三语首页（内容归档/详情路由已删除）
   scripts/         world, theme, orb-art, avatar-dock, shell, page-transitions
   theme/           palettes, orb-shaders (star black hole), orb-fallback
   transitions/     language.ts（三种编排）、snapshot.ts（隔离页面快照）
@@ -80,6 +80,6 @@ SiteConfig.ts      身份、站点、导航、主题、动效开关
 - 语言转场的 Frame / Curtain / Slices 编排参考并改写自 [Codrops Interlude](https://github.com/codrops/interlude)，以原生 Web Animations API 接入；保留 [MIT 许可证](third-party/interlude-LICENSE.txt)。全部颜色读取当前主题变量。
 - 头像是 `public/avatar.svg` 占位，CV 是 `public/kim cv.pdf`，发布前替换。
 - 相册目前用 `palette` 渐变和 `cover.svg` 占位；`photo-video.json` 的 `src` 指向尚未放入的真实照片。
-- 三主题、头像快捷菜单、三语路由、内容集合、四种页面转场与详情页已可交互。
+- 三主题、头像快捷菜单、三语路由、内容集合、页面转场、媒体查看器与内容 Sheet 已可交互。
 - 顶部导航与移动端 Dock 已移除；全站导航靠滚动和右上角的主题球。
 - 主题切换目前是单层圆环 `Bloom`；6 条完整分镜与 Three.js 世界还在下一步。

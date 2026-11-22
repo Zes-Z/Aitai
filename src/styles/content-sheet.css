@@ -1,0 +1,95 @@
+/* ============================================================
+   In-page content sheet (project / thought)
+   ============================================================ */
+
+.content-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(1200px 800px at 78% -10%, color-mix(in srgb, var(--bg-2) 82%, transparent), transparent 64%),
+    var(--bg);
+  color: var(--text);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .28s var(--ease-soft), visibility 0s linear .28s;
+}
+
+.content-sheet[hidden] { display: none; }
+.content-sheet.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .35s var(--ease-soft), visibility 0s;
+}
+
+.content-sheet__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: flex-end;
+  padding: clamp(14px, 2.2vw, 24px) var(--gutter);
+  pointer-events: none;
+}
+
+.content-sheet__close {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  color: var(--text);
+  backdrop-filter: blur(14px) saturate(1.15);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: background-color .3s var(--ease-soft), transform .35s var(--ease-soft);
+}
+.content-sheet__close:hover {
+  background: var(--surface-2);
+  transform: rotate(90deg);
+}
+.content-sheet__close svg { width: 19px; height: 19px; }
+
+.content-sheet__scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.content-sheet__scroll::-webkit-scrollbar { display: none; }
+
+.content-sheet__inner {
+  width: 100%;
+  max-width: 900px;
+  margin-inline: auto;
+  padding: clamp(78px, 11vh, 118px) var(--gutter) clamp(96px, 14vh, 150px);
+}
+
+.sheet-article .detail-kicker { margin-bottom: 1rem; }
+.sheet-article .detail-title { max-width: 16ch; }
+.sheet-article .detail-summary { max-width: 58ch; }
+.sheet-article .detail-hero { margin-top: clamp(1.4rem, 3vw, 2.4rem); }
+.sheet-article .detail-body { margin-top: clamp(1.8rem, 4vw, 3rem); }
+.sheet-article .detail-body table { width: 100%; }
+
+html.is-sheet-open { overflow: hidden; }
+html.is-sheet-open .avatar-dock,
+html.is-sheet-open .theme-orb {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .2s ease, visibility 0s linear .2s;
+}
+
+@media (max-width: 640px) {
+  .content-sheet__close { width: 42px; height: 42px; }
+  .content-sheet__inner { padding-top: 72px; }
+}

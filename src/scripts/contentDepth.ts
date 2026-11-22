@@ -93,15 +93,13 @@ export function initContentDepth(): void {
   tiles.forEach((tile, index) => {
     const ratio = Number.parseFloat(getComputedStyle(tile).getPropertyValue('--r')) || 1.5;
     const isMedia = tile.hasAttribute('data-media-tile');
-    const href = tile.getAttribute('href') ?? '';
     const image = tile.querySelector<HTMLImageElement>('img');
     const imageSrc = image?.currentSrc || image?.src || '';
     const label = tile.getAttribute('aria-label') ?? '';
 
-    const el = document.createElement(isMedia ? 'button' : 'a') as HTMLButtonElement | HTMLAnchorElement;
+    const el = document.createElement('button') as HTMLButtonElement;
+    el.type = 'button';
     el.className = 'depth-item';
-    if (isMedia) (el as HTMLButtonElement).type = 'button';
-    else (el as HTMLAnchorElement).href = href;
     el.setAttribute('aria-label', label);
     el.style.setProperty('--r', ratio.toFixed(4));
     el.style.setProperty('--p1', tile.style.getPropertyValue('--p1'));
@@ -128,10 +126,8 @@ export function initContentDepth(): void {
         event.preventDefault();
         return;
       }
-      if (isMedia) {
-        event.preventDefault();
-        tile.click();
-      }
+      event.preventDefault();
+      tile.click();
     });
 
     field.append(el);

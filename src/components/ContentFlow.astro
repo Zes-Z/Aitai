@@ -1,10 +1,10 @@
 ---
 import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import { t } from '../i18n';
-import { withBase } from '../utils/paths';
 import { LANGS, type Lang } from '../types';
 import '../styles/content-depth.css';
+import '../styles/content-sheet.css';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -32,7 +32,7 @@ const ratioFor = (ratio: string) => (ratio === 'portrait' ? 0.75 : ratio === 'sq
 type FeedItem = {
   kind: 'project' | 'thought' | 'album';
   id: string;
-  href: string;
+  sheetKey?: string;
   title: string;
   palette: [string, string, string];
   ratio: number;
@@ -41,39 +41,51 @@ type FeedItem = {
   videoUrl?: string;
 };
 
-const projects = (await getCollection('project'))
-  .filter((entry) => entry.id.endsWith('/' + lang))
-  .map((entry) => {
-    const slug = entry.id.split('/')[0];
-    const image = pickFolderImage(slug);
-    return {
-      kind: 'project' as const,
-      id: 'project-' + slug,
-      href: withBase('/' + lang + '/projects/' + slug + '/'),
-      title: entry.data.title,
-      palette: entry.data.palette as [string, string, string],
-      ratio: image ? image.width / image.height : 1.5,
-      date: entry.data.year + '.00.' + entry.data.index,
-      image,
-    };
-  });
+const projects = await Promise.all(
+  (await getCollection('project'))
+    .filter((entry) => entry.id.endsWith('/' + lang))
+    .map(async (entry) => {
+      const slug = entry.id.split('/')[0];
+      const image = pickFolderImage(slug);
+      const { Content } = await render(entry);
+      return {
+        kind: 'project' as const,
+        id: 'project-' + slug,
+        slug,
+        sheetKey: 'project:' + slug,
+        title: entry.data.title,
+        palette: entry.data.palette as [string, string, string],
+        ratio: image ? image.width / image.height : 1.5,
+        date: entry.data.year + '.00.' + entry.data.index,
+        image,
+        data: entry.data,
+        Content,
+      };
+    })
+);
 
-const thoughts = (await getCollection('post'))
-  .filter((entry) => entry.id.endsWith('/' + lang))
-  .map((entry) => {
-    const slug = entry.id.split('/')[0];
-    const image = pickFolderImage(slug);
-    return {
-      kind: 'thought' as const,
-      id: 'thought-' + slug,
-      href: withBase('/' + lang + '/thoughts/' + slug + '/'),
-      title: entry.data.title,
-      palette: entry.data.palette as [string, string, string],
-      ratio: image ? image.width / image.height : 1.5,
-      date: entry.data.date,
-      image,
-    };
-  });
+const thoughts = await Promise.all(
+  (await getCollection('post'))
+    .filter((entry) => entry.id.endsWith('/' + lang))
+    .map(async (entry) => {
+      const slug = entry.id.split('/')[0];
+      const image = pickFolderImage(slug);
+      const { Content } = await render(entry);
+      return {
+        kind: 'thought' as const,
+        id: 'thought-' + slug,
+        slug,
+        sheetKey: 'post:' + slug,
+        title: entry.data.title,
+        palette: entry.data.palette as [string, string, string],
+        ratio: image ? image.width / image.height : 1.5,
+        date: entry.data.date,
+        image,
+        data: entry.data,
+        Content,
+      };
+    })
+);
 
 const album = (await getCollection('album'))
   .filter((entry) => !entry.data.draft)
@@ -83,7 +95,6 @@ const album = (await getCollection('album'))
     return {
       kind: 'album' as const,
       id: 'album-' + entry.id,
-      href: '',
       title: entry.data.title[langIndex] ?? entry.data.title[0],
       palette: (entry.data.palette ?? ['#0b1026', '#22306b', '#8fb3ff']) as [string, string, string],
       ratio: image ? image.width / image.height : ratioFor(entry.data.ratio),
@@ -140,19 +151,67 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
       }
 
       return (
-        <a
+        <button
+          type="button"
           class="content-tile content-tile--article"
-          href={item.href}
+          data-content-sheet-trigger={item.sheetKey}
           style={style}
           aria-label={item.title}
+          aria-haspopup="dialog"
           data-reveal
         >
           {media}
-        </a>
+        </button>
       );
     })}
   </div>
 </section>
+
+{projects.map((project) => (
+  <template data-content-sheet={project.sheetKey}>
+    <article class="sheet-article">
+      <p class="detail-kicker">
+        <span>{project.data.year}</span>
+        <span>{project.data.role}</span>
+        <span>{project.data.tags.join(' / ')}</span>
+      </p>
+      <h1 class="detail-title">{project.data.title}</h1>
+      <p class="detail-summary">{project.data.summary}</p>
+      <div class="detail-hero" style={`--p1: ${project.data.palette[0]}; --p2: ${project.data.palette[1]}; --p3: ${project.data.palette[2]}`}>
+        <span class="detail-mark">{project.data.index}</span>
+      </div>
+      <div class="detail-body"><project.Content /></div>
+    </article>
+  </template>
+))}
+
+{thoughts.map((thought) => (
+  <template data-content-sheet={thought.sheetKey}>
+    <article class="sheet-article">
+      <p class="detail-kicker">
+        <span>{thought.data.date}</span>
+        <span>{thought.data.reading} min read</span>
+      </p>
+      <h1 class="detail-title">{thought.data.title}</h1>
+      <p class="detail-summary">{thought.data.excerpt}</p>
+      <div class="detail-hero" style={`--p1: ${thought.data.palette[0]}; --p2: ${thought.data.palette[1]}; --p3: ${thought.data.palette[2]}`}>
+        <span class="detail-mark">会</span>
+      </div>
+      <div class="detail-body"><thought.Content /></div>
+    </article>
+  </template>
+))}
+
+<div class="content-sheet" data-content-sheet-root hidden role="dialog" aria-modal="true" aria-label={t('nav.home', lang)}>
+  <div class="content-sheet__bar">
+    <button class="content-sheet__close" type="button" data-content-sheet-close aria-label={t('aria.close', lang)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="content-sheet__scroll" data-lenis-prevent tabindex="0" role="region" aria-label={t('nav.home', lang)}>
+    <div class="content-sheet__inner" data-content-sheet-content></div>
+  </div>
+</div>
 
 <dialog class="media-viewer" data-media-viewer aria-label="Media viewer">
   <button class="media-viewer__close" type="button" data-viewer-close aria-label={t('aria.close', lang)}>
@@ -414,4 +473,11 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
 
   document.addEventListener('astro:page-load', initContentDepth);
   initContentDepth();
+</script>
+
+<script>
+  import { initContentSheet } from '../scripts/contentSheet';
+
+  document.addEventListener('astro:page-load', initContentSheet);
+  initContentSheet();
 </script>
