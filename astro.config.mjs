@@ -1,5 +1,6 @@
 
 import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
 // 自动识别部署平台
@@ -22,6 +23,8 @@ const site = isGitHubPages
 export default defineConfig({
   site,
   base,
+
+  integrations: [react()],
 
   trailingSlash: 'always',
 

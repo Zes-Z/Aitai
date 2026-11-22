@@ -74,8 +74,69 @@ export function createOrbFallback(canvas: HTMLCanvasElement) {
     ctx.beginPath(); ctx.arc(size / 2, size / 2, size * .182, 0, tau); ctx.stroke();
     ctx.shadowBlur = 0; ctx.fillStyle = '#010107'; ctx.fill(); disk(true);
   }
+
+  function dawn(t: number, size: number) {
+    if (!ctx) return;
+    const sky = ctx.createLinearGradient(0, 0, 0, size);
+    sky.addColorStop(0, '#f5b58f'); sky.addColorStop(.55, '#ffd6ad'); sky.addColorStop(1, '#ffe6c8');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, size, size);
+
+    const cx = size * .5, cy = size * (.45 + .004 * Math.sin(t * .18));
+    const radius = size * .29;
+    const halo = ctx.createRadialGradient(cx, cy, radius * .2, cx, cy, radius * 2.1);
+    halo.addColorStop(0, 'rgba(255,211,136,.46)'); halo.addColorStop(.45, 'rgba(255,164,92,.16)');
+    halo.addColorStop(1, 'rgba(255,164,92,0)');
+    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, radius * 2.1, 0, tau); ctx.fill();
+
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * .008);
+    for (let i = 0; i < 13; i++) {
+      ctx.rotate(tau / 13);
+      ctx.strokeStyle = 'rgba(255,220,155,.15)'; ctx.lineWidth = size * .006;
+      ctx.beginPath(); ctx.moveTo(radius * 1.12, 0); ctx.lineTo(radius * 1.9, 0); ctx.stroke();
+    }
+    ctx.restore();
+
+    const sun = ctx.createRadialGradient(cx - radius * .35, cy - radius * .32, radius * .05, cx, cy, radius);
+    sun.addColorStop(0, '#fffdf0'); sun.addColorStop(.28, '#ffe9a9'); sun.addColorStop(.7, '#ffc45d');
+    sun.addColorStop(1, '#e77a2d');
+    ctx.fillStyle = sun; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, tau); ctx.fill();
+
+    const horizon = size * .73;
+    const water = ctx.createLinearGradient(0, horizon, 0, size);
+    water.addColorStop(0, '#386e70'); water.addColorStop(.5, '#16434f'); water.addColorStop(1, '#061a28');
+    ctx.fillStyle = water; ctx.beginPath(); ctx.moveTo(0, horizon);
+    for (let i = 0; i <= 40; i++) {
+      const x = i / 40;
+      ctx.lineTo(x * size, horizon + Math.sin(x * 18 + t * .4) * size * .006);
+    }
+    ctx.lineTo(size, size); ctx.lineTo(0, size); ctx.closePath(); ctx.fill();
+
+    ctx.save(); ctx.clip();
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath();
+      for (let j = 0; j <= 32; j++) {
+        const x = j / 32;
+        const y = horizon + (i + 1) / 10 * (size - horizon) + Math.sin(x * 21 - t * 1.1 + i) * size * .008;
+        if (!j) ctx.moveTo(0, y); else ctx.lineTo(x * size, y);
+      }
+      ctx.strokeStyle = 'rgba(255,210,160,.1)'; ctx.lineWidth = size * .004; ctx.stroke();
+    }
+    const refl = ctx.createLinearGradient(cx - size * .16, 0, cx + size * .16, 0);
+    refl.addColorStop(0, 'rgba(255,192,116,0)'); refl.addColorStop(.5, 'rgba(255,192,116,.24)');
+    refl.addColorStop(1, 'rgba(255,192,116,0)');
+    ctx.fillStyle = refl; ctx.fillRect(0, horizon, size, size - horizon);
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(255,242,212,.42)'; ctx.lineWidth = size * .006;
+    ctx.beginPath(); ctx.moveTo(0, horizon); ctx.lineTo(size, horizon); ctx.stroke();
+  }
+
   return {
-    draw(scene: 'sea' | 'star', time: number) { if (scene === 'sea') sea(time, canvas.width); else hole(time, canvas.width); },
+    draw(scene: 'sea' | 'star' | 'dawn', time: number) {
+      if (scene === 'sea') sea(time, canvas.width);
+      else if (scene === 'star') hole(time, canvas.width);
+      else dawn(time, canvas.width);
+    },
     dispose() {},
   };
 }

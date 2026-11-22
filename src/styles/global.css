@@ -12,6 +12,7 @@
 
   --maxw: 1440px;
   --corner-size: 46px;
+  --orb-size: clamp(78px, 7.5vw, 104px);
   --corner-inset: max(clamp(18px, 3vw, 32px), env(safe-area-inset-top), env(safe-area-inset-left), env(safe-area-inset-right));
   --corner-top: var(--corner-inset);
   --gutter: calc(var(--corner-inset) + var(--corner-size));
@@ -545,6 +546,87 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   box-shadow: 0 0 60px color-mix(in srgb, var(--glow) 26%, transparent);
+}
+
+
+.hero-lanyard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 470px);
+  margin-left: auto;
+}
+.hero-lanyard .hero-avatar {
+  z-index: 2;
+  margin-bottom: -0.15rem;
+}
+.lanyard-stage {
+  position: relative;
+  width: 100%;
+  height: clamp(450px, 52vh, 570px);
+  margin-top: -0.2rem;
+  touch-action: pan-y;
+}
+.lanyard-stage > .lanyard {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.lanyard-stage::after {
+  content: '';
+  position: absolute;
+  inset: 10% 6% 2%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, var(--glow) 16%, transparent), transparent 68%);
+  filter: blur(28px);
+}
+.lanyard-caption {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  width: 100%;
+  margin-top: 0.15rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.lanyard-clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.lanyard-clock b {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text);
+}
+.lanyard-clock em {
+  font-style: normal;
+  font-size: 0.55rem;
+  color: var(--faint);
+}
+.lanyard-flip {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--accent) 80%, var(--muted));
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .hero-lanyard { width: min(100%, 440px); margin: 0 auto; }
+  .lanyard-stage { height: clamp(390px, 54vh, 500px); }
+}
+@media (max-width: 600px) {
+  .hero-lanyard { width: min(100%, 390px); }
+  .lanyard-stage { height: 410px; }
+  .lanyard-caption { gap: 0.7rem; font-size: 0.52rem; }
+  .lanyard-flip { display: none; }
 }
 
 /* ============================================================
@@ -1852,8 +1934,7 @@ section[id] { scroll-margin-top: calc(var(--header-h) + 16px); }
 .index-row .name { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2.4rem); line-height: 1.05; }
 .index-row .meta { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
 
-.album-grid {
-  display: grid;
+.album-grid {  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.9rem;
 }

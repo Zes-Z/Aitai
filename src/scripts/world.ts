@@ -142,9 +142,9 @@ export function initWorld() {
   function drawSea(t: number) {
     const c = palette.sea;
     const horizon = h * 0.58;
-    const mx = w * 0.72 + pointerX * 10;
+    const mx = w * 0.84 + pointerX * 10;
     const my = h * 0.2 + pointerY * 8;
-    const moonR = Math.min(w, h) * 0.058;
+    const moonR = Math.min(w, h) * 0.05;
 
     ctx.save();
 
@@ -211,13 +211,13 @@ export function initWorld() {
     disc.addColorStop(0, '#fffaf0');
     disc.addColorStop(0.7, '#e9f2f6');
     disc.addColorStop(1, '#cfe3ea');
-    ctx.globalAlpha = 0.96 * fade;
+    ctx.globalAlpha = 0.02 * fade;
     ctx.fillStyle = disc;
     ctx.beginPath();
     ctx.arc(mx, my, moonR, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.16 * fade;
+    ctx.globalAlpha = 0.0 * fade;
     ctx.fillStyle = '#9fb8c4';
     ctx.beginPath();
     ctx.arc(mx - moonR * 0.3, my + moonR * 0.22, moonR * 0.14, 0, Math.PI * 2);

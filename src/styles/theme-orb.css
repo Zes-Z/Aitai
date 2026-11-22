@@ -1,4 +1,4 @@
-/* CSS sun with procedural moon/tide and 3D black-hole canvas scenes. */
+/* One 3D sphere: procedural sea, black hole and dawn sun shader scenes. */
 .theme-orb {
   position: fixed;
   top: var(--corner-top);
@@ -8,8 +8,8 @@
 .orb-button {
   position: relative;
   display: block;
-  width: var(--corner-size);
-  height: var(--corner-size);
+  width: var(--orb-size);
+  height: var(--orb-size);
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: 50%;
@@ -38,10 +38,7 @@
   border-radius: inherit;
   pointer-events: none;
 }
-.orb-scene { display: none; overflow: hidden; }
-:root[data-theme='dawn'] .orb-scene--dawn,
-:root[data-theme='sea'] .orb-scene--dynamic,
-:root[data-theme='star'] .orb-scene--dynamic { display: block; }
+.orb-scene { display: block; overflow: hidden; }
 .orb-glass {
   z-index: 2;
   background: radial-gradient(ellipse at 25% 12%, rgb(255 255 255 / .3), transparent 32%);
@@ -51,43 +48,6 @@
   background: radial-gradient(ellipse at 26% 12%, rgb(185 204 255 / .1), transparent 30%);
   box-shadow: inset 0 0 4px rgb(173 191 255 / .15);
 }
-.orb-scene--dawn {
-  background:
-    radial-gradient(circle at 34% 28%, #fff1c9 0%, #ffe7bc 24%, transparent 57%),
-    radial-gradient(circle at 70% 78%, #ffd08e 0%, #fbd7bd 38%, #f8dfce 74%);
-}
-.orb-solar-orbit {
-  position: absolute;
-  inset: 6px;
-  border: 1px solid rgb(237 156 91 / .32);
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgb(255 237 181 / .4);
-}
-.orb-sun {
-  position: absolute;
-  /* Preserve the original dawn dot's anchor, seven-second path and scale. */
-  top: 32%;
-  left: 32%;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 27%, #fffef3 0%, #fff8bd 23%, #ffd35b 55%, #f1a12f 79%, #d67425 100%);
-  box-shadow:
-    inset -.8px -1px 2px rgb(176 80 18 / .3),
-    0 0 3px #fff9cf,
-    0 0 9px rgb(255 202 68 / .9),
-    0 0 17px rgb(255 163 59 / .55);
-  animation: orb-drift 7s ease-in-out infinite;
-}
-.orb-sun::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: repeating-conic-gradient(from 12deg, transparent 0deg 17deg, rgb(255 255 234 / .18) 21deg, transparent 27deg);
-  mix-blend-mode: soft-light;
-}
-.orb-scene--dynamic { background: #031018; }
 .orb-hold {
   z-index: 3;
   overflow: visible;
@@ -126,10 +86,6 @@
 .orb-paused .orb-scene *,
 .orb-paused .orb-scene *::after { animation-play-state: paused; }
 
-@keyframes orb-drift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(9px, -7px) scale(1.25); }
-}
 @keyframes orb-hold { to { stroke-dashoffset: 0; } }
 
 @media (prefers-reduced-motion: reduce) {

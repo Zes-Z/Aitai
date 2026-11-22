@@ -47,7 +47,7 @@ vec3 moonScene(vec2 uv) {
   vec3 sky = mix(vec3(0.015, 0.055, 0.09), vec3(0.08, 0.19, 0.23), uv.y);
   vec3 color = sky;
 
-  vec2 p = (uv - vec2(0.47, 0.65)) / 0.255;
+  vec2 p = (uv - vec2(0.5, 0.62)) / 0.30;
   float r2 = dot(p, p);
   color += vec3(0.11, 0.2, 0.21) * exp(-r2 * 0.9) * 0.3;
   if (r2 < 1.0) {
@@ -81,7 +81,7 @@ vec3 sea(vec2 uv, float t) {
   water *= 0.87 + 0.13 * sin(a + b * 0.3);
   vec3 halfVector = normalize(vec3(-0.5, 0.7, 1.8));
   float specular = pow(max(dot(normal, halfVector), 0.0), 48.0);
-  float reflection = exp(-pow((uv.x - 0.47 + slope.x * 0.18) * 4.5, 2.0));
+  float reflection = exp(-pow((uv.x - 0.5 + slope.x * 0.18) * 4.5, 2.0));
   water += vec3(0.38, 0.62, 0.6) * specular * reflection * 0.7;
   float lace = noise(q * vec2(105.0, 64.0) + vec2(t * 0.22, -t * 0.6));
   float foam = exp(-pow(depth / (0.012 + lace * 0.012), 2.0));
@@ -112,11 +112,11 @@ vec3 blackHole(vec2 uv, float t) {
   // A ninety-second roll and an inclined orbit change real 3D viewing geometry.
   screen = rotate(-0.3 + t * TAU / 90.0) * screen;
   float orbit = t * TAU / 110.0;
-  vec3 eye = vec3(sin(orbit) * 5.4, 1.55 + 0.35 * sin(t * TAU / 80.0), cos(orbit) * 5.4);
+  vec3 eye = vec3(sin(orbit) * 4.6, 1.45 + 0.3 * sin(t * TAU / 80.0), cos(orbit) * 4.6);
   vec3 forward = normalize(-eye);
   vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0)));
   vec3 up = cross(right, forward);
-  vec3 ray = normalize(forward + screen.x * right * 0.51 + screen.y * up * 0.51);
+  vec3 ray = normalize(forward + screen.x * right * 0.62 + screen.y * up * 0.62);
   vec3 point = eye;
   vec3 color = vec3(0.0);
   float transmission = 1.0;
@@ -126,8 +126,8 @@ vec3 blackHole(vec2 uv, float t) {
   for (int i = 0; i < 96; i++) {
     float radius = length(point);
     closest = min(closest, radius);
-    if (radius < 0.73) { captured = true; break; }
-    float stepSize = clamp(radius * 0.085, 0.025, 0.3);
+    if (radius < 0.68) { captured = true; break; }
+    float stepSize = clamp(radius * 0.08, 0.02, 0.28);
     vec3 previous = point;
     ray = normalize(ray - point * (0.52 * stepSize / (radius * radius * radius)));
     point += ray * stepSize;
@@ -135,7 +135,7 @@ vec3 blackHole(vec2 uv, float t) {
       float f = previous.y / (previous.y - point.y);
       vec3 hit = mix(previous, point, f);
       float diskRadius = length(hit.xz);
-      if (diskRadius > 1.02 && diskRadius < 2.25) {
+      if (diskRadius > 0.92 && diskRadius < 2.12) {
         color += diskLight(hit, t, eye) * transmission;
         transmission *= 0.16;
       }
@@ -146,13 +146,66 @@ vec3 blackHole(vec2 uv, float t) {
   float stars = pow(hash(floor((ray.xy / max(abs(ray.z), 0.2)) * 360.0)), 130.0);
   background += vec3(0.4, 0.47, 0.65) * stars * 0.25;
   if (!captured) color += background * transmission;
-  float photon = exp(-pow((closest - 0.83) / 0.055, 2.0));
-  color += vec3(1.0, 0.6, 0.22) * photon * 0.32 * transmission;
+  float photon = exp(-pow((closest - 0.78) / 0.075, 2.0));
+  color += vec3(1.0, 0.58, 0.2) * photon * 0.5 * transmission;
+  float inner = exp(-pow((closest - 0.7) / 0.16, 2.0));
+  color += vec3(1.0, 0.38, 0.1) * inner * 0.12 * transmission;
   return pow(vec3(1.0) - exp(-color * 1.15), vec3(0.88));
 }
+
+vec3 dawnScene(vec2 uv, float t) {
+  // A low, large sun over a nearly still morning sea.
+  vec3 high = vec3(0.96, 0.66, 0.51);
+  vec3 low = vec3(1.0, 0.82, 0.62);
+  vec3 color = mix(high, low, smoothstep(0.05, 0.75, uv.y));
+
+  float horizon = 0.27;
+  vec2 p = (uv - vec2(0.5, 0.45 + 0.004 * sin(t * 0.18))) / 0.29;
+  float r2 = dot(p, p);
+  float r = sqrt(r2);
+
+  // Wide corona and slow rays: the sun should read before the glass edge.
+  color += vec3(1.0, 0.50, 0.18) * exp(-r2 * 2.0) * 0.24;
+  float ang = atan(p.y, p.x);
+  float rays = pow(0.5 + 0.5 * cos(ang * 13.0 + t * 0.07), 9.0);
+  color += vec3(1.0, 0.62, 0.26) * rays * smoothstep(0.82, 1.12, r)
+    * (1.0 - smoothstep(1.28, 2.45, r)) * 0.15;
+
+  if (r2 < 1.0) {
+    vec3 n = vec3(p, sqrt(1.0 - r2));
+    float light = max(dot(n, normalize(vec3(-0.45, 0.60, 0.80))), 0.0);
+    float gran = fbm(p * 7.0 + vec2(t * 0.035, -t * 0.025));
+    vec3 sun = mix(vec3(0.90, 0.30, 0.055), vec3(1.0, 0.94, 0.63), pow(light, 1.2));
+    sun *= 0.84 + 0.24 * gran;
+    sun *= 0.72 + 0.38 * sqrt(max(1.0 - r2, 0.0));
+    float spot = smoothstep(0.66, 0.9, fbm(p * 12.0 + vec2(0.4, -t * 0.02)));
+    sun -= vec3(0.34, 0.12, 0.015) * spot * 0.3;
+    color = mix(color, sun, smoothstep(1.0, 0.94, r2));
+  }
+
+  // Calm water below the horizon; only slow, shallow ripples.
+  float water = 1.0 - smoothstep(horizon - 0.01, horizon + 0.01, uv.y);
+  vec3 sea = mix(vec3(0.018, 0.085, 0.13), vec3(0.12, 0.29, 0.31),
+    smoothstep(0.0, horizon, uv.y));
+  float ripple = sin(uv.x * 33.0 + sin(uv.y * 17.0 - t * 0.38) * 2.0 + t * 0.3) * 0.5 + 0.5;
+  sea += vec3(0.22, 0.34, 0.31) * ripple * 0.05;
+  float refl = exp(-pow((uv.x - 0.5) * 9.0, 2.0)) * (1.0 - smoothstep(0.0, horizon, uv.y));
+  float glint = pow(0.5 + 0.5 * sin(uv.y * 108.0 - t * 1.15 + sin(uv.x * 19.0) * 2.0), 6.0);
+  sea += vec3(1.0, 0.65, 0.30) * refl * (0.22 + 0.28 * glint);
+  color = mix(color, sea, water);
+
+  // Thin horizon light and morning mist.
+  color += vec3(1.0, 0.67, 0.34) * exp(-pow((uv.y - horizon) * 27.0, 2.0)) * 0.22;
+  color += vec3(1.0, 0.86, 0.68) * smoothstep(horizon + 0.04, horizon + 0.18, uv.y)
+    * (1.0 - water) * 0.025;
+  return color;
+}
+
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
-  vec3 color = uScene < 0.5 ? sea(uv, uTime) : blackHole(uv, uTime);
+  vec3 color = uScene < 0.5 ? sea(uv, uTime)
+    : uScene < 1.5 ? blackHole(uv, uTime)
+    : dawnScene(uv, uTime);
   vec2 p = uv * 2.0 - 1.0;
   float glass = 1.0 - smoothstep(0.5, 1.15, length(p));
   color *= mix(0.56, 1.0, glass);

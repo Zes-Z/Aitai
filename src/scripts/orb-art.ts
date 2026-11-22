@@ -4,7 +4,8 @@ import { isTheme } from '../theme/palettes';
 import { orbFragmentShader, orbVertexShader } from '../theme/orb-shaders';
 import { createOrbFallback } from '../theme/orb-fallback';
 
-type Painter = { draw(scene: 'sea' | 'star', time: number): void; dispose(): void };
+type OrbScene = 'sea' | 'star' | 'dawn';
+type Painter = { draw(scene: OrbScene, time: number): void; dispose(): void };
 let mounted: { canvas: HTMLCanvasElement; sync(): void; stop(): void; dispose(): void } | undefined;
 let bound = false;
 
@@ -43,7 +44,7 @@ function gpuPainter(canvas: HTMLCanvasElement): Painter | null {
     draw(theme, seconds) {
       gl.viewport(0, 0, canvas.width, canvas.height); gl.useProgram(program);
       gl.uniform2f(resolution, canvas.width, canvas.height); gl.uniform1f(time, seconds);
-      gl.uniform1f(scene, theme === 'sea' ? 0 : 1); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.uniform1f(scene, theme === 'sea' ? 0 : theme === 'star' ? 1 : 2); gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
     dispose() { gl.deleteBuffer(buffer); gl.deleteProgram(program); },
   };
@@ -58,7 +59,7 @@ function mount(initialCanvas: HTMLCanvasElement) {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   const stop = () => { cancelAnimationFrame(frame); frame = 0; last = 0; };
   const draw = () => {
-    if (theme === 'dawn' || lost) return;
+    if (lost) return;
     if (!painter) {
       try { painter = gpuPainter(canvas); }
       catch (error) {
@@ -72,7 +73,7 @@ function mount(initialCanvas: HTMLCanvasElement) {
       }
       if (!painter) { painter = createOrbFallback(canvas); canvas.dataset.renderer = 'canvas-2d'; }
     }
-    const pixels = Math.min(256, Math.max(96, Math.round((canvas.clientWidth || 46) * Math.min(devicePixelRatio || 1, 2))));
+    const pixels = Math.min(320, Math.max(128, Math.round((canvas.clientWidth || 96) * Math.min(devicePixelRatio || 1, 2))));
     if (canvas.width !== pixels || canvas.height !== pixels) { canvas.width = pixels; canvas.height = pixels; }
     painter?.draw(theme, reduce.matches ? 0 : elapsed);
   };
@@ -87,7 +88,7 @@ function mount(initialCanvas: HTMLCanvasElement) {
     const value = document.documentElement.dataset.theme;
     const next = isTheme(value) ? value : siteConfig.theme.default;
     if (next !== theme) { theme = next; elapsed = 0; }
-    if (theme === 'dawn' || document.hidden || !visible || lost) return;
+    if (document.hidden || !visible || lost) return;
     draw();
     if (!reduce.matches) frame = requestAnimationFrame(loop);
   };

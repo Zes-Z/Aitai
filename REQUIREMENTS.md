@@ -1192,7 +1192,202 @@ export function t(key: keyof typeof messages, lang: Lang): string {
 
 ## 9. 内容模型与文件结构
 
-### 9.1 文件树
+### 9.0 三种内容对象（M4 定稿）
+
+本站只有三种内容对象。路由、列表、搜索都按这三类处理；「随想 / 相册 / 项目」是展示名，不是第四种对象。
+
+| 对象 | 一句话 | 组织单位 | 是否进入文章列表 | 典型 |
+| --- | --- | --- | --- | --- |
+| **Text** | 一段可被任意页面引用的长文字 | 一个 key | 否，按 key 读取 | 关于、首页说明、空状态、项目引言 |
+| **Media** | 图片 / 视频 + 一个可渲染的 `portfolio.md` | 一个文件夹 | 是 | 相册、作品集、项目 |
+| **Complex Post** | 封面 + 顶层三语正文 + 多个章节子文件夹 | 一个文件夹 | 是，仅顶层 | 电路学笔记、课程笔记、连载长文 |
+
+选择规则只有一条：
+
+~~~text
+只有文字，没有自己的媒体和封面        → Text
+有图片/视频，并有 portfolio.md 要渲染  → Media
+有封面，且正文要拆成多个章节文件夹     → Complex Post
+~~~
+
+> 「项目」不是独立对象：一个项目如果主要是图片、视频和一段说明，就是 Media；如果它有封面、章节和多页正文，就是 Complex Post。
+
+#### 9.0.1 Text · 文字对象
+
+Text 是**内容片段**，不是文章详情页。它解决的是「同一段说明要在多个位置复用」，例如首页第二幅的引言、关于页、空状态、作品集开场白。
+
+~~~text
+src/content/text/
+└─ drift-intro/
+   ├─ zh.md
+   ├─ en.md
+   └─ ja.md
+~~~
+
+```yaml
+---
+title: 漂流物引言          # 可选；仅编辑器/无障碍需要
+description: 首页第二幅的说明 # 可选
+updated: 2026-11-22
+draft: false
+---
+
+拖动它们，或者只是看看。
+```
+
+- key = 文件夹名（`drift-intro`），文件必须正好是 `zh.md / en.md / ja.md`。
+- 组件通过 `getEntry('text', lang + '/' + key)` 读取；没有 key 的页面不生成路由。
+- 需要独立页面时，在 frontmatter 写 `route: true`，才生成 `/{lang}/text/{key}/`。
+- Text 不参与文章归档、上下篇、阅读时长、封面图；它只是被引用的一段正文。
+- **边界**：按钮、导航、表单标签等 UI 文案继续放 `src/i18n/messages.ts`；Text 只放编辑性长文字。
+
+#### 9.0.2 Media · 图片 / 视频 / 作品集对象
+
+Media 有两种形态，但共用同一套扫描、封面和灯箱：
+
+1. **平面媒体流**：`media/` 根目录下的图片、视频，加一个可选的 `photo-video.json` 元数据文件。
+2. **作品集**：`media/<slug>/` 文件夹，里面是图片、视频和 **必须可渲染的 `portfolio.md`**。
+
+~~~text
+src/content/media/
+├─ photo-video.json              # 平面照片/视频的元数据
+├─ IMG_2372.JPG
+├─ clip-01.mp4
+└─ 花开两朵，各表一枝/
+   ├─ portfolio.md               # 作品集说明：frontmatter + 正文
+   ├─ 01.jpg
+   ├─ 02.jpg
+   └─ clip.mp4
+~~~
+
+`portfolio.md` 的 frontmatter：
+
+```yaml
+---
+title: 花开两朵，各表一枝       # string 或 { zh, en, ja }
+description: 一组关于春天的照片   # string 或 { zh, en, ja }
+category: photography
+heroImage: 01.jpg              # 可省略，默认第一张
+related: [sea-moon]
+draft: false
+---
+这里是一段会被真正渲染的说明文字，可以写 **Markdown**、引用、列表。
+```
+
+正文里可以用一个 `json` 代码块给单张照片补元数据（代码块本身不会被当正文渲染）：
+
+~~~json
+{
+  "01.jpg": {
+    "title": ["花开", "Bloom", "開花"],
+    "location": "京都",
+    "date": "2026-04-02",
+    "exif": { "camera": "Canon EOS R8" }
+  }
+}
+~~~
+
+- 文件夹里出现 `.jpg/.jpeg/.png/.webp/.avif/.gif/.mp4/.webm/.mov` 就被扫描为媒体；`draft: true` 的单张照片隐藏。
+- 封面 = `heroImage`；没有就用第一张；没有媒体但有 `portfolio.md` 时，作品集卡不生成。
+- 作品集详情页结构：封面 → 标题/说明 → **渲染后的 `portfolio.md` 正文** → 图片/视频网格 → 灯箱；视频默认静音循环，灯箱可开声音。
+- 筛选：`category` 来自 `portfolio.md`，也允许单张照片覆盖。
+- Media **不拆章节**。如果一组内容需要「第一章 / 第二章」的多页正文，它就不是 Media，而是 Complex Post。
+- 项目（Project）用 Media 表达：一个 `media/<project-slug>/` + `portfolio.md`；不再单独维护第四种 schema。
+
+#### 9.0.3 Complex Post · 带封面的复杂 Post
+
+这是从 Zes4U 迁移的核心对象。一个 Post 是一个文件夹：**封面图 + 顶层三语正文 + 任意个章节子文件夹**。
+
+~~~text
+src/content/posts/电路学笔记/
+├─ 封面图片.jpg                 # 封面；也可用 postImage 指定
+├─ zh.md                       # 顶层：封面文 / 摘要 / 章节目录
+├─ en.md
+├─ ja.md
+├─ 一、基本电路观念/
+│  ├─ zh.md                    # 章节子页
+│  ├─ en.md
+│  └─ ja.md
+├─ 二、进阶电路分析/
+│  ├─ zh.md
+│  ├─ en.md
+│  └─ ja.md
+└─ 三、储能元件的电路分析/
+   ├─ zh.md
+   ├─ en.md
+   └─ ja.md
+~~~
+
+**顶层 `zh.md / en.md / ja.md`**
+
+```yaml
+---
+title: 电路学笔记
+description: 一句话摘要
+category: Math & Coding
+tag: [电路]
+pubDate: 2026-09-14
+postImage: ./封面图片.jpg
+homepined: false
+pinedOrder: 0
+draft: false
+---
+
+## 一、[基本电路观念](./一、基本电路观念/{lang}.md)
+## 二、[进阶电路分析](./二、进阶电路分析/{lang}.md)
+```
+
+**章节 `<章节名>/zh.md`**
+
+```yaml
+---
+title: 基本电路观念        # 可省略；loader 用文件夹名兜底
+description: 章节摘要        # 可省略
+draft: false
+---
+## 电路变量的定义
+...
+```
+
+加载规则（与 Zes4U `zestLoader` 一致）：
+
+1. 递归扫描 `src/content/posts/**/*.md`，只认 `zh.md / en.md / ja.md` 三种文件名。
+2. entry id = `<lang>/<相对路径去 .md>`，例如 `zh/电路学笔记/一、基本电路观念`。
+3. 路径段数 = 2（`<slug>/<lang>.md`）→ 顶层文章，`isSubpage: false`。
+4. 路径段数 > 2（`<slug>/<chapter>/<lang>.md`）→ 章节子页，`isSubpage: true`；缺 `title` 时用父文件夹名，缺 `category` 时填 `Subpage`。
+5. 只有顶层文章进入归档、首页列表、上下篇；章节子页仍生成独立静态页，但不进入列表。
+6. 顶层正文里的 `./章节/{lang}.md` 由 Markdown 链接解析器改写为本地化路由 `/{lang}/posts/<slug>/<章节>/`；图片路径相对**当前 md 所在文件夹**解析。
+
+路由：
+
+- 顶层：`/{lang}/posts/<slug>/`
+- 章节：`/{lang}/posts/<slug>/<chapter>/`
+- slug 可以是中文、空格、标点；URL 统一 slugify，文件系统保留原名。
+
+章节页结构：
+
+- 面包屑：`Posts / <顶层标题> / <章节标题>`
+- 章节标题、阅读进度、目录（TOC）、渲染后的正文
+- 上一章 / 下一章（只在本 Post 内，不接全站上下篇）
+- 返回顶层目录
+
+封面规则：
+
+- 优先 frontmatter `postImage`；
+- 否则同目录 `封面图片.*` / `cover.*`；
+- 都没有时列表使用主题色渐变占位，不阻塞构建。
+
+#### 9.0.4 当前代码到目标模型的映射
+
+| 目标对象 | 当前 M3 实现 | 迁移动作 |
+| --- | --- | --- |
+| Text | `src/content/post/`（随想） | 纯文字随想改为 `src/content/text/<key>/`；带封面/章节的保留到 Complex Post |
+| Media | `src/content/album/` + `src/content/project/` | 统一到 `src/content/media/`；项目用 `portfolio.md` 描述，不再单独建 project schema |
+| Complex Post | 暂无章节能力 | 新增 `src/loaders/posts.ts`（可移植 Zes4U `zest.ts`）与章节路由；顶层/子页字段按 9.0.3 |
+
+> 迁移时先保留现有 URL：`/thoughts/`、`/album/`、`/projects/` 可以做 301/静态别名；内容文件夹可以逐步搬，不要一次性改动全部。
+
+### 9.1 文件树（M3 现状；目标结构见 9.0）
 
 原则：整体扁平；组件按职责分 5 个文件夹，不再往下嵌套超过 2 层；内容按「一个对象一个文件夹」组织。
 
@@ -1269,7 +1464,9 @@ aitai/
 └─ tsconfig.json
 ~~~
 
-### 9.2 随想 Post
+### 9.2 随想 Post（Text 的当前实现）
+
+> 目标模型见 9.0.1：纯文字随想迁移为 `src/content/text/<key>/`；本节描述当前 `post` 路径。
 
 - 路径：`src/content/post/{slug}/{lang}.md`；`slug` 可以有空格与中文（与 Zes4U 一致），URL 用 slugify 后的值。
 - 顶层 `{lang}.md` 是正式文章；子文件夹里的 `{lang}.md` 是外挂子文档，不进入列表。
@@ -1291,7 +1488,9 @@ draft: false
 - 列表排序：`pinned` 优先，然后 `date` 倒序。
 - 阅读时长按字符数估算（CJK 400 字/分钟，英文 220 词/分钟）。
 
-### 9.3 相册 Album
+### 9.3 相册 Album（Media 的当前实现）
+
+> 目标模型见 9.0.2：`album` 与 `project` 统一到 `media`，并让 `portfolio.md` 正文真正渲染。
 
 沿用 Zes4U 的 `photo-video.json` 字段，保证脚本与内容可直接迁移。
 
@@ -1345,7 +1544,9 @@ draft: false
 - 视频支持 `mp4 / webm / mov`；列表里默认静音、循环、hover 播放；灯箱里可开声音。
 - 缩略图由 `optimize-images.mjs` 生成 480 / 960 / 1600 三档，输出 WebP + AVIF。
 
-### 9.4 项目 Project
+### 9.4 项目 Project（Media 的当前实现）
+
+> 项目不是第四种对象：见 9.0.2，项目用 Media + `portfolio.md` 表达；若带封面和章节则属于 Complex Post。
 
 - 路径：`src/content/project/{slug}/{lang}.md`，媒体同目录。
 - 媒体种类多：封面图、过程图、短视频、外链 demo。用 frontmatter 的 `media` 数组描述顺序与说明。
