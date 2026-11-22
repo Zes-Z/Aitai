@@ -34,6 +34,7 @@ type FeedItem = {
   id: string;
   sheetKey?: string;
   title: string;
+  meta?: string;
   palette: [string, string, string];
   ratio: number;
   date: string;
@@ -92,10 +93,12 @@ const album = (await getCollection('album'))
   .map((entry) => {
     const image = imageModules[albumKey(entry.data.src)];
     const videoUrl = videoModules[albumKey(entry.data.src)];
+    const place = (entry.data.place ?? [entry.data.location, entry.data.location, entry.data.location])[langIndex] ?? entry.data.location;
     return {
       kind: 'album' as const,
       id: 'album-' + entry.id,
       title: entry.data.title[langIndex] ?? entry.data.title[0],
+      meta: [entry.data.date, place].filter(Boolean).join(' · '),
       palette: (entry.data.palette ?? ['#0b1026', '#22306b', '#8fb3ff']) as [string, string, string],
       ratio: image ? image.width / image.height : ratioFor(entry.data.ratio),
       date: entry.data.date,
@@ -139,6 +142,8 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
             data-media-tile
             data-src={item.image?.src ?? ''}
             data-video={item.videoUrl ?? ''}
+            data-caption={item.title}
+            data-meta={item.meta ?? ''}
             data-ratio={item.ratio.toFixed(4)}
             style={style}
             aria-label={item.title}
@@ -213,17 +218,31 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
   </div>
 </div>
 
-<dialog class="media-viewer" data-media-viewer aria-label="Media viewer">
-  <button class="media-viewer__close" type="button" data-viewer-close aria-label={t('aria.close', lang)}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-  </button>
-  <button class="media-viewer__nav media-viewer__prev" type="button" data-viewer-prev aria-label={t('aria.previous', lang)}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
-  </button>
-  <div class="media-viewer__stage" data-viewer-stage></div>
-  <button class="media-viewer__nav media-viewer__next" type="button" data-viewer-next aria-label={t('aria.next', lang)}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-  </button>
+<dialog class="media-viewer" data-media-viewer aria-label="Media viewer" tabindex="-1">
+  <div class="media-viewer__stage">
+    <div class="media-viewer__media" data-viewer-stage></div>
+    <div class="media-viewer__caption">
+      <p class="media-viewer__title" data-viewer-title></p>
+      <p class="media-viewer__meta" data-viewer-meta></p>
+    </div>
+  </div>
+
+  <div class="media-viewer__ui">
+    <button class="media-viewer__btn" type="button" data-viewer-prev aria-label={t('aria.previous', lang)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <span class="media-viewer__counter">
+      <span data-viewer-index>01</span>
+      <span class="media-viewer__sep" aria-hidden="true">/</span>
+      <span data-viewer-total>00</span>
+    </span>
+    <button class="media-viewer__btn" type="button" data-viewer-next aria-label={t('aria.next', lang)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <button class="media-viewer__btn media-viewer__close" type="button" data-viewer-close aria-label={t('aria.close', lang)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
 </dialog>
 
 <style>
@@ -312,63 +331,123 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
     height: 100svh;
     max-height: none;
     margin: 0;
-    padding: clamp(24px, 4vw, 56px);
+    padding: clamp(22px, 4vw, 56px) clamp(18px, 4vw, 56px) clamp(92px, 10vh, 118px);
     border: 0;
     background: transparent;
-    color: #fff;
+    color: var(--text);
   }
+  .media-viewer:focus,
+  .media-viewer:focus-visible { outline: none; }
   .media-viewer::backdrop {
-    background: rgb(3 5 12 / .86);
-    backdrop-filter: blur(16px) saturate(1.1);
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    backdrop-filter: blur(18px) saturate(1.08);
   }
   .media-viewer__stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 1.8vw, 20px);
+    width: 100%;
+    height: 100%;
+  }
+  .media-viewer__media {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 100%;
+    max-height: calc(100svh - clamp(210px, 26vh, 270px));
   }
-  .media-viewer__stage :global(img),
-  .media-viewer__stage :global(video) {
+  .media-viewer__media :global(img),
+  .media-viewer__media :global(video) {
     display: block;
     width: auto;
     height: auto;
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 92vw;
+    max-height: calc(100svh - clamp(210px, 26vh, 270px));
     object-fit: contain;
     border-radius: 4px;
+    box-shadow: 0 34px 80px -42px rgb(0 0 0 / .55);
   }
   :global(.media-viewer__fallback) {
-    width: min(86vw, 1200px);
-    aspect-ratio: var(--r);
+    width: min(82vw, 1080px);
+    height: min(64svh, 620px);
     border-radius: 8px;
     background:
       radial-gradient(120% 100% at 28% 18%, var(--p3), transparent 58%),
       linear-gradient(145deg, var(--p2), var(--p1));
+    box-shadow: 0 34px 80px -42px rgb(0 0 0 / .45);
   }
-  .media-viewer__close,
-  .media-viewer__nav {
+  .media-viewer__caption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    max-width: min(92vw, 900px);
+    text-align: center;
+  }
+  .media-viewer__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .media-viewer__meta {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .media-viewer__ui {
     position: fixed;
+    left: 50%;
+    bottom: clamp(18px, 3vw, 32px);
     z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+    backdrop-filter: blur(16px) saturate(1.1);
+    box-shadow: var(--shadow);
+    transform: translateX(-50%);
+  }
+  .media-viewer__btn {
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
-    border: 1px solid rgb(255 255 255 / .18);
+    width: 42px;
+    height: 42px;
+    border: 0;
     border-radius: 50%;
-    background: rgb(8 11 18 / .55);
-    color: #fff;
-    backdrop-filter: blur(10px);
+    background: transparent;
+    color: var(--text);
     cursor: pointer;
+    transition: background-color .3s var(--ease-soft), color .3s var(--ease-soft);
   }
-  .media-viewer__close { top: clamp(16px, 2.4vw, 30px); right: clamp(16px, 2.4vw, 30px); }
-  .media-viewer__nav { bottom: clamp(16px, 2.4vw, 30px); }
-  .media-viewer__prev { left: clamp(16px, 2.4vw, 30px); }
-  .media-viewer__next { right: clamp(16px, 2.4vw, 30px); }
-  .media-viewer__close:hover,
-  .media-viewer__nav:hover { background: rgb(255 255 255 / .14); }
-  .media-viewer__close svg,
-  .media-viewer__nav svg { width: 20px; height: 20px; }
+  .media-viewer__btn:hover {
+    background: color-mix(in srgb, var(--surface) 75%, transparent);
+    color: var(--accent);
+  }
+  .media-viewer__btn svg { width: 19px; height: 19px; }
+  .media-viewer__close {
+    margin-left: 4px;
+    border: 1px solid var(--border-strong);
+  }
+  .media-viewer__counter {
+    display: inline-flex;
+    align-items: center;
+    gap: .4em;
+    padding-inline: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .media-viewer__sep { opacity: .5; }
   :global(html.is-media-open) { overflow: hidden; }
 </style>
 
@@ -378,18 +457,23 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
     if (!dialog || dialog.dataset.ready === 'true') return;
     dialog.dataset.ready = 'true';
 
-    const stage = dialog.querySelector<HTMLElement>('[data-viewer-stage]');
+    const media = dialog.querySelector<HTMLElement>('[data-viewer-stage]');
+    const titleEl = dialog.querySelector<HTMLElement>('[data-viewer-title]');
+    const metaEl = dialog.querySelector<HTMLElement>('[data-viewer-meta]');
+    const indexEl = dialog.querySelector<HTMLElement>('[data-viewer-index]');
+    const totalEl = dialog.querySelector<HTMLElement>('[data-viewer-total]');
     const tiles = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-media-tile]'));
     const prev = dialog.querySelector<HTMLButtonElement>('[data-viewer-prev]');
     const next = dialog.querySelector<HTMLButtonElement>('[data-viewer-next]');
-    if (!stage || !tiles.length) return;
+    if (!media || !titleEl || !metaEl || !indexEl || !totalEl || !tiles.length) return;
 
     let current = -1;
+    totalEl.textContent = String(tiles.length).padStart(2, '0');
 
     const render = () => {
       const tile = tiles[current];
       if (!tile) return;
-      stage.replaceChildren();
+      media.replaceChildren();
       const src = tile.dataset.src ?? '';
       const video = tile.dataset.video ?? '';
 
@@ -402,13 +486,13 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
         player.muted = true;
         player.loop = true;
         player.playsInline = true;
-        stage.append(player);
+        media.append(player);
       } else if (src) {
         const image = document.createElement('img');
         image.src = src;
         image.alt = '';
         image.decoding = 'async';
-        stage.append(image);
+        media.append(image);
       } else {
         const fallback = document.createElement('div');
         fallback.className = 'media-viewer__fallback';
@@ -416,9 +500,13 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
         fallback.style.setProperty('--p2', tile.style.getPropertyValue('--p2'));
         fallback.style.setProperty('--p3', tile.style.getPropertyValue('--p3'));
         fallback.style.setProperty('--r', tile.dataset.ratio ?? '1.5');
-        stage.append(fallback);
+        media.append(fallback);
       }
 
+      titleEl.textContent = tile.dataset.caption ?? '';
+      metaEl.textContent = tile.dataset.meta ?? '';
+      metaEl.hidden = !metaEl.textContent;
+      indexEl.textContent = String(current + 1).padStart(2, '0');
       if (prev) prev.hidden = tiles.length < 2;
       if (next) next.hidden = tiles.length < 2;
     };
@@ -427,6 +515,7 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
       current = (index + tiles.length) % tiles.length;
       render();
       dialog.showModal();
+      dialog.focus({ preventScroll: true });
       document.documentElement.classList.add('is-media-open');
     };
 
@@ -449,7 +538,7 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
     });
     dialog.addEventListener('close', () => {
       document.documentElement.classList.remove('is-media-open');
-      stage.replaceChildren();
+      media.replaceChildren();
       current = -1;
     });
     document.addEventListener('keydown', (event) => {

@@ -42,7 +42,7 @@ export function makeLanyardFront(data: LanyardFaceData, theme: LanyardTheme = 's
     <text x="720" y="714" class="value" fill="${p.text}">${occupation}</text>
   </g>
   <style>
-    .name { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 162px; letter-spacing: -5px; }
+    .name { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 90px; letter-spacing: -5px; }
     .sub { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 44px; letter-spacing: 0; }
     .motto { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 58px; letter-spacing: -1px; }
     .value { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 44px; letter-spacing: .4px; }
