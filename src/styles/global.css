@@ -569,6 +569,9 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
   pointer-events: auto;
 }
 @media (max-width: 1400px) {
+  .hero-inner { grid-template-columns: minmax(0, 580px); }
+}
+@media (max-width: 1100px) {
   .hero .hero-lanyard { display: none; }
 }
 .hero-inner {
