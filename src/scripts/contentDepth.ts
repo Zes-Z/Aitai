@@ -92,7 +92,6 @@ export function initContentDepth(): void {
 
   tiles.forEach((tile, index) => {
     const ratio = Number.parseFloat(getComputedStyle(tile).getPropertyValue('--r')) || 1.5;
-    const isMedia = tile.hasAttribute('data-media-tile');
     const image = tile.querySelector<HTMLImageElement>('img');
     const imageSrc = image?.currentSrc || image?.src || '';
     const label = tile.getAttribute('aria-label') ?? '';
@@ -163,7 +162,6 @@ export function initContentDepth(): void {
   let frame = 0;
   let lastTime = 0;
   let elapsed = 0;
-  let trackHeight = 0;
 
   const request = () => {
     if (frame || !visible) return;
@@ -194,7 +192,6 @@ export function initContentDepth(): void {
     const runway = Math.max(VIEW_DEPTH, lastDepth - 1250);
     const nextHeight = Math.round(h + runway / SCROLL_RATE);
     track.style.height = nextHeight + 'px';
-    trackHeight = nextHeight;
     const base = (Math.min(w, h) * (view.small ? 0.5 : 0.36)) / FOCAL_SCALE;
     items.forEach((item) => {
       const iw = base * item.size * Math.sqrt(item.ratio);

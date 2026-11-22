@@ -1380,6 +1380,7 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
    ============================================================ */
 
 .harbor { padding-bottom: 0; }
+.harbor-head { grid-template-columns: minmax(0, 1fr); }
 .harbor .section-inner { container-type: inline-size; }
 .harbor-big {
   position: relative;

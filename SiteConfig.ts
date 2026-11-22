@@ -77,35 +77,9 @@ export const siteConfig = {
     } satisfies Record<ThemeId, L10n>,
   },
 
-  nav: {
-    sections: [
-      { id: 'tide', label: { zh: '潮汐线', en: 'Tide', ja: '潮汐線' } satisfies L10n },
-      { id: 'drift', label: { zh: '漂流物', en: 'Driftage', ja: '漂流物' } satisfies L10n },
-      { id: 'realms', label: { zh: '三域', en: 'Realms', ja: '三つ領域' } satisfies L10n },
-      { id: 'harbor', label: { zh: '归港', en: 'Harbor', ja: '帰港' } satisfies L10n },
-    ],
-  },
-
   theme: {
     order: ['dawn', 'sea', 'star'] as const satisfies readonly ThemeId[],
     default: 'dawn' as ThemeId,
-    autoByTime: false,
-    intensity: 1,
-    world: 'canvas' as 'canvas' | 'webgl',
-  },
-
-  motion: {
-    level: 'full' as 'full' | 'lite' | 'off',
-    cursor: true,
-    smoothScroll: true,
-    pageTransitions: true,
-  },
-
-  features: {
-    sound: false,
-    guestbook: false,
-    commandPalette: false,
-    viewTransitions: true,
   },
 } as const;
 
