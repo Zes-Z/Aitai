@@ -12,6 +12,12 @@ export const siteConfig = {
     email: 'zes234@proton.me',
     location: { zh: '京都', en: 'KyoTo', ja: '京都' } satisfies L10n,
     timezone: 'Asia/Tokyo',
+    age: 24,
+    occupation: {
+      zh: '设计 / 开发',
+      en: 'Design / Development',
+      ja: 'デザイン / 開発',
+    } satisfies L10n,
     status: {
       zh: '正在做 Aitai',
       en: 'Building Aitai',

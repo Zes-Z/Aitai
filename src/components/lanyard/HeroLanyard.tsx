@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import Lanyard from './Lanyard';
 import type { LanyardTheme } from './faces';
 
-type FaceSet = { front: string; back: string };
 interface Props {
-  faces: Record<LanyardTheme, FaceSet>;
+  faces: Record<LanyardTheme, string>;
+  backImage: string;
 }
 
 const CARD_COLOR: Record<LanyardTheme, string> = {
@@ -20,7 +20,7 @@ const STRAP_COLOR: Record<LanyardTheme, string> = {
   star: '#1a1a26',
 };
 
-export default function HeroLanyard({ faces }: Props) {
+export default function HeroLanyard({ faces, backImage }: Props) {
   const [theme, setTheme] = useState<LanyardTheme>('dawn');
 
   useEffect(() => {
@@ -33,30 +33,28 @@ export default function HeroLanyard({ faces }: Props) {
     return () => window.removeEventListener('aitai:theme', sync);
   }, []);
 
-  const face = faces[theme] ?? faces.dawn;
-
   return (
     <Lanyard
       className="hero-lanyard"
-      frontImage={face.front}
-      backImage={face.back}
+      frontImage={faces[theme] ?? faces.dawn}
+      backImage={backImage}
       imageFit="cover"
       cardColor={CARD_COLOR[theme]}
-      orientation="portrait"
+      orientation="landscape"
       finish="matte"
-      cornerRadius={0.2}
-      size={0.56}
-      anchor="center"
-      strapLength={0.35}
+      cornerRadius={0.16}
+      size={0.38}
+      anchor="right"
+      strapLength={0.3}
       strapColor={STRAP_COLOR[theme]}
       strapWidth={0.72}
       metal="silver"
-      gravity={0.9}
-      damping={0.55}
-      elasticity={0.5}
-      breeze={0.35}
+      gravity={0.25}
+      damping={0.3}
+      elasticity={0.1}
+      breeze={0}
       interactive
-      intro
+      intro={false}
     />
   );
 }

@@ -1,9 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Hero from '../../components/Hero.astro';
-import WaveDivider from '../../components/WaveDivider.astro';
-import Driftage from '../../components/Driftage.astro';
-import Realms from '../../components/Realms.astro';
+import ContentFlow from '../../components/ContentFlow.astro';
 import Harbor from '../../components/Harbor.astro';
 import { siteConfig } from '../../../SiteConfig';
 import type { Lang } from '../../types';
@@ -17,10 +15,6 @@ const { lang } = Astro.params as { lang: Lang };
 
 <BaseLayout lang={lang} page="home" description={siteConfig.site.description[lang]}>
   <Hero lang={lang} />
-  <WaveDivider />
-  <Driftage lang={lang} />
-  <WaveDivider />
-  <Realms lang={lang} />
-  <WaveDivider />
+  <ContentFlow lang={lang} />
   <Harbor lang={lang} />
 </BaseLayout>

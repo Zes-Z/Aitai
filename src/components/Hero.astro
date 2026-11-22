@@ -1,13 +1,10 @@
 ---
-import { getCollection } from 'astro:content';
-import { join } from 'node:path';
-import sharp from 'sharp';
 import { siteConfig } from '../../SiteConfig';
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
 import type { Lang } from '../types';
 import HeroLanyard from './lanyard/HeroLanyard';
-import { makeLanyardFaces } from './lanyard/faces';
+import { makeLanyardFront } from './lanyard/faces';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -21,42 +18,26 @@ const status = siteConfig.identity.status[lang];
 const location = siteConfig.identity.location[lang];
 const timezone = siteConfig.identity.timezone;
 
-const posts = await getCollection('post');
-const projects = await getCollection('project');
-const album = await getCollection('album');
-const countFor = (entries: Array<{ id: string }>) => entries.filter((entry) => entry.id.endsWith('/' + lang)).length;
-const avatarBytes = await sharp(join(process.cwd(), 'public', siteConfig.identity.avatar.replace(/^\//, '')))
-  .resize(256, 256, { fit: 'cover' })
-  .jpeg({ quality: 82 })
-  .toBuffer();
-const avatarData = 'data:image/jpeg;base64,' + avatarBytes.toString('base64');
-const counts = {
-  languages: siteConfig.site.langs.length,
-  notes: countFor(posts),
-  photos: album.filter((entry) => !entry.data.draft).length,
-  projects: countFor(projects),
-};
 const faceData = {
   lang,
   name: siteConfig.identity.name,
   nameJa: siteConfig.identity.nameJa,
-  available: t('hero.available', lang),
-  status,
+  age: siteConfig.identity.age,
   location,
-  quote: siteConfig.hero.motto[1][lang],
-  avatar: avatarData,
-  counts,
+  motto: siteConfig.hero.motto[1][lang],
+  occupation: siteConfig.identity.occupation[lang],
 };
 const faces = {
-  dawn: makeLanyardFaces(faceData, 'dawn'),
-  sea: makeLanyardFaces(faceData, 'sea'),
-  star: makeLanyardFaces(faceData, 'star'),
+  dawn: makeLanyardFront(faceData, 'dawn'),
+  sea: makeLanyardFront(faceData, 'sea'),
+  star: makeLanyardFront(faceData, 'star'),
 };
+const backImage = withBase('/lanyard/card-back.webp');
 
 ---
 
 <section id="tide" class="hero" data-section aria-labelledby="hero-title">
-  <HeroLanyard client:only="react" faces={faces} />
+  <HeroLanyard client:only="react" faces={faces} backImage={backImage} />
 
   <div class="hero-inner">
     <div class="hero-copy">
@@ -98,7 +79,7 @@ const faces = {
 
   </div>
 
-  <a class="hero-scroll" href="#drift">
+  <a class="hero-scroll" href="#content">
     <span class="scroll-line" aria-hidden="true"></span>
     {siteConfig.theme.order.map((theme) => (
       <span class="hero-scroll-label" data-scroll-theme={theme}>{t(`hero.scroll.${theme}`, lang)}</span>
