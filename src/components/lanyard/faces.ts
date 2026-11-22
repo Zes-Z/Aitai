@@ -36,14 +36,16 @@ export function makeLanyardFront(data: LanyardFaceData, theme: LanyardTheme = 's
 
   const front = `<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1024" viewBox="0 0 1440 1024">
   <rect width="1440" height="1024" fill="${p.bg}"/>
-  <text x="72" y="318" class="name" fill="${p.text}">${name} <tspan class="sub" fill-opacity=".66">· ${data.age} · ${location}</tspan></text>
-  <text x="72" y="560" class="motto" fill="${p.text}">${motto}</text>
-  <text x="72" y="800" class="value" fill="${p.text}">${occupation}</text>
+  <g text-anchor="middle" dominant-baseline="middle">
+    <text x="720" y="310" class="name" fill="${p.text}">${name} <tspan class="sub" fill-opacity=".68">· ${data.age} · ${location}</tspan></text>
+    <text x="720" y="512" class="motto" fill="${p.text}">${motto}</text>
+    <text x="720" y="714" class="value" fill="${p.text}">${occupation}</text>
+  </g>
   <style>
-    .name { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 142px; letter-spacing: -5px; }
-    .sub { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 38px; letter-spacing: 0; }
-    .motto { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 48px; letter-spacing: -1px; }
-    .value { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 38px; letter-spacing: .4px; }
+    .name { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 162px; letter-spacing: -5px; }
+    .sub { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 44px; letter-spacing: 0; }
+    .motto { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 58px; letter-spacing: -1px; }
+    .value { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 44px; letter-spacing: .4px; }
   </style>
 </svg>`;
 

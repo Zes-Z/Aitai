@@ -13,6 +13,10 @@ export const siteConfig = {
     location: { zh: '京都', en: 'KyoTo', ja: '京都' } satisfies L10n,
     timezone: 'Asia/Tokyo',
     age: 24,
+    lanyard: {
+      /** public 下的路径；换成自己的封底图后只改这里 */
+      backImage: '/lanyard/card-back.webp',
+    },
     occupation: {
       zh: '设计 / 开发',
       en: 'Design / Development',
