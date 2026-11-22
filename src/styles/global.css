@@ -12,7 +12,6 @@
 
   --maxw: 1440px;
   --corner-size: 46px;
-  --orb-size: clamp(78px, 7.5vw, 104px);
   --corner-inset: max(clamp(18px, 3vw, 32px), env(safe-area-inset-top), env(safe-area-inset-left), env(safe-area-inset-right));
   --corner-top: var(--corner-inset);
   --gutter: calc(var(--corner-inset) + var(--corner-size));
@@ -159,7 +158,17 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   height: 100%;
   z-index: 0;
   pointer-events: none;
+  transition: opacity .55s ease;
 }
+:root[data-theme='star'] #world-canvas { opacity: 0; }
+.galaxy-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.galaxy-layer .galaxy-container { width: 100%; height: 100%; }
 
 .grain {
   position: fixed;
@@ -550,22 +559,19 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
 
 
 .hero-lanyard {
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: var(--gutter);
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(100%, 470px);
-  margin-left: auto;
-}
-.hero-lanyard .hero-avatar {
-  z-index: 2;
-  margin-bottom: -0.15rem;
+  width: clamp(300px, 34vw, 470px);
 }
 .lanyard-stage {
   position: relative;
   width: 100%;
-  height: clamp(450px, 52vh, 570px);
-  margin-top: -0.2rem;
+  height: clamp(560px, 76vh, 820px);
   touch-action: pan-y;
 }
 .lanyard-stage > .lanyard {
@@ -619,12 +625,14 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
   white-space: nowrap;
 }
 @media (max-width: 900px) {
-  .hero-lanyard { width: min(100%, 440px); margin: 0 auto; }
-  .lanyard-stage { height: clamp(390px, 54vh, 500px); }
+  .hero { flex-direction: column; align-items: stretch; }
+  .hero-inner { width: 100%; }
+  .hero-lanyard { position: relative; top: auto; right: auto; flex: none; width: min(100%, 440px); margin: 2rem auto 0; }
+  .lanyard-stage { height: clamp(430px, 58vh, 560px); }
 }
 @media (max-width: 600px) {
   .hero-lanyard { width: min(100%, 390px); }
-  .lanyard-stage { height: 410px; }
+  .lanyard-stage { height: 440px; }
   .lanyard-caption { gap: 0.7rem; font-size: 0.52rem; }
   .lanyard-flip { display: none; }
 }

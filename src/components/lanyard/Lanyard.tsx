@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import * as THREE from 'three';
 
 import './Lanyard.css';
@@ -43,6 +43,7 @@ export interface LanyardProps {
   intro?: boolean;
   className?: string;
   style?: CSSProperties;
+  backContent?: ReactNode;
 }
 
 interface Settings {
@@ -891,9 +892,11 @@ const Lanyard = ({
   interactive = true,
   intro = true,
   className = '',
-  style
+  style,
+  backContent
 }: LanyardProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<Settings | null>(null);
   const applyRef = useRef<(() => void) | null>(null);
 
@@ -1255,10 +1258,44 @@ const Lanyard = ({
       clampGroup.position.copy(hang);
     };
 
+    const updateBackOverlay = () => {
+      const overlay = backRef.current;
+      if (!overlay) return;
+      cardGroup.updateMatrixWorld(true);
+      const project = (x: number, y: number) => {
+        const point = new THREE.Vector3(x, y, 0);
+        backMesh.localToWorld(point);
+        point.project(camera);
+        return { x: (point.x * 0.5 + 0.5) * view.width, y: (-point.y * 0.5 + 0.5) * view.height };
+      };
+      // Top-left / top-right / bottom-left, so the DOM card is upright on the back face.
+      const p00 = project(-layout.width / 2, layout.height / 2);
+      const p10 = project(layout.width / 2, layout.height / 2);
+      const p01 = project(-layout.width / 2, -layout.height / 2);
+      const ow = 300;
+      const oh = 430;
+      const a = (p10.x - p00.x) / ow;
+      const b = (p10.y - p00.y) / ow;
+      const c = (p01.x - p00.x) / oh;
+      const d = (p01.y - p00.y) / oh;
+      const normal = new THREE.Vector3(0, 0, 1).transformDirection(backMesh.matrixWorld);
+      const world = new THREE.Vector3();
+      backMesh.getWorldPosition(world);
+      const toCamera = camera.position.clone().sub(world);
+      const distance = toCamera.length();
+      const facing = distance > 0 ? normal.dot(toCamera.normalize()) : 0;
+      const visible = facing > 0.18;
+      overlay.style.transform = 'matrix(' + a + ',' + b + ',' + c + ',' + d + ',' + p00.x + ',' + p00.y + ')';
+      overlay.style.opacity = visible ? '1' : '0';
+      overlay.style.visibility = visible ? 'visible' : 'hidden';
+    };
+
     const render = () => {
       cardGroup.position.copy(sim.body.position);
       cardGroup.quaternion.copy(sim.body.quaternion);
       updateBand();
+      cardGroup.updateMatrixWorld(true);
+      updateBackOverlay();
       renderer.render(scene, camera);
     };
 
@@ -1450,7 +1487,13 @@ const Lanyard = ({
     };
   }, []);
 
-  return <div ref={containerRef} className={`lanyard ${className}`.trim()} style={style} />;
+  return (
+    <div ref={containerRef} className={`lanyard ${className}`.trim()} style={style}>
+      <div ref={backRef} className="lanyard-dom-back" aria-hidden="true">
+        {backContent}
+      </div>
+    </div>
+  );
 };
 
 export default Lanyard;

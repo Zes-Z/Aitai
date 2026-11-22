@@ -1,8 +1,11 @@
 ---
-// The orb is a single WebGL/CSS sphere: star, sea and dawn are all shader scenes.
+// Dawn keeps the original CSS sun; sea and star use the WebGL sphere.
 ---
+<span class="orb-scene orb-scene--dawn" aria-hidden="true">
+  <span class="orb-sun"></span>
+</span>
 <canvas
-  class="orb-scene"
+  class="orb-scene orb-scene--dynamic"
   data-orb-canvas
   width="256"
   height="256"

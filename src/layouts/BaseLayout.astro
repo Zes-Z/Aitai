@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import BaseHead from '../components/BaseHead.astro';
 import WorldCanvas from '../components/WorldCanvas.astro';
+import GalaxyBackground from '../components/backgrounds/Galaxy/GalaxyBackground';
 import AvatarDock from '../components/AvatarDock.astro';
 import ThemeOrb from '../components/ThemeOrb.astro';
 import ThemeTransition from '../components/ThemeTransition.astro';
@@ -30,6 +31,7 @@ const { lang, title, description, page = 'page' } = Astro.props;
   <body data-page={page}>
     <a class="skip-link" href="#main">Skip to content</a>
 
+    <GalaxyBackground client:only="react" />
     <WorldCanvas />
     <AvatarDock lang={lang} />
     <ThemeOrb lang={lang} path={Astro.url.pathname} />
