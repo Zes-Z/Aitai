@@ -33,6 +33,8 @@ export default function SeaWaves() {
         lightAngle={150}
         lightMode={false}
         intro
+        mouseInteraction={false}
+        swellOnClick
         quality="medium"
         dpr={2}
       />

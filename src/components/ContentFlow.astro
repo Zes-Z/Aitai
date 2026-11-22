@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
 import { LANGS, type Lang } from '../types';
+import '../styles/content-depth.css';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -98,7 +99,7 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
 });
 ---
 
-<section id="content" class="content-flow" data-section aria-label={lang === 'zh' ? '内容' : lang === 'ja' ? 'コンテンツ' : 'Content'}>
+<section id="content" class="content-flow" data-section data-content-depth aria-label={lang === 'zh' ? '内容' : lang === 'ja' ? 'コンテンツ' : 'Content'}>
   <div class="content-wall">
     {items.map((item, index) => {
       const style = `--r: ${item.ratio.toFixed(4)}; --p1: ${item.palette[0]}; --p2: ${item.palette[1]}; --p3: ${item.palette[2]}; --reveal-delay: ${Math.min(index, 8) * 0.04}s`;
@@ -406,4 +407,11 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
 
   document.addEventListener('astro:page-load', initMediaViewer);
   initMediaViewer();
+</script>
+
+<script>
+  import { initContentDepth } from '../scripts/contentDepth';
+
+  document.addEventListener('astro:page-load', initContentDepth);
+  initContentDepth();
 </script>
