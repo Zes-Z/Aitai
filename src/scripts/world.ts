@@ -338,9 +338,8 @@ export function initWorld() {
 
   function draw(t: number) {
     ctx.clearRect(0, 0, w, h);
-    if (theme === 'star') return;
-    if (theme === 'sea') drawSea(t);
-    else drawDawn(t);
+    if (theme === 'star' || theme === 'dawn') return;
+    drawSea(t);
   }
 
   function loop(now: number) {

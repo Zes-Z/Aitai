@@ -22,14 +22,14 @@ export default function SeaCrystalOrb() {
   return (
     <CrystalizedBall
       preset="eclipse"
-      color="#BABABA"
+      color="#DDEBFA"
       size={0.9}
       strands={3}
       sparks={0}
       particleCount={500}
-      haze={0}
+      haze={0.22}
       dustSpeed={1.65}
-      glow={0.7}
+      glow={0.85}
       particleShape="round"
       flares={0.05}
       depth={0.65}

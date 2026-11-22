@@ -169,7 +169,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   pointer-events: none;
   transition: opacity .55s ease;
 }
-:root[data-theme='star'] #world-canvas { opacity: 0; }
+:root[data-theme='star'] #world-canvas,
+:root[data-theme='dawn'] #world-canvas { opacity: 0; }
 .galaxy-layer {
   position: fixed;
   inset: 0;
@@ -178,6 +179,14 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   pointer-events: none;
 }
 .galaxy-layer .galaxy-container { width: 100%; height: 100%; }
+.dawn-rays-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dawn-rays-layer .side-rays { width: 100%; height: 100%; }
 
 .grain {
   position: fixed;
@@ -552,14 +561,14 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
 }
 .hero .hero-lanyard {
   position: absolute;
-  top: 0;
-  right: 0;
+  inset: 0;
   z-index: 0;
-  width: min(50vw, 720px);
+  width: 100%;
   height: 100%;
+  transform: translateX(20%);
   pointer-events: auto;
 }
-@media (max-width: 1024px) {
+@media (max-width: 1400px) {
   .hero .hero-lanyard { display: none; }
 }
 .hero-inner {
@@ -567,7 +576,8 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
   z-index: 1;
   pointer-events: none;
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
+  grid-template-columns: minmax(0, 720px);
+  justify-content: start;
   gap: clamp(2rem, 6vw, 6rem);
   align-items: center;
   width: 100%;
