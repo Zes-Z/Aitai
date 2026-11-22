@@ -45,7 +45,6 @@
   --selection: rgba(143, 179, 255, 0.24);
   --noise: 0.055;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-  --hero-veil: linear-gradient(180deg, rgba(5, 6, 15, 0.05), rgba(5, 6, 15, 0.72) 78%, #05060f 100%);
 }
 
 :root[data-theme='sea'] {
@@ -67,7 +66,6 @@
   --selection: rgba(111, 231, 222, 0.22);
   --noise: 0.06;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-  --hero-veil: linear-gradient(180deg, rgba(3, 16, 24, 0.05), rgba(3, 16, 24, 0.72) 78%, #031018 100%);
 }
 
 :root[data-theme='dawn'] {
@@ -89,7 +87,6 @@
   --selection: rgba(233, 139, 106, 0.22);
   --noise: 0.035;
   --shadow: 0 24px 70px rgba(80, 55, 45, 0.14);
-  --hero-veil: linear-gradient(180deg, rgba(247, 240, 232, 0.05), rgba(247, 240, 232, 0.7) 78%, #f7f0e8 100%);
 }
 
 /* ============================================================
@@ -548,13 +545,6 @@ html[data-docked='true'] .header-nav { pointer-events: auto; margin-left: clamp(
   min-height: 100svh;
   padding: calc(var(--header-h) + 4rem) var(--gutter) 5rem;
   overflow: clip;
-}
-.hero-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: var(--hero-veil);
-  pointer-events: none;
 }
 .hero .hero-lanyard {
   position: absolute;
