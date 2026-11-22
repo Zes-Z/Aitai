@@ -6,6 +6,7 @@ import SideRays from './SideRays';
 /**
  * ReactBits Side Rays, mounted only for the dawn theme.
  * Follow-mouse is off; a click gives the light a short intensity pulse.
+ * Warm sunrise palette / brighter glow than the source defaults.
  */
 export default function DawnRays() {
   const [active, setActive] = useState(false);
@@ -40,7 +41,20 @@ export default function DawnRays() {
 
   return (
     <div className="dawn-rays-layer" aria-hidden="true">
-      <SideRays followMouse={false} intensity={pulse ? 2.8 : 2} />
+      <SideRays
+        rayColor1="#FF9A3F"
+        rayColor2="#FFD27A"
+        blend={0.45}
+        speed={2.4}
+        intensity={pulse ? 3.4 : 2.7}
+        spread={2.2}
+        density={6}
+        sharpness={0.5}
+        glow={1.65}
+        saturation={1.2}
+        dust={0.14}
+        followMouse={false}
+      />
     </div>
   );
 }

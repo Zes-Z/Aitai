@@ -70,20 +70,20 @@
 
 :root[data-theme='dawn'] {
   color-scheme: light;
-  --bg: #f7f0e8;
-  --bg-2: #efe3d6;
-  --bg-3: #ffe2c7;
+  --bg: #fdf8f1;
+  --bg-2: #f5e5d1;
+  --bg-3: #ffd7a8;
   --surface: rgba(255, 252, 248, 0.66);
   --surface-2: rgba(255, 252, 248, 0.86);
   --text: #2a2730;
   --muted: #6e6a78;
   --faint: #9b93a0;
-  --accent: #e98b6a;
+  --accent: #e98055;
   --accent-2: #4f7fa8;
-  --accent-3: #f2c879;
+  --accent-3: #f6c56e;
   --border: rgba(42, 39, 48, 0.12);
   --border-strong: rgba(42, 39, 48, 0.24);
-  --glow: #ffb199;
+  --glow: #ffb38f;
   --selection: rgba(233, 139, 106, 0.22);
   --noise: 0.035;
   --shadow: 0 24px 70px rgba(80, 55, 45, 0.14);
