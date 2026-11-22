@@ -19,6 +19,8 @@ export function initAvatarDock() {
   let startX = 0;
   let startY = 0;
   let suppressClick = false;
+  let downAt = 0;
+  let longFired = false;
 
   function setOpen(open: boolean, focusFirst = false) {
     dock!.dataset.open = String(open);
@@ -30,8 +32,8 @@ export function initAvatarDock() {
 
   function endPress() {
     window.clearTimeout(timer);
+    timer = 0;
     delete trigger!.dataset.pressing;
-    if (pointer !== null && trigger!.hasPointerCapture(pointer)) trigger!.releasePointerCapture(pointer);
     pointer = null;
   }
 
@@ -48,6 +50,20 @@ export function initAvatarDock() {
     else window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   }
 
+  const onUp = () => {
+    if (pointer === null) return;
+    // Fallback when a browser throttles/drops the 460ms timer during a hold.
+    if (!longFired && performance.now() - downAt >= 420) {
+      longFired = true;
+      suppressClick = true;
+      delete trigger!.dataset.pressing;
+      scrollToTop();
+    }
+    endPress();
+  };
+  const onWindowUp = () => onUp();
+  const onWindowCancel = () => { if (pointer !== null) cancelPress(); };
+
   trigger.addEventListener('pointerdown', (event) => {
     if (!event.isPrimary || event.button !== 0) return;
     if (document.documentElement.classList.contains('is-transitioning')) {
@@ -56,23 +72,29 @@ export function initAvatarDock() {
     }
     endPress();
     suppressClick = false;
+    longFired = false;
     pointer = event.pointerId;
     startX = event.clientX;
     startY = event.clientY;
+    downAt = performance.now();
     trigger.dataset.pressing = 'true';
-    trigger.setPointerCapture(event.pointerId);
     timer = window.setTimeout(() => {
+      if (longFired) return;
+      longFired = true;
       suppressClick = true;
       delete trigger.dataset.pressing;
       scrollToTop();
     }, 460);
   }, options);
   trigger.addEventListener('pointermove', (event) => {
-    if (pointer === event.pointerId && Math.hypot(event.clientX - startX, event.clientY - startY) > 12) cancelPress();
+    if (pointer !== event.pointerId) return;
+    const limit = event.pointerType === 'touch' ? 18 : 36;
+    if (Math.hypot(event.clientX - startX, event.clientY - startY) > limit) cancelPress();
   }, options);
-  trigger.addEventListener('pointerup', endPress, options);
+  trigger.addEventListener('pointerup', onUp, options);
   trigger.addEventListener('pointercancel', cancelPress, options);
-  trigger.addEventListener('lostpointercapture', endPress, options);
+  window.addEventListener('pointerup', onWindowUp, options);
+  window.addEventListener('pointercancel', onWindowCancel, options);
   trigger.addEventListener('contextmenu', (event) => event.preventDefault(), options);
   trigger.addEventListener('click', (event) => {
     event.preventDefault();

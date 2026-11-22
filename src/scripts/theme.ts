@@ -107,14 +107,33 @@ function bindTrigger(trigger: HTMLButtonElement) {
   let pointer: number | null = null;
   let startX = 0;
   let startY = 0;
+  let downAt = 0;
+  let longFired = false;
   let suppressClick = false;
 
   const endPress = () => {
     window.clearTimeout(pressTimer);
+    pressTimer = 0;
     delete trigger.dataset.pressing;
-    if (pointer !== null && trigger.hasPointerCapture(pointer)) trigger.releasePointerCapture(pointer);
+    window.removeEventListener('pointerup', onWindowUp);
+    window.removeEventListener('pointercancel', onWindowCancel);
     pointer = null;
   };
+
+  const onWindowUp = () => endPress();
+  const onWindowCancel = () => {
+    suppressClick = true;
+    endPress();
+  };
+
+  const fireHold = () => {
+    if (longFired) return;
+    longFired = true;
+    suppressClick = true;
+    delete trigger.dataset.pressing;
+    cycleTheme(trigger);
+  };
+
   cancelPress = () => {
     suppressClick = true;
     endPress();
@@ -130,34 +149,39 @@ function bindTrigger(trigger: HTMLButtonElement) {
     pointer = event.pointerId;
     startX = event.clientX;
     startY = event.clientY;
+    downAt = performance.now();
+    longFired = false;
     suppressClick = false;
     trigger.dataset.pressing = 'true';
-    trigger.setPointerCapture(event.pointerId);
-    pressTimer = window.setTimeout(() => {
-      suppressClick = true;
-      delete trigger.dataset.pressing;
-      cycleTheme(trigger);
-    }, HOLD_MS);
+    window.addEventListener('pointerup', onWindowUp);
+    window.addEventListener('pointercancel', onWindowCancel);
+    pressTimer = window.setTimeout(fireHold, HOLD_MS);
   });
+
   trigger.addEventListener('pointermove', (event) => {
     if (pointer !== event.pointerId) return;
-    // A drag or touch scroll must not turn into either a hold or a language click.
-    if (Math.hypot(event.clientX - startX, event.clientY - startY) > 12) {
+    // Trackpad jitter must not kill a hold; touch needs a slightly tighter guard.
+    const limit = event.pointerType === 'touch' ? 18 : 36;
+    if (Math.hypot(event.clientX - startX, event.clientY - startY) > limit) {
       suppressClick = true;
       endPress();
     }
   });
-  trigger.addEventListener('pointerup', endPress);
+
+  trigger.addEventListener('pointerup', (event) => {
+    if (pointer !== event.pointerId) return;
+    // Fallback for browsers that drop the timer while the pointer is down.
+    if (!longFired && performance.now() - downAt >= HOLD_MS - 40) fireHold();
+    endPress();
+  });
+
   trigger.addEventListener('pointercancel', () => {
     suppressClick = true;
     endPress();
   });
-  trigger.addEventListener('lostpointercapture', () => {
-    window.clearTimeout(pressTimer);
-    delete trigger.dataset.pressing;
-    pointer = null;
-  });
+
   trigger.addEventListener('contextmenu', (event) => event.preventDefault());
+
   trigger.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -167,6 +191,7 @@ function bindTrigger(trigger: HTMLButtonElement) {
     }
     cycleLanguage(trigger);
   });
+
   trigger.addEventListener('keydown', (event) => {
     if (event.key === ' ' || event.key === 'ArrowDown') {
       event.preventDefault();
@@ -179,13 +204,14 @@ function bindTrigger(trigger: HTMLButtonElement) {
       suppressClick = true;
       endPress();
     } else if (event.key === 'Enter') {
-      // Reset a cancelled pointer gesture before the native keyboard click.
       suppressClick = false;
     }
   });
+
   trigger.addEventListener('keyup', (event) => {
     if (event.key === ' ') event.preventDefault();
   });
+
   trigger.addEventListener('blur', () => {
     if (pointer !== null) {
       suppressClick = true;

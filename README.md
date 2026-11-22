@@ -34,7 +34,8 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **页面转场**：Tide / Constellate / Develop / Veil 四种；ClientRouter 负责导航，自研 overlay + Web Animations API 负责「封面 + 揭示」；支持返回、中断、reduced-motion；Astro 默认转场已关闭。
 - **语言切换**：朝凪用暖杏色 `Frame`，外框先展开、新页面随后显露；海月用深青色双层 `Curtain`，幕布升起覆盖旧页、再收起揭示新页；星空用蓝紫色 `Slices`，桌面五列、手机三列错峰推进新旧页面。Frame / Slices 使用隔离的静态页面快照，包含当时的背景画布；语言切换保留滚动位置，目标页较短时限制在可滚动范围内，返回时恢复各页保存的位置并反向播放。切换期间锁定输入，结束后恢复语言按钮焦点。支持中断恢复、慢速加载及减少动态效果。
 - **内容页**：项目列表 / 详情、相册、随想列表 / 正文，全部静态生成（35 页）。
-- **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、轨道拖拽、复制邮箱 Toast。
+- **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、轨道拖拽、复制邮箱 Toast；浏览器页面滚动条隐藏。
+- **角落长按**：控制球与左上角头像不再依赖 `setPointerCapture`，改用窗口级 `pointerup/pointercancel` + 420ms 指针抬起兜底；鼠标允许 36px 抖动、触控 18px，避免轻微移动取消长按；按钮 `touch-action: none`。
 - **第二幅「漂流物」**：改成可拖拽的漂浮场——4 张卡可以拖动、惯性、边界回弹、hover 光斑、复位；数字滚动、实时时间、技能 marquee 都在同一块场里。
 - **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月直接使用 ReactBits Crystalized Ball（`eclipse` / `#BABABA` / 3 strands / 500 particles，按 46px 容器把 size 调到 0.9）；星空是 WebGL 三维光线追踪的黑洞与吸积盘。朝凪是轻量 CSS，海月是 ogl，星空是持久化 WebGL。
 - **首页身份卡**：ReactBits Lanyard 3D 吊牌，绳子直接挂在页面顶部，不再使用大头像；正面是身份卡，背面通过 Lanyard 的 `backContent` 叠加 **ReactBits SpotlightCard 源码**（真实 DOM、跟随指针的聚光与边缘光），不是静态背图。可拖动、甩动、点击翻面；卡片正面仍是 CanvasTexture，背面 DOM 通过投影矩阵跟随 3D 卡片。
