@@ -1,8 +1,13 @@
 ---
+import { getCollection } from 'astro:content';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { siteConfig } from '../../SiteConfig';
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
 import type { Lang } from '../types';
+import Lanyard from './lanyard/Lanyard';
+import { makeLanyardFaces } from './lanyard/faces';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -16,10 +21,60 @@ const status = siteConfig.identity.status[lang];
 const location = siteConfig.identity.location[lang];
 const timezone = siteConfig.identity.timezone;
 
+const posts = await getCollection('post');
+const projects = await getCollection('project');
+const album = await getCollection('album');
+const countFor = (entries: Array<{ id: string }>) => entries.filter((entry) => entry.id.endsWith('/' + lang)).length;
+const avatarExtension = siteConfig.identity.avatar.split('.').pop() || 'jpg';
+const avatarMime = avatarExtension === 'svg' ? 'image/svg+xml' : avatarExtension === 'png' ? 'image/png' : 'image/jpeg';
+const avatarBytes = readFileSync(join(process.cwd(), 'public', siteConfig.identity.avatar.replace(/^\//, '')));
+const avatarData = 'data:' + avatarMime + ';base64,' + avatarBytes.toString('base64');
+const counts = {
+  languages: siteConfig.site.langs.length,
+  notes: countFor(posts),
+  photos: album.filter((entry) => !entry.data.draft).length,
+  projects: countFor(projects),
+};
+const faces = makeLanyardFaces({
+  lang,
+  name: siteConfig.identity.name,
+  nameJa: siteConfig.identity.nameJa,
+  available: t('hero.available', lang),
+  status,
+  location,
+  quote: siteConfig.hero.motto[1][lang],
+  avatar: avatarData,
+  counts,
+});
+
 ---
 
 <section id="tide" class="hero" data-section aria-labelledby="hero-title">
   <div class="hero-veil" aria-hidden="true"></div>
+
+  <Lanyard
+    client:only="react"
+    className="hero-lanyard"
+    frontImage={faces.front}
+    backImage={faces.back}
+    imageFit="cover"
+    cardColor="#0b0b12"
+    orientation="portrait"
+    finish="matte"
+    cornerRadius={0.2}
+    size={0.42}
+    anchor="center"
+    strapLength={0.35}
+    strapColor="#1a1a26"
+    strapWidth={0.72}
+    metal="silver"
+    gravity={0.9}
+    damping={0.55}
+    elasticity={0.5}
+    breeze={0.35}
+    interactive
+    intro
+  />
 
   <div class="hero-inner">
     <div class="hero-copy">
