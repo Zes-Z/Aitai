@@ -30,7 +30,6 @@ export const messages = {
   'hero.email': { zh: '写信', en: 'Email me', ja: 'メールする' },
   'hero.github': { zh: 'GitHub', en: 'GitHub', ja: 'GitHub' },
   'hero.available': { zh: '可接新项目', en: 'Open to work', ja: '新しい仕事、受付中' },
-  'lanyard.flip': { zh: '拖动 · 点击翻面', en: 'Drag · click to flip', ja: 'ドラッグ · クリックで裏返す' },
 
   'drift.eyebrow': { zh: '02 / 漂流物', en: '02 / Driftage', ja: '02 / 漂流物' },
   'drift.title': { zh: '漂在海上的东西。', en: 'Things adrift.', ja: '海に漂うもの。' },

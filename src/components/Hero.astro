@@ -1,13 +1,8 @@
 ---
-import { getCollection } from 'astro:content';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { siteConfig } from '../../SiteConfig';
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
 import type { Lang } from '../types';
-import LanyardCard from './lanyard/LanyardCard';
-import { makeLanyardFaces } from './lanyard/faces';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -21,32 +16,6 @@ const status = siteConfig.identity.status[lang];
 const location = siteConfig.identity.location[lang];
 const timezone = siteConfig.identity.timezone;
 
-const posts = await getCollection('post');
-const projects = await getCollection('project');
-const album = await getCollection('album');
-const countFor = (entries: Array<{ id: string }>) => entries.filter((entry) => entry.id.endsWith('/' + lang)).length;
-const avatarExtension = siteConfig.identity.avatar.split('.').pop() || 'jpg';
-const avatarMime = avatarExtension === 'svg' ? 'image/svg+xml' : avatarExtension === 'png' ? 'image/png' : 'image/jpeg';
-const avatarBytes = readFileSync(join(process.cwd(), 'public', siteConfig.identity.avatar.replace(/^\//, '')));
-const avatarData = 'data:' + avatarMime + ';base64,' + avatarBytes.toString('base64');
-const counts = {
-  languages: siteConfig.site.langs.length,
-  notes: countFor(posts),
-  photos: album.filter((entry) => !entry.data.draft).length,
-  projects: countFor(projects),
-};
-const quote = siteConfig.hero.motto[1][lang];
-const faces = makeLanyardFaces({
-  lang,
-  name: siteConfig.identity.name,
-  nameJa: siteConfig.identity.nameJa,
-  available: t('hero.available', lang),
-  status,
-  location,
-  quote,
-  avatar: avatarData,
-  counts,
-});
 ---
 
 <section id="tide" class="hero" data-section aria-labelledby="hero-title">
@@ -91,28 +60,6 @@ const faces = makeLanyardFaces({
     </div>
 
   </div>
-
-  <aside class="hero-lanyard" aria-label={siteConfig.identity.name + ' · ' + t('hero.available', lang)}>
-    <div class="lanyard-stage">
-      <LanyardCard
-        client:only="react"
-        frontImage={faces.front}
-        backImage={faces.back}
-        lang={lang}
-        quote={quote}
-        counts={counts}
-      />
-    </div>
-
-    <div class="lanyard-caption">
-      <span class="lanyard-clock">
-        <b data-clock data-tz={timezone}>--:--</b>
-        <em data-date data-tz={timezone} data-lang={lang}></em>
-      </span>
-      <span>{location}</span>
-      <span class="lanyard-flip">{t('lanyard.flip', lang)}</span>
-    </div>
-  </aside>
 
   <a class="hero-scroll" href="#drift">
     <span class="scroll-line" aria-hidden="true"></span>

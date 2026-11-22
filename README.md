@@ -38,7 +38,6 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **角落长按**：控制球与左上角头像不再依赖 `setPointerCapture`，改用窗口级 `pointerup/pointercancel` + 420ms 指针抬起兜底；鼠标允许 36px 抖动、触控 18px，避免轻微移动取消长按；按钮 `touch-action: none`。
 - **第二幅「漂流物」**：改成可拖拽的漂浮场——4 张卡可以拖动、惯性、边界回弹、hover 光斑、复位；数字滚动、实时时间、技能 marquee 都在同一块场里。
 - **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月直接使用 ReactBits Crystalized Ball（`eclipse` / `#BABABA` / 3 strands / 500 particles，按 46px 容器把 size 调到 0.9）；星空是 WebGL 三维光线追踪的黑洞与吸积盘。朝凪是轻量 CSS，海月是 ogl，星空是持久化 WebGL。
-- **首页身份卡**：ReactBits Lanyard 3D 吊牌，绳子直接挂在页面顶部，不再使用大头像；正面是身份卡，背面通过 Lanyard 的 `backContent` 叠加 **ReactBits SpotlightCard 源码**（真实 DOM、跟随指针的聚光与边缘光），不是静态背图。可拖动、甩动、点击翻面；卡片正面仍是 CanvasTexture，背面 DOM 通过投影矩阵跟随 3D 卡片。
 - **内容模型**：只认 Text / Media / Complex Post 三种对象；Zes4U 的封面 + 章节 + 三语 md 结构、loader 规则与目录树见 [REQUIREMENTS §9.0](REQUIREMENTS.md#90-三种内容对象m4-定稿)。
 - **星空背景**：直接使用 ReactBits Galaxy 源码（WebGL2 星场、星云、闪烁、层深），只在星空主题挂载；海月/朝凪仍用原 Canvas 2D 世界。
 - **世界引擎**：Canvas 2D 明月与海面 / 晨雾，跟随主题切换；星空由 Galaxy 接管；支持 reduced-motion。
@@ -47,7 +46,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 
 ```
 src/
-  components/      AvatarDock, ThemeOrb, Hero, Driftage, Realms, Harbor, PageTransition..., lanyard/ (React + Three), orb/CrystalizedBall (React + ogl)
+  components/      AvatarDock, ThemeOrb, Hero, Driftage, Realms, Harbor, PageTransition..., orb/CrystalizedBall (React + ogl)
   content/post/    随想 markdown（zh / en / ja）
   content/project/ 项目 markdown（zh / en / ja）
   content/album/   photo-video.json + 相册媒体
