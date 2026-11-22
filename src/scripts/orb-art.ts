@@ -59,7 +59,7 @@ function mount(initialCanvas: HTMLCanvasElement) {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   const stop = () => { cancelAnimationFrame(frame); frame = 0; last = 0; };
   const draw = () => {
-    if (theme === 'dawn' || lost) return;
+    if (theme === 'dawn' || theme === 'sea' || lost) return;
     if (!painter) {
       try { painter = gpuPainter(canvas); }
       catch (error) {
@@ -88,7 +88,7 @@ function mount(initialCanvas: HTMLCanvasElement) {
     const value = document.documentElement.dataset.theme;
     const next = isTheme(value) ? value : siteConfig.theme.default;
     if (next !== theme) { theme = next; elapsed = 0; }
-    if (theme === 'dawn' || document.hidden || !visible || lost) return;
+    if (theme === 'dawn' || theme === 'sea' || document.hidden || !visible || lost) return;
     draw();
     if (!reduce.matches) frame = requestAnimationFrame(loop);
   };

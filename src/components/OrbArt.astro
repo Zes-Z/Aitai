@@ -1,8 +1,12 @@
 ---
-// Dawn keeps the original CSS sun; sea and star use the WebGL sphere.
+import SeaCrystalOrb from './orb/SeaCrystalOrb';
+// Dawn: CSS sun. Sea: ReactBits Crystalized Ball. Star: WebGL black hole.
 ---
 <span class="orb-scene orb-scene--dawn" aria-hidden="true">
   <span class="orb-sun"></span>
+</span>
+<span class="orb-scene orb-scene--crystal" aria-hidden="true">
+  <SeaCrystalOrb client:only="react" />
 </span>
 <canvas
   class="orb-scene orb-scene--dynamic"

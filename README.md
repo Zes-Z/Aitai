@@ -36,7 +36,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **内容页**：项目列表 / 详情、相册、随想列表 / 正文，全部静态生成（35 页）。
 - **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、轨道拖拽、复制邮箱 Toast。
 - **第二幅「漂流物」**：改成可拖拽的漂浮场——4 张卡可以拖动、惯性、边界回弹、hover 光斑、复位；数字滚动、实时时间、技能 marquee 都在同一块场里。
-- **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月是 WebGL 月面 + 实时海水，每 10 秒按「平静 2s → 涨潮 3s → 吞没 2s → 退潮 3s」循环；星空是 WebGL 三维光线追踪的黑洞与吸积盘。海月与星空共用持久化画布；朝凪使用轻量 CSS 场景。
+- **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月直接使用 ReactBits Crystalized Ball（`eclipse` / `#BABABA` / 3 strands / 500 particles，按 46px 容器把 size 调到 0.9）；星空是 WebGL 三维光线追踪的黑洞与吸积盘。朝凪是轻量 CSS，海月是 ogl，星空是持久化 WebGL。
 - **首页身份卡**：ReactBits Lanyard 3D 吊牌，绳子直接挂在页面顶部，不再使用大头像；正面是身份卡，背面通过 Lanyard 的 `backContent` 叠加 **ReactBits SpotlightCard 源码**（真实 DOM、跟随指针的聚光与边缘光），不是静态背图。可拖动、甩动、点击翻面；卡片正面仍是 CanvasTexture，背面 DOM 通过投影矩阵跟随 3D 卡片。
 - **内容模型**：只认 Text / Media / Complex Post 三种对象；Zes4U 的封面 + 章节 + 三语 md 结构、loader 规则与目录树见 [REQUIREMENTS §9.0](REQUIREMENTS.md#90-三种内容对象m4-定稿)。
 - **星空背景**：直接使用 ReactBits Galaxy 源码（WebGL2 星场、星云、闪烁、层深），只在星空主题挂载；海月/朝凪仍用原 Canvas 2D 世界。
@@ -46,7 +46,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 
 ```
 src/
-  components/      AvatarDock, ThemeOrb, Hero, Driftage, Realms, Harbor, PageTransition..., lanyard/ (React + Three)
+  components/      AvatarDock, ThemeOrb, Hero, Driftage, Realms, Harbor, PageTransition..., lanyard/ (React + Three), orb/CrystalizedBall (React + ogl)
   content/post/    随想 markdown（zh / en / ja）
   content/project/ 项目 markdown（zh / en / ja）
   content/album/   photo-video.json + 相册媒体
@@ -55,7 +55,7 @@ src/
   i18n/            一个键 × 三语
   pages/[lang]/    首页与详情页
   scripts/         world, theme, orb-art, avatar-dock, shell, page-transitions
-  theme/           palettes, orb-shaders (sea / star / dawn), orb-fallback
+  theme/           palettes, orb-shaders (star black hole), orb-fallback
   transitions/     language.ts（三种编排）、snapshot.ts（隔离页面快照）
   styles/page-transitions.css
   styles/global.css
