@@ -41,7 +41,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月直接使用 ReactBits Crystalized Ball（`eclipse` / `#BABABA` / 3 strands / 500 particles，按 46px 容器把 size 调到 0.9）；星空是 WebGL 三维光线追踪的黑洞与吸积盘。朝凪是轻量 CSS，海月是 ogl，星空是持久化 WebGL。
 - **内容模型**：只认 Text / Media / Complex Post 三种对象；Zes4U 的封面 + 章节 + 三语 md 结构、loader 规则与目录树见 [REQUIREMENTS §9.0](REQUIREMENTS.md#90-三种内容对象m4-定稿)。
 - **星空背景**：直接使用 ReactBits Galaxy 源码（WebGL2 星场、星云、闪烁、层深），只在星空主题挂载。
-- **朝凪背景**：直接使用 ReactBits Side Rays 源码，只在朝凪挂载；光源坐标改到右上角控制球附近，看起来由球发出；WorldCanvas 在朝凪关闭。
+- **朝凪背景**：直接使用 ReactBits Side Rays 源码，**默认配色和参数**（origin top-right / sunbeam 默认值），只在朝凪挂载；WorldCanvas 在朝凪关闭。
 - **海月月亮**：Crystalized Ball 改为月光银 `#DDEBFA`，haze 0.22 / glow 0.85，不再是偏黑的色。
 - **世界引擎**：Canvas 2D 海面只在海月主题绘制；星空交给 Galaxy，朝凪交给 Side Rays；支持 reduced-motion。
 
