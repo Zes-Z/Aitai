@@ -42,8 +42,8 @@ export default function DawnRays() {
   return (
     <div className="dawn-rays-layer" aria-hidden="true">
       <SideRays
-        rayColor1="#FF9A3F"
-        rayColor2="#FFD27A"
+        rayColor1="#ffb26f39"
+        rayColor2="#ffef8b"
         blend={0.45}
         speed={2.4}
         intensity={pulse ? 3.4 : 2.7}

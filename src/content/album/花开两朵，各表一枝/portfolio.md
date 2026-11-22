@@ -1,0 +1,278 @@
+---
+title: 花开两朵，各表一枝
+description: ''
+pubDate: 2026-11-12T00:00:00.000Z
+category: flower
+tag: []
+heroImage: IMG_1198_1.JPG
+draft: false
+---
+
+[
+
+  "IMG_0621_1.JPG": {
+    "draft": false,
+    "type": "photo",
+    "category": "flower",
+    "tag": [],
+    "location": "",
+    "date": "2026-04-05",
+    "photographer": "zes",
+    "title": [
+      "",
+      "",
+      ""
+    ],
+    "description": "",
+    "text": [
+      "",
+      "",
+      ""
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "45mm",
+      "aperture": "f/22",
+      "shutterSpeed": "1/3200s",
+      "iso": "6400",
+      "exposureCompensation": "0 EV"
+    },
+    "related": [
+      "花开两朵-各表一枝-IMG-0630-1",
+      "花开两朵-各表一枝-IMG-0660",
+      "花开两朵-各表一枝-IMG-0662",
+      "花开两朵-各表一枝-IMG-1194-1",
+      "花开两朵-各表一枝-IMG-1198-1",
+      "花开两朵-各表一枝-IMG-1199-1"
+    ]
+  },
+
+  "IMG_0630_1.JPG": {
+    "draft": false,
+    "type": "photo",
+    "category": "flower",
+    "tag": [],
+    "location": "",
+    "date": "2026-04-05",
+    "photographer": "zes",
+    "title": [
+      "",
+      "",
+      ""
+    ],
+    "description": "",
+    "text": [
+      "",
+      "",
+      ""
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/22",
+      "shutterSpeed": "1/80s",
+      "iso": "200",
+      "exposureCompensation": "0 EV"
+    },
+    "related": [
+      "花开两朵-各表一枝-IMG-0621-1",
+      "花开两朵-各表一枝-IMG-0660",
+      "花开两朵-各表一枝-IMG-0662",
+      "花开两朵-各表一枝-IMG-1194-1",
+      "花开两朵-各表一枝-IMG-1198-1",
+      "花开两朵-各表一枝-IMG-1199-1"
+    ]
+  },
+
+  "IMG_0660.JPG": {
+    "draft": false,
+    "type": "photo",
+    "category": "flower",
+    "tag": [],
+    "location": "",
+    "date": "2026-04-05",
+    "photographer": "zes",
+    "title": [
+      "",
+      "",
+      ""
+    ],
+    "description": "",
+    "text": [
+      "",
+      "",
+      ""
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/2500s",
+      "iso": "160",
+      "exposureCompensation": "0 EV"
+    },
+    "related": [
+      "花开两朵-各表一枝-IMG-0621-1",
+      "花开两朵-各表一枝-IMG-0630-1",
+      "花开两朵-各表一枝-IMG-0662",
+      "花开两朵-各表一枝-IMG-1194-1",
+      "花开两朵-各表一枝-IMG-1198-1",
+      "花开两朵-各表一枝-IMG-1199-1"
+    ]
+  },
+
+  "IMG_0662.JPG": {
+    "draft": false,
+    "type": "photo",
+    "category": "flower",
+    "tag": [],
+    "location": "",
+    "date": "2026-04-05",
+    "photographer": "zes",
+    "title": [
+      "",
+      "",
+      ""
+    ],
+    "description": "",
+    "text": [
+      "",
+      "",
+      ""
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/16000s",
+      "iso": "2500",
+      "exposureCompensation": "0 EV"
+    },
+    "related": [
+      "花开两朵-各表一枝-IMG-0621-1",
+      "花开两朵-各表一枝-IMG-0630-1",
+      "花开两朵-各表一枝-IMG-0660",
+      "花开两朵-各表一枝-IMG-1194-1",
+      "花开两朵-各表一枝-IMG-1198-1",
+      "花开两朵-各表一枝-IMG-1199-1"
+    ]
+  },
+
+  "IMG_1194_1.JPG": {
+    "draft": false,
+    "type": "photo",
+    "category": "flower",
+    "tag": [],
+    "location": "",
+    "date": "2026-05-05",
+    "photographer": "zes",
+    "title": [
+      "",
+      "",
+      ""
+    ],
+    "description": "",
+    "text": [
+      "",
+      "",
+      ""
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/1250s",
+      "iso": "100",
+      "exposureCompensation": "-0.33 EV"
+    },
+    "related": [
+      "花开两朵-各表一枝-IMG-0621-1",
+      "花开两朵-各表一枝-IMG-0630-1",
+      "花开两朵-各表一枝-IMG-0660",
+      "花开两朵-各表一枝-IMG-0662",
+      "花开两朵-各表一枝-IMG-1198-1",
+      "花开两朵-各表一枝-IMG-1199-1"
+    ]
+  },
+
+  "IMG_1198_1.JPG": {
+    "draft": false,
+    "type": "photo",
+    "category": "flower",
+    "tag": [],
+    "location": "天津",
+    "date": "2026.03.04",
+    "photographer": "zes",
+    "title": [
+      "two flowers",
+      "花开两朵",
+      ""
+    ],
+    "description": "蔷薇蔷薇，你一年开几回？",
+    "text": [
+      "这是两朵花",
+      "",
+      ""
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "28-70",
+      "focalLength": "60",
+      "aperture": "F2.8",
+      "shutterSpeed": "1/30s",
+      "iso": "100",
+      "exposureCompensation": "-1 EV"
+    },
+    "related": [
+      "花开两朵-各表一枝-IMG-0621-1",
+      "花开两朵-各表一枝-IMG-0630-1",
+      "花开两朵-各表一枝-IMG-0660",
+      "花开两朵-各表一枝-IMG-0662",
+      "花开两朵-各表一枝-IMG-1194-1",
+      "花开两朵-各表一枝-IMG-1199-1"
+    ]
+  },
+
+  "IMG_1199_1.JPG": {
+    "draft": false,
+    "type": "photo",
+    "category": "flower",
+    "tag": [],
+    "location": "天津",
+    "date": "2026-05-05",
+    "photographer": "zes",
+    "title": [
+      "",
+      "",
+      ""
+    ],
+    "description": "简短的描述",
+    "text": [
+      "一小段故事",
+      "",
+      ""
+    ],
+    "exif": {
+      "camera": "Canon EOS R8",
+      "lens": "RF28-70mm F2.8 IS STM",
+      "focalLength": "70mm",
+      "aperture": "f/2.8",
+      "shutterSpeed": "1/4000s",
+      "iso": "200",
+      "exposureCompensation": "-0.33 EV"
+    },
+    "related": [
+      "花开两朵-各表一枝-IMG-0621-1",
+      "花开两朵-各表一枝-IMG-0630-1",
+      "花开两朵-各表一枝-IMG-0660",
+      "花开两朵-各表一枝-IMG-0662",
+      "花开两朵-各表一枝-IMG-1194-1",
+      "花开两朵-各表一枝-IMG-1198-1"
+    ]
+  }
+]

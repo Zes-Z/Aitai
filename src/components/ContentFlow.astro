@@ -1,113 +1,181 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection, render } from 'astro:content';
+import { getImage, Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import { posix } from 'node:path';
 import { t } from '../i18n';
-import { LANGS, type Lang } from '../types';
+import type { Lang } from '../types';
+import { getAlbumEntries } from '../utils/album';
+import { renderMarkdown } from '../utils/markdown';
+import { withBase } from '../utils/paths';
 import '../styles/content-depth.css';
 import '../styles/content-sheet.css';
+import 'katex/dist/katex.min.css';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const langIndex = LANGS.indexOf(lang);
 
-const imageModules = import.meta.glob<ImageMetadata>('/src/content/**/*.{jpg,jpeg,png,webp,avif}', {
-  eager: true,
-  import: 'default',
-});
-const videoModules = import.meta.glob<string>('/src/content/**/*.{mp4,webm}', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-});
+const postImageModules = import.meta.glob<ImageMetadata>(
+  '/src/content/posts/**/*.{png,jpg,jpeg,PNG,JPG,JPEG,webp,gif,svg,avif}',
+  { eager: true, import: 'default' }
+);
+const postImageIndex = new Map(
+  Object.entries(postImageModules).map(([path, meta]) => [path.toLowerCase(), meta])
+);
+const postFilesBySlug = (slug: string) =>
+  Object.keys(postImageModules)
+    .filter((path) => path.startsWith('/src/content/posts/' + slug + '/'))
+    .sort();
 
-const pickFolderImage = (folder: string) => {
-  const entries = Object.entries(imageModules).filter(([path]) => path.includes('/' + folder + '/'));
-  const cover = entries.find(([path]) => /\/cover\.[^.]+$/.test(path));
-  return (cover ?? entries[0])?.[1];
-};
-
-const albumKey = (src: string) => '/src/content/album/' + src.replace(/^\.\//, '');
-const ratioFor = (ratio: string) => (ratio === 'portrait' ? 0.75 : ratio === 'square' ? 1 : 1.5);
-
-type FeedItem = {
-  kind: 'project' | 'thought' | 'album';
-  id: string;
-  sheetKey?: string;
-  title: string;
-  meta?: string;
-  palette: [string, string, string];
-  ratio: number;
-  date: string;
-  image?: ImageMetadata;
-  videoUrl?: string;
-};
-
-const projects = await Promise.all(
-  (await getCollection('project'))
-    .filter((entry) => entry.id.endsWith('/' + lang))
-    .map(async (entry) => {
-      const slug = entry.id.split('/')[0];
-      const image = pickFolderImage(slug);
-      const { Content } = await render(entry);
-      return {
-        kind: 'project' as const,
-        id: 'project-' + slug,
-        slug,
-        sheetKey: 'project:' + slug,
-        title: entry.data.title,
-        palette: entry.data.palette as [string, string, string],
-        ratio: image ? image.width / image.height : 1.5,
-        date: entry.data.year + '.00.' + entry.data.index,
-        image,
-        data: entry.data,
-        Content,
-      };
-    })
+const albumImageModules = import.meta.glob<ImageMetadata>(
+  '/src/content/album/**/*.{png,jpg,jpeg,PNG,JPG,JPEG,webp,avif,gif}',
+  { eager: true, import: 'default' }
 );
 
-const thoughts = await Promise.all(
-  (await getCollection('post'))
-    .filter((entry) => entry.id.endsWith('/' + lang))
+const paletteList: [string, string, string][] = [
+  ['#0b1026', '#243a8f', '#8fb3ff'],
+  ['#03131a', '#0b4a52', '#6fe7de'],
+  ['#1a1010', '#7a3b2a', '#ffb38f'],
+  ['#171126', '#4b2a74', '#c9b6ff'],
+  ['#101a12', '#31523a', '#b9e6b0'],
+  ['#1b1408', '#6b4a1d', '#f6c56e'],
+];
+const paletteFor = (key: string): [string, string, string] => {
+  let h = 0;
+  for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return paletteList[h % paletteList.length];
+};
+
+const resolvePostMeta = (baseSlug: string, ref: string): ImageMetadata | undefined => {
+  if (!ref || /^(https?:|\/|data:|#)/.test(ref)) return undefined;
+  let clean = ref.replace(/^(\.\/)+/, '');
+  try { clean = decodeURIComponent(clean); } catch { /* keep as-is */ }
+  return postImageIndex.get(('/src/content/posts/' + baseSlug + '/' + clean).toLowerCase());
+};
+
+const resolveImage = async (baseSlug: string, url: string) => {
+  const meta = resolvePostMeta(baseSlug, url);
+  if (!meta) return undefined;
+  return {
+    src: withBase(meta.src),
+    original: withBase(meta.src),
+    openLabel: '查看原图',
+    width: meta.width,
+    height: meta.height,
+  };
+};
+
+const resolveChapterLink = (baseSlug: string, url: string, chapters: Map<string, string>) => {
+  let decoded = url;
+  try { decoded = decodeURIComponent(url); } catch { /* keep raw */ }
+  const suffixMatch = /([?#].*)$/.exec(decoded);
+  const suffix = suffixMatch?.[1] ?? '';
+  const clean = (suffix ? decoded.slice(0, -suffix.length) : decoded)
+    .replaceAll('\\', '/')
+    .replaceAll('{lang}', lang);
+  if (!/\.md$/i.test(clean)) return undefined;
+  let target = posix.normalize(posix.join(baseSlug, clean.replace(/\.md$/i, '')));
+  if (target.endsWith('/' + lang)) target = target.slice(0, -(lang.length + 1));
+  const anchor = chapters.get(target);
+  return anchor ? '#' + anchor + suffix : undefined;
+};
+
+const allPosts = await getCollection('posts');
+const langPosts = allPosts.filter((entry) => entry.id.startsWith(lang + '/'));
+
+const preparedPosts = await Promise.all(
+  langPosts
+    .filter((entry) => !entry.data.isSubpage && !entry.data.draft)
     .map(async (entry) => {
-      const slug = entry.id.split('/')[0];
-      const image = pickFolderImage(slug);
-      const { Content } = await render(entry);
+      const slug = entry.id.slice(lang.length + 1);
+      const subpages = langPosts
+        .filter((child) => child.data.isSubpage && child.id.startsWith(lang + '/' + slug + '/') && !child.data.draft)
+        .sort((a, b) => a.id.localeCompare(b.id));
+
+      const chapters = new Map<string, string>();
+      subpages.forEach((child, index) => {
+        chapters.set(child.id.slice(lang.length + 1), 'chapter-' + index);
+      });
+
+      const mainHtml = await renderMarkdown(entry.body ?? '', {
+        resolveImage: (url) => resolveImage(slug, url),
+        resolveLink: (url) => resolveChapterLink(slug, url, chapters),
+      });
+
+      const renderedChapters = await Promise.all(
+        subpages.map(async (child) => {
+          const childSlug = child.id.slice(lang.length + 1);
+          const result = await renderMarkdown(child.body ?? '', {
+            resolveImage: (url) => resolveImage(childSlug, url),
+            resolveLink: (url) => resolveChapterLink(childSlug, url, chapters),
+          });
+          return {
+            id: chapters.get(childSlug)!,
+            title: child.data.title,
+            html: result.html,
+          };
+        })
+      );
+
+      const explicitCover = entry.data.postImage?.trim();
+      const firstCover = postFilesBySlug(slug)[0];
+      const image = explicitCover && explicitCover !== ' '
+        ? resolvePostMeta(slug, explicitCover) ?? (firstCover ? postImageModules[firstCover] : undefined)
+        : firstCover
+          ? postImageModules[firstCover]
+          : undefined;
+
+      const date = entry.data.pubDate
+        ? entry.data.pubDate.toISOString().slice(0, 10).replaceAll('-', '.')
+        : '';
+
       return {
-        kind: 'thought' as const,
-        id: 'thought-' + slug,
+        kind: 'post' as const,
+        id: 'post-' + slug,
         slug,
         sheetKey: 'post:' + slug,
         title: entry.data.title,
-        palette: entry.data.palette as [string, string, string],
+        meta: [entry.data.category, date].filter(Boolean).join(' · '),
+        palette: paletteFor(entry.data.category + slug),
         ratio: image ? image.width / image.height : 1.5,
-        date: entry.data.date,
+        date,
         image,
-        data: entry.data,
-        Content,
+        description: entry.data.description ?? '',
+        category: entry.data.category,
+        tags: entry.data.tag,
+        html: mainHtml.html,
+        chapters: renderedChapters,
       };
     })
 );
 
-const album = (await getCollection('album'))
-  .filter((entry) => !entry.data.draft)
-  .map((entry) => {
-    const image = imageModules[albumKey(entry.data.src)];
-    const videoUrl = videoModules[albumKey(entry.data.src)];
-    const place = (entry.data.place ?? [entry.data.location, entry.data.location, entry.data.location])[langIndex] ?? entry.data.location;
+const albumItems = await Promise.all(
+  getAlbumEntries(lang).map(async (entry) => {
+    const meta = albumImageModules['/src/content/album/' + entry.file];
+    let imageUrl = entry.src;
+    if (meta) {
+      try {
+        imageUrl = (await getImage({ src: meta, width: 2000, format: 'webp', quality: 80 })).src;
+      } catch {
+        imageUrl = entry.src;
+      }
+    }
     return {
       kind: 'album' as const,
       id: 'album-' + entry.id,
-      title: entry.data.title[langIndex] ?? entry.data.title[0],
-      meta: [entry.data.date, place].filter(Boolean).join(' · '),
-      palette: (entry.data.palette ?? ['#0b1026', '#22306b', '#8fb3ff']) as [string, string, string],
-      ratio: image ? image.width / image.height : ratioFor(entry.data.ratio),
-      date: entry.data.date,
-      image,
-      videoUrl,
+      title: entry.title,
+      meta: [entry.date, entry.location].filter(Boolean).join(' · '),
+      palette: paletteFor(entry.file),
+      ratio: meta ? meta.width / meta.height : (entry.width && entry.height ? entry.width / entry.height : 1.5),
+      date: entry.date,
+      image: meta,
+      imageUrl,
+      videoUrl: entry.kind === 'video' ? entry.src : undefined,
+      mediaType: entry.kind,
     };
-  });
+  })
+);
 
-const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
+const items = [...preparedPosts, ...albumItems].sort((a, b) => {
   const byDate = b.date.localeCompare(a.date);
   return byDate || a.title.localeCompare(b.title);
 });
@@ -117,21 +185,17 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
   <div class="content-wall">
     {items.map((item, index) => {
       const style = `--r: ${item.ratio.toFixed(4)}; --p1: ${item.palette[0]}; --p2: ${item.palette[1]}; --p3: ${item.palette[2]}; --reveal-delay: ${Math.min(index, 8) * 0.04}s`;
-      const media = (
-        <>
-          {item.image ? (
-            <Image
-              src={item.image}
-              alt=""
-              widths={[480, 800, 1200]}
-              sizes="(max-width: 700px) 46vw, 30vw"
-              loading={index < 4 ? 'eager' : 'lazy'}
-              decoding="async"
-            />
-          ) : (
-            <span class="content-art" aria-hidden="true"></span>
-          )}
-        </>
+      const cover = item.image ? (
+        <Image
+          src={item.image}
+          alt=""
+          widths={[480, 800, 1200]}
+          sizes="(max-width: 700px) 46vw, 30vw"
+          loading={index < 4 ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      ) : (
+        <span class="content-art" aria-hidden="true"></span>
       );
 
       if (item.kind === 'album') {
@@ -140,7 +204,7 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
             type="button"
             class:list={['content-tile', 'content-tile--media', { 'content-tile--video': Boolean(item.videoUrl) }]}
             data-media-tile
-            data-src={item.image?.src ?? ''}
+            data-src={item.imageUrl ?? ''}
             data-video={item.videoUrl ?? ''}
             data-caption={item.title}
             data-meta={item.meta ?? ''}
@@ -150,7 +214,7 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
             aria-haspopup="dialog"
             data-reveal
           >
-            {media}
+            {cover}
           </button>
         );
       }
@@ -165,44 +229,38 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
           aria-haspopup="dialog"
           data-reveal
         >
-          {media}
+          {cover}
         </button>
       );
     })}
   </div>
 </section>
 
-{projects.map((project) => (
-  <template data-content-sheet={project.sheetKey}>
+{preparedPosts.map((post) => (
+  <template data-content-sheet={post.sheetKey}>
     <article class="sheet-article">
       <p class="detail-kicker">
-        <span>{project.data.year}</span>
-        <span>{project.data.role}</span>
-        <span>{project.data.tags.join(' / ')}</span>
+        <span>{post.category}</span>
+        {post.date && <span>{post.date}</span>}
+        {post.tags.length > 0 && <span>{post.tags.join(' / ')}</span>}
       </p>
-      <h1 class="detail-title">{project.data.title}</h1>
-      <p class="detail-summary">{project.data.summary}</p>
-      <div class="detail-hero" style={`--p1: ${project.data.palette[0]}; --p2: ${project.data.palette[1]}; --p3: ${project.data.palette[2]}`}>
-        <span class="detail-mark">{project.data.index}</span>
-      </div>
-      <div class="detail-body"><project.Content /></div>
-    </article>
-  </template>
-))}
+      <h1 class="detail-title">{post.title}</h1>
+      {post.description && <p class="detail-summary">{post.description}</p>}
 
-{thoughts.map((thought) => (
-  <template data-content-sheet={thought.sheetKey}>
-    <article class="sheet-article">
-      <p class="detail-kicker">
-        <span>{thought.data.date}</span>
-        <span>{thought.data.reading} min read</span>
-      </p>
-      <h1 class="detail-title">{thought.data.title}</h1>
-      <p class="detail-summary">{thought.data.excerpt}</p>
-      <div class="detail-hero" style={`--p1: ${thought.data.palette[0]}; --p2: ${thought.data.palette[1]}; --p3: ${thought.data.palette[2]}`}>
-        <span class="detail-mark">会</span>
-      </div>
-      <div class="detail-body"><thought.Content /></div>
+      {post.image && (
+        <figure class="sheet-cover">
+          <Image src={post.image} alt="" widths={[640, 960, 1280]} sizes="(max-width: 700px) 92vw, 880px" loading="lazy" decoding="async" />
+        </figure>
+      )}
+
+      <div class="detail-body" set:html={post.html}></div>
+
+      {post.chapters.map((chapter) => (
+        <section class="sheet-chapter" id={chapter.id}>
+          <h2>{chapter.title}</h2>
+          <div class="detail-body" set:html={chapter.html}></div>
+        </section>
+      ))}
     </article>
   </template>
 ))}
@@ -432,10 +490,7 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
     color: var(--accent);
   }
   .media-viewer__btn svg { width: 19px; height: 19px; }
-  .media-viewer__close {
-    margin-left: 4px;
-    border: 1px solid var(--border-strong);
-  }
+  .media-viewer__close { margin-left: 4px; border: 1px solid var(--border-strong); }
   .media-viewer__counter {
     display: inline-flex;
     align-items: center;
@@ -449,6 +504,28 @@ const items: FeedItem[] = [...projects, ...thoughts, ...album].sort((a, b) => {
   }
   .media-viewer__sep { opacity: .5; }
   :global(html.is-media-open) { overflow: hidden; }
+
+  .sheet-cover {
+    margin: clamp(1.5rem, 3vw, 2.5rem) auto 0;
+    max-width: 880px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .sheet-cover :global(img) { display: block; width: 100%; height: auto; }
+  .sheet-chapter {
+    margin-top: clamp(2.5rem, 6vw, 5rem);
+    padding-top: clamp(1.4rem, 3vw, 2.4rem);
+    border-top: 1px solid var(--border);
+    scroll-margin-top: 96px;
+  }
+  .sheet-chapter > h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 400;
+    letter-spacing: -.02em;
+    margin-bottom: 1.2rem;
+  }
 </style>
 
 <script>
