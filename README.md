@@ -24,7 +24,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 
 ## 已实现
 
-- **三段首页**：潮汐线 / 内容流 / 归港；内容流把项目、影像、随想合并成一条 justified 图片墙，没有标题、eyebrow、说明或计数。
+- **三段首页**：潮汐线 / 内容流 / 归港；内容流把 Zes4U posts 与 album 合并成 depth field，没有标题、eyebrow、说明或计数。
 - **三主题**：星空 / 海月（海上明月，不是水母）/ 朝凪；默认朝凪（`SiteConfig.theme.default` 可改）；长按主题球直接循环切换、全屏换界、localStorage 持久化、无闪首帧。
 - **头像菜单**：读取 `SiteConfig.identity.socials`，点击在右下方 90° 区域内等角度展开，基础半径 80px；长按 460ms 回到当前页面顶部，Space / Home 回顶，↓ 打开链接，Escape 关闭。GitHub / 邮件 / CV 图标沿用 funiki 的 SVG 风格。自定义图标用 `iconSrc`，空链接显示为不可点击的占位；CV 使用 `{ label: 'CV', href: '/kim cv.pdf', icon: 'cv' }`，头像、首屏、漂流物和尾幅的下载入口共用这条配置。
 - **对称边界**：头像按钮与主题球都是 46px，顶部与左右边缘使用相等的安全区边距。所有页面的内容留白由按钮内侧边界推导；窄屏标题、列表和相册随内容宽度排版。
@@ -33,10 +33,11 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **相册**：`src/content/album` 整体复制，`utils/album.ts` 直接读取 `photo-video.json`、`portfolio.md` 和文件夹资源；相册条目不进 content collection，与 Zes4U 的 gallery 管线一致。
 - **页面转场**：Tide / Constellate / Develop / Veil 四种；ClientRouter 负责导航，自研 overlay + Web Animations API 负责「封面 + 揭示」；支持返回、中断、reduced-motion；Astro 默认转场已关闭。
 - **语言切换**：不再播放主题内转场（Frame / Curtain / Slices 已停用）。通过 ClientRouter 原地换页，页面不刷新、不闪白、不锁定滚动；切换后保留当前滚动位置，URL 更新到目标语言路径。
-- **页面范围**：只生成三语首页、根跳转与 404，共 5 页；项目/相册/随想的归档页和详情页已移除。
+- **页面范围**：只生成三语首页、根首页与 404，共 5 页；根路径不再显示 meta refresh 预加载页；项目/相册/随想的归档页和详情页已移除。
 - **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、轨道拖拽、复制邮箱 Toast；浏览器页面滚动条隐藏。
 - **角落长按**：控制球与左上角头像不再依赖 `setPointerCapture`，改用窗口级 `pointerup/pointercancel` + 420ms 指针抬起兜底；鼠标允许 36px 抖动、触控 18px，避免轻微移动取消长按；按钮 `touch-action: none`。
 - **首页 Lanyard**：ReactBits Lanyard 原始源码直接挂在 hero 的全屏透明画布上；landscape、`anchor=right`、`elasticity=.1`、`damping=.3`、`gravity=.25`、`breeze=0`、`intro=false`、`strapLength=.6`（视觉上带子更长、卡片上下居中）、plain strap。正面**只有三行**：名字·年龄·居住地 / 座右铭 / 职业内容；没有 header、标签、编号、分割线、条码、页脚或水印。背面使用 `SiteConfig.identity.lanyard.backImage` 指向的图片（默认 ReactBits 原始封底图）；图片放在 `public/lanyard/`，推荐 1440×1024，其他比例会按 `cover` 裁切。年龄和职业在 `SiteConfig.identity` 中修改。≤1400px 收窄文案列，≤1100px 隐藏卡片。
+- **Folder 入口**：图片流上方新增三枚 ReactBits Folder（Projects / Posts / Portofio），直接复制源码，`glass` / `#e3ff7a` / `openOn=hover` / `tilt=.3` / `frost=.3` / `tabPosition=left` / `size=1.2`；打开后的条目分别跳转到 post Sheet 或相册 lightbox。
 - **内容流**：移植 funiki 02 Life in Frames 的 **depth field**——图片按深度散落、滚动穿越、鼠标磁性倾斜、可拖拽；reduced-motion / 无 JS 时回退到 justified 图片墙。Zes4U posts 与 album 按日期混合，无任何标题与提示。album 单图 / 视频点击打开 funiki lightbox 风格查看器；post 点击后用全屏 Sheet 原地渲染主 md + 所有子章节，不跳转页面。缩略图统一生成 **AVIF 质量 90 / 900px**，点击查看器再加载原始 JPG。
 - **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月直接使用 ReactBits Crystalized Ball（`eclipse` / `#DDEBFA` / 3 strands / 500 particles，按 46px 容器把 size 调到 0.9）；星空是 WebGL 三维光线追踪的黑洞与吸积盘。朝凪是轻量 CSS，海月是 ogl，星空是持久化 WebGL。
 - **Markdown**：`utils/markdown.ts` 从 Zes4U 移植 unified 管线，支持 GFM、KaTeX、directive 特殊块、defList、GitHub alert、Shiki 高亮、代码复制；相关 prose / directive / code-block 样式逐条移植，已移除首字下沉。
@@ -50,7 +51,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 
 ```
 src/
-  components/      AvatarDock, ThemeOrb, Hero, ContentFlow, Harbor, PageTransition..., lanyard/ (React + Three), backgrounds/Galaxy + SideRays + GradientWaves, orb/CrystalizedBall (React + ogl)
+  components/      AvatarDock, ThemeOrb, Hero, ContentFlow, FolderGateway, Harbor, PageTransition..., folder/ (ReactBits Folder), lanyard/ (React + Three), backgrounds/Galaxy + SideRays + GradientWaves, orb/CrystalizedBall (React + ogl)
   content/posts/          Zes4U posts/<slug>/{zh,en,ja}.md + 子章节
   content/welcome-site/  Zes4U welcome markdown
   content/album/         photo-video.json + portfolio.md + 相册媒体

@@ -1,22 +1,16 @@
 ---
-import { withBase } from '../utils/paths';
-const target = withBase('/zh/');
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import ContentFlow from '../components/ContentFlow.astro';
+import Harbor from '../components/Harbor.astro';
+import { siteConfig } from '../../SiteConfig';
+import type { Lang } from '../types';
+
+const lang: Lang = 'zh';
 ---
 
-<!doctype html>
-<html lang="zh">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="refresh" content={'0;url=' + target} />
-    <link rel="canonical" href={target} />
-    <title>AITAI · 会いたい</title>
-    <style>
-      html, body { height: 100%; margin: 0; background: #05060f; color: #e9ecff; }
-      body { display: grid; place-items: center; font-family: Georgia, serif; letter-spacing: 0.2em; }
-      a { color: #8fb3ff; }
-    </style>
-  </head>
-  <body>
-    <a href={target}>AITAI · 会いたい</a>
-  </body>
-</html>
+<BaseLayout lang={lang} page="home" description={siteConfig.site.description[lang]}>
+  <Hero lang={lang} />
+  <ContentFlow lang={lang} />
+  <Harbor lang={lang} />
+</BaseLayout>

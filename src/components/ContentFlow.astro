@@ -7,6 +7,7 @@ import type { Lang } from '../types';
 import { getAlbumEntries } from '../utils/album';
 import { renderMarkdown } from '../utils/markdown';
 import { withBase } from '../utils/paths';
+import FolderGateway from './folder/FolderGateway';
 import '../styles/content-depth.css';
 import '../styles/content-sheet.css';
 import 'katex/dist/katex.min.css';
@@ -182,6 +183,7 @@ const albumItems = await Promise.all(
       imageUrl: entry.src,
       videoUrl: entry.kind === 'video' ? entry.src : undefined,
       mediaType: entry.kind,
+      group: entry.file.includes('/') ? entry.file.split('/')[0] : '',
     };
   })
 );
@@ -190,9 +192,41 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
   const byDate = b.date.localeCompare(a.date);
   return byDate || a.title.localeCompare(b.title);
 });
+
+const mediaFolders = splitAlbumFolders(albumItems);
+const folderGroups = [
+  {
+    label: 'Projects',
+    kind: 'media' as const,
+    items: mediaFolders.projects,
+  },
+  {
+    label: 'Posts',
+    kind: 'post' as const,
+    items: preparedPosts
+      .filter((post) => Boolean(post.thumb))
+      .slice(0, 3)
+      .map((post) => ({ id: post.slug, title: post.title, image: post.thumb! })),
+  },
+  {
+    label: 'Portofio',
+    kind: 'media' as const,
+    items: mediaFolders.portfolio,
+  },
+];
+
+function splitAlbumFolders(albums: typeof albumItems) {
+  const withImage = albums.filter((album) => Boolean(album.thumb));
+  return {
+    projects: withImage.filter((album) => Boolean(album.group)).slice(0, 3).map((album) => ({ id: album.id, title: album.title, image: album.thumb! })),
+    portfolio: withImage.filter((album) => !album.group).slice(0, 3).map((album) => ({ id: album.id, title: album.title, image: album.thumb! })),
+  };
+}
 ---
 
 <section id="content" class="content-flow" data-section data-content-depth aria-label={lang === 'zh' ? '内容' : lang === 'ja' ? 'コンテンツ' : 'Content'}>
+  <FolderGateway client:only="react" groups={folderGroups} />
+
   <div class="content-wall">
     {items.map((item, index) => {
       const style = `--r: ${item.ratio.toFixed(4)}; --p1: ${item.palette[0]}; --p2: ${item.palette[1]}; --p3: ${item.palette[2]}; --reveal-delay: ${Math.min(index, 8) * 0.04}s`;
@@ -215,6 +249,7 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
             type="button"
             class:list={['content-tile', 'content-tile--media', { 'content-tile--video': Boolean(item.videoUrl) }]}
             data-media-tile
+            data-media-id={item.id}
             data-src={item.imageUrl ?? ''}
             data-video={item.videoUrl ?? ''}
             data-caption={item.title}
@@ -318,6 +353,27 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
   .content-flow {
     position: relative;
     padding: clamp(3.4rem, 8vh, 6.5rem) 0 clamp(4rem, 9vh, 8rem);
+  }
+  .folder-gateway {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: clamp(420px, 58vh, 640px);
+    padding: 1rem var(--gutter) clamp(3.5rem, 8vh, 7rem);
+  }
+  .folder-gateway__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(1.2rem, 3.2vw, 3rem);
+  }
+  .folder-gateway__item { display: flex; flex: 0 0 auto; justify-content: center; }
+  @media (max-width: 760px) {
+    .folder-gateway { min-height: 0; padding-block: 2rem 4rem; }
+    .folder-gateway__row { gap: 2rem; }
   }
   .content-wall {
     --row: 17rem;
@@ -536,6 +592,34 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
     font-weight: 400;
     letter-spacing: -.02em;
     margin-bottom: 1.2rem;
+  }
+</style>
+
+<style is:global>
+  .folder-gateway {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: clamp(420px, 58vh, 640px);
+    padding: 1rem var(--gutter) clamp(3.5rem, 8vh, 7rem);
+  }
+  .folder-gateway__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(1.2rem, 3.2vw, 3rem);
+  }
+  .folder-gateway__item {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+  }
+  @media (max-width: 760px) {
+    .folder-gateway { min-height: 0; padding-block: 2rem 4rem; }
+    .folder-gateway__row { gap: 2rem; }
   }
 </style>
 
