@@ -1,4 +1,5 @@
 import { defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { zestLoader } from './loaders/zest';
 
@@ -12,9 +13,24 @@ import { zestLoader } from './loaders/zest';
  * Album media lives outside the collection in src/content/album and is read
  * by utils/album.ts, matching Zes4U's gallery pipeline.
  */
+const palette = z.array(z.string()).length(3);
+
 export const collections = {
+  projects: defineCollection({
+    loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
+    schema: z.object({
+      title: z.string(),
+      index: z.string(),
+      year: z.string(),
+      role: z.string(),
+      summary: z.string(),
+      tags: z.array(z.string()).default([]),
+      palette,
+    }),
+  }),
+
   posts: defineCollection({
-    loader: zestLoader({ base: './src/content/posts' }),
+    loader: zestLoader({ base: './src/content/post' }),
     schema: z.object({
       title: z.string(),
       category: z.string().min(1),

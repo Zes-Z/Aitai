@@ -4,7 +4,7 @@ import { getCollection } from 'astro:content';
 import { posix } from 'node:path';
 import { t } from '../i18n';
 import type { Lang } from '../types';
-import { getAlbumEntries } from '../utils/album';
+import { getAlbumEntries, getAlbumHomeItems, type PortfolioCard } from '../utils/album';
 import { renderMarkdown } from '../utils/markdown';
 import { withBase } from '../utils/paths';
 import FolderGateway from './folder/FolderGateway';
@@ -16,7 +16,7 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 
 const postImageModules = import.meta.glob<ImageMetadata>(
-  '/src/content/posts/**/*.{png,jpg,jpeg,PNG,JPG,JPEG,webp,gif,svg,avif}',
+  '/src/content/post/**/*.{png,jpg,jpeg,PNG,JPG,JPEG,webp,gif,svg,avif}',
   { eager: true, import: 'default' }
 );
 const postImageIndex = new Map(
@@ -24,7 +24,7 @@ const postImageIndex = new Map(
 );
 const postFilesBySlug = (slug: string) =>
   Object.keys(postImageModules)
-    .filter((path) => path.startsWith('/src/content/posts/' + slug + '/'))
+    .filter((path) => path.startsWith('/src/content/post/' + slug + '/'))
     .sort();
 
 const albumImageModules = import.meta.glob<ImageMetadata>(
@@ -50,7 +50,7 @@ const resolvePostMeta = (baseSlug: string, ref: string): ImageMetadata | undefin
   if (!ref || /^(https?:|\/|data:|#)/.test(ref)) return undefined;
   let clean = ref.replace(/^(\.\/)+/, '');
   try { clean = decodeURIComponent(clean); } catch { /* keep as-is */ }
-  return postImageIndex.get(('/src/content/posts/' + baseSlug + '/' + clean).toLowerCase());
+  return postImageIndex.get(('/src/content/post/' + baseSlug + '/' + clean).toLowerCase());
 };
 
 const resolveImage = async (baseSlug: string, url: string) => {
@@ -79,6 +79,35 @@ const resolveChapterLink = (baseSlug: string, url: string, chapters: Map<string,
   const anchor = chapters.get(target);
   return anchor ? '#' + anchor + suffix : undefined;
 };
+
+const svgData = (svg: string) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+const projectCover = (title: string, palette: string[]) => {
+  const safe = title.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]!));
+  return svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480" viewBox="0 0 720 480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${palette[0]}"/><stop offset=".55" stop-color="${palette[1]}"/><stop offset="1" stop-color="${palette[2]}"/></linearGradient></defs><rect width="720" height="480" fill="url(#g)"/><circle cx="560" cy="120" r="160" fill="${palette[2]}" fill-opacity=".22"/><text x="52" y="380" fill="#fff" fill-opacity=".9" font-family="Georgia,serif" font-size="54">${safe}</text></svg>`);
+};
+
+const allProjects = await getCollection('projects');
+const langProjects = await Promise.all(
+  allProjects
+    .filter((entry) => entry.id.endsWith('/' + lang))
+    .sort((a, b) => a.data.index.localeCompare(b.data.index))
+    .map(async (entry) => {
+      const slug = entry.id.split('/')[0];
+      const { html } = await renderMarkdown(entry.body ?? '', {});
+      return {
+        slug,
+        sheetKey: 'project:' + slug,
+        title: entry.data.title,
+        category: entry.data.role,
+        year: entry.data.year,
+        summary: entry.data.summary,
+        tags: entry.data.tags,
+        palette: entry.data.palette,
+        cover: projectCover(entry.data.title, entry.data.palette),
+        html,
+      };
+    })
+);
 
 const allPosts = await getCollection('posts');
 const langPosts = allPosts.filter((entry) => entry.id.startsWith(lang + '/'));
@@ -193,12 +222,22 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
   return byDate || a.title.localeCompare(b.title);
 });
 
-const mediaFolders = splitAlbumFolders(albumItems);
+const portfolioCards = getAlbumHomeItems(lang).filter(
+  (item): item is PortfolioCard => 'type' in item && item.type === 'portfolio'
+);
+const portfolioItems = portfolioCards
+  .slice(0, 3)
+  .map((item) => {
+    const cover = albumItems.find((album) => album.group === item.folder && Boolean(album.thumb));
+    return { id: cover?.id ?? item.id, title: item.title || item.folder, image: cover?.thumb ?? '' };
+  })
+  .filter((item) => Boolean(item.image));
+
 const folderGroups = [
   {
     label: 'Projects',
-    kind: 'media' as const,
-    items: mediaFolders.projects,
+    kind: 'project' as const,
+    items: langProjects.slice(0, 3).map((project) => ({ id: project.slug, title: project.title, image: project.cover })),
   },
   {
     label: 'Posts',
@@ -211,17 +250,9 @@ const folderGroups = [
   {
     label: 'Portofio',
     kind: 'media' as const,
-    items: mediaFolders.portfolio,
+    items: portfolioItems,
   },
 ];
-
-function splitAlbumFolders(albums: typeof albumItems) {
-  const withImage = albums.filter((album) => Boolean(album.thumb));
-  return {
-    projects: withImage.filter((album) => Boolean(album.group)).slice(0, 3).map((album) => ({ id: album.id, title: album.title, image: album.thumb! })),
-    portfolio: withImage.filter((album) => !album.group).slice(0, 3).map((album) => ({ id: album.id, title: album.title, image: album.thumb! })),
-  };
-}
 ---
 
 <section id="content" class="content-flow" data-section data-content-depth aria-label={lang === 'zh' ? '内容' : lang === 'ja' ? 'コンテンツ' : 'Content'}>
@@ -281,6 +312,28 @@ function splitAlbumFolders(albums: typeof albumItems) {
     })}
   </div>
 </section>
+
+{langProjects.map((project) => (
+  <template data-content-sheet={project.sheetKey}>
+    <article class="sheet-article">
+      <p class="detail-kicker">
+        <span>{project.year}</span>
+        <span>{project.category}</span>
+        {project.tags.length > 0 && <span>{project.tags.join(' / ')}</span>}
+      </p>
+      <h1 class="detail-title">{project.title}</h1>
+      <p class="detail-summary">{project.summary}</p>
+      <div class="detail-hero" style={`--p1: ${project.palette[0]}; --p2: ${project.palette[1]}; --p3: ${project.palette[2]}`}>
+        <span class="detail-mark">会</span>
+      </div>
+      <div class="detail-body" set:html={project.html}></div>
+    </article>
+  </template>
+))}
+
+{langProjects.map((project) => (
+  <button type="button" hidden data-content-sheet-trigger={project.sheetKey}></button>
+))}
 
 {preparedPosts.map((post) => (
   <template data-content-sheet={post.sheetKey}>
@@ -610,13 +663,16 @@ function splitAlbumFolders(albums: typeof albumItems) {
     flex-wrap: wrap;
     align-items: flex-end;
     justify-content: center;
-    gap: clamp(1.2rem, 3.2vw, 3rem);
+    gap: clamp(3rem, 8vw, 9rem);
   }
   .folder-gateway__item {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex: 0 0 auto;
     justify-content: center;
   }
+  .folder-gateway__item.is-active { z-index: 20; }
   @media (max-width: 760px) {
     .folder-gateway { min-height: 0; padding-block: 2rem 4rem; }
     .folder-gateway__row { gap: 2rem; }

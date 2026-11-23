@@ -68,9 +68,9 @@ async function parseZestFile(
  *
  * Structure:
  *
- *   src/content/posts/<slug>/<lang>.md
- *   src/content/posts/<slug>/<subdir>/<lang>.md
- *   src/content/posts/<slug>/<subdir>/<subdir>/<lang>.md
+ *   src/content/post/<slug>/<lang>.md
+ *   src/content/post/<slug>/<subdir>/<lang>.md
+ *   src/content/post/<slug>/<subdir>/<subdir>/<lang>.md
  *
  * Entry IDs:
  *

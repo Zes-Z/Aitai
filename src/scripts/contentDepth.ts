@@ -17,7 +17,7 @@ const MAGNET_MAX = 22;
 const MAGNET_EASE = 420;
 const LEAD = VIEW_DEPTH * 0.35;
 /** Horizontal starting offset as a share of viewport width. >0 shifts right. */
-const FIELD_OFFSET_X = 0.04;
+const FIELD_OFFSET_X = 0.06;
 const FOCAL_SCALE = PERSPECTIVE / (PERSPECTIVE + FOCAL);
 const BLUR_STEPS = [0, 1, 2, 3.5, 5.5, 8, 12, 15, 19];
 

@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import Folder from './Folder';
 
 type FolderItemData = { id: string; title: string; image: string };
-type FolderGroup = { label: string; kind: 'post' | 'media'; items: FolderItemData[] };
+type FolderGroup = { label: string; kind: 'post' | 'project' | 'media'; items: FolderItemData[] };
 
 interface Props { groups: FolderGroup[] }
 
 function openItem(group: FolderGroup, item: FolderItemData) {
-  if (group.kind === 'post') {
+  if (group.kind === 'post' || group.kind === 'project') {
     const trigger = [...document.querySelectorAll<HTMLElement>('[data-content-sheet-trigger]')]
-      .find((el) => el.dataset.contentSheetTrigger === 'post:' + item.id);
+      .find((el) => el.dataset.contentSheetTrigger === group.kind + ':' + item.id);
     trigger?.click();
     return;
   }
@@ -22,6 +22,7 @@ function openItem(group: FolderGroup, item: FolderItemData) {
 
 export default function FolderGateway({ groups }: Props) {
   const [theme, setTheme] = useState<'dawn' | 'sea' | 'star'>('dawn');
+  const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
     const sync = () => {
@@ -37,7 +38,7 @@ export default function FolderGateway({ groups }: Props) {
     <div className="folder-gateway">
       <div className="folder-gateway__row">
         {groups.map((group) => (
-          <div className="folder-gateway__item" key={group.label}>
+          <div className={'folder-gateway__item' + (active === group.label ? ' is-active' : '')} key={group.label}>
           <Folder
             label={group.label}
             items={group.items.map((item) => ({ title: item.title, image: item.image, alt: item.title }))}
@@ -49,6 +50,7 @@ export default function FolderGateway({ groups }: Props) {
             tabPosition="left"
             size={1.2}
             theme={theme === 'dawn' ? 'light' : 'dark'}
+            onOpenChange={(open) => setActive(open ? group.label : null)}
             onItemClick={(_item, index) => {
               const selected = group.items[index];
               if (selected) openItem(group, selected);
