@@ -43,9 +43,9 @@ export function makeLanyardFront(data: LanyardFaceData, theme: LanyardTheme = 's
   </g>
   <style>
     .name { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 90px; letter-spacing: -3px; }
-    .sub { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 44px; letter-spacing: 0; }
-    .motto { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 58px; letter-spacing: -1px; }
-    .value { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 44px; letter-spacing: .4px; }
+    .sub { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 60px; letter-spacing: 0; }
+    .motto { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-size: 60px; letter-spacing: -1px; }
+    .value { font-family: Inter, Helvetica, Arial, sans-serif; font-size: 60px; letter-spacing: .4px; }
   </style>
 </svg>`;
 

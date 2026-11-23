@@ -16,6 +16,8 @@ const MAGNET_PULL = 0.12;
 const MAGNET_MAX = 22;
 const MAGNET_EASE = 420;
 const LEAD = VIEW_DEPTH * 0.35;
+/** Horizontal starting offset as a share of viewport width. >0 shifts right. */
+const FIELD_OFFSET_X = 0.04;
 const FOCAL_SCALE = PERSPECTIVE / (PERSPECTIVE + FOCAL);
 const BLUR_STEPS = [0, 1, 2, 3.5, 5.5, 8, 12, 15, 19];
 
@@ -174,7 +176,7 @@ export function initContentDepth(): void {
     const spread = Math.pow(s / FOCAL_SCALE, 0.6);
     const spanX = view.w * SPAN;
     const spanY = view.h * SPAN;
-    const x = wrap(item.u - (cam.x * s) / spanX) * spanX * spread;
+    const x = wrap(item.u - (cam.x * s) / spanX) * spanX * spread + view.w * FIELD_OFFSET_X;
     const y = wrap(item.v - (cam.y * s) / spanY) * spanY * spread;
     const opacity = smooth(40, 260, depth) * (1 - smooth(VIEW_DEPTH - 700, VIEW_DEPTH - 80, depth));
     const blur = Math.min(MAX_BLUR, Math.max(0, Math.abs(depth - FOCAL) - SHARP_BAND) / BLUR_FALLOFF);

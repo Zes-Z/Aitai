@@ -17,11 +17,7 @@ export const siteConfig = {
       /** public 下的路径；换成自己的封底图后只改这里 */
       backImage: '/IMG_1199_1.JPG',
     },
-    occupation: {
-      zh: '设计 / 开发',
-      en: 'Design / Development',
-      ja: 'デザイン / 開発',
-    } satisfies L10n,
+    occupation: 'C++ / Python / Golang',
     status: {
       zh: '正在做 Aitai',
       en: 'Building Aitai',
