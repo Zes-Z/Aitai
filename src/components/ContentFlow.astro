@@ -4,10 +4,12 @@ import { getCollection } from 'astro:content';
 import { posix } from 'node:path';
 import { t } from '../i18n';
 import type { Lang } from '../types';
-import { getAlbumEntries, getAlbumHomeItems, type PortfolioCard } from '../utils/album';
+import { getAlbumEntries, getAlbumHomeItems, resolvePortfolioAsset, type PortfolioCard } from '../utils/album';
 import { renderMarkdown } from '../utils/markdown';
+import { coverAccent } from '../utils/cover-color';
 import { withBase } from '../utils/paths';
-import FolderGateway from './folder/FolderGateway';
+import ChromaGrid from './chroma/ChromaGrid';
+import '../styles/content-flow.css';
 import '../styles/content-depth.css';
 import '../styles/content-sheet.css';
 import 'katex/dist/katex.min.css';
@@ -29,6 +31,10 @@ const postFilesBySlug = (slug: string) =>
 
 const albumImageModules = import.meta.glob<ImageMetadata>(
   '/src/content/album/**/*.{png,jpg,jpeg,PNG,JPG,JPEG,webp,avif,gif}',
+  { eager: true, import: 'default' }
+);
+const projectImageModules = import.meta.glob<ImageMetadata>(
+  '/src/content/projects/**/*.{png,jpg,jpeg,PNG,JPG,JPEG,webp,gif,svg,avif}',
   { eager: true, import: 'default' }
 );
 
@@ -59,7 +65,7 @@ const resolveImage = async (baseSlug: string, url: string) => {
   return {
     src: withBase(meta.src),
     original: withBase(meta.src),
-    openLabel: '查看原图',
+    openLabel: t('content.openImage', lang),
     width: meta.width,
     height: meta.height,
   };
@@ -89,11 +95,29 @@ const projectCover = (title: string, palette: string[]) => {
 const allProjects = await getCollection('projects');
 const langProjects = await Promise.all(
   allProjects
-    .filter((entry) => entry.id.endsWith('/' + lang))
+    .filter((entry) => !entry.data.draft && entry.id.endsWith('/' + lang))
     .sort((a, b) => a.data.index.localeCompare(b.data.index))
     .map(async (entry) => {
-      const slug = entry.id.split('/')[0];
-      const { html } = await renderMarkdown(entry.body ?? '', {});
+      const slug = entry.id.slice(0, -(lang.length + 1));
+      const imagePaths = Object.keys(projectImageModules).filter((path) => path.startsWith('/src/content/projects/' + slug + '/')).sort();
+      const coverRef = entry.data.cover?.replace(/^(\.\/)+/, '');
+      const image = (coverRef ? projectImageModules['/src/content/projects/' + slug + '/' + coverRef] : undefined)
+        ?? projectImageModules[imagePaths[0]];
+      const cover = image
+        ? (await getImage({ src: image, width: 900, format: 'avif', quality: 90 })).src
+        : entry.data.cover && /^(https?:|\/)/.test(entry.data.cover)
+          ? (/^https?:/.test(entry.data.cover) ? entry.data.cover : withBase(entry.data.cover))
+          : projectCover(entry.data.title, entry.data.palette);
+      const coverFile = Object.keys(projectImageModules).find((path) => projectImageModules[path] === image);
+      const accent = await coverAccent(coverFile ?? cover);
+      const { html } = await renderMarkdown(entry.body ?? '', {
+        resolveImage: async (url) => {
+          let ref = url;
+          try { ref = decodeURIComponent(ref); } catch { /* keep filename */ }
+          const meta = projectImageModules['/src/content/projects/' + posix.normalize(posix.join(slug, ref))];
+          return meta ? { src: meta.src, original: meta.src, width: meta.width, height: meta.height, openLabel: t('content.openImage', lang) } : undefined;
+        },
+      });
       return {
         slug,
         sheetKey: 'project:' + slug,
@@ -103,7 +127,8 @@ const langProjects = await Promise.all(
         summary: entry.data.summary,
         tags: entry.data.tags,
         palette: entry.data.palette,
-        cover: projectCover(entry.data.title, entry.data.palette),
+        cover,
+        accent,
         html,
       };
     })
@@ -166,6 +191,10 @@ const preparedPosts = await Promise.all(
           thumb = undefined;
         }
       }
+      const palette = paletteFor(entry.data.category + slug);
+      const cover = thumb ?? projectCover(entry.data.title, palette);
+      const coverFile = Object.keys(postImageModules).find((path) => postImageModules[path] === image);
+      const accent = await coverAccent(coverFile ?? cover);
 
       return {
         kind: 'post' as const,
@@ -174,7 +203,9 @@ const preparedPosts = await Promise.all(
         sheetKey: 'post:' + slug,
         title: entry.data.title,
         meta: [entry.data.category, date].filter(Boolean).join(' · '),
-        palette: paletteFor(entry.data.category + slug),
+        palette,
+        cover,
+        accent,
         ratio: image ? image.width / image.height : 1.5,
         date,
         image,
@@ -188,8 +219,9 @@ const preparedPosts = await Promise.all(
     })
 );
 
+const albumEntries = getAlbumEntries(lang);
 const albumItems = await Promise.all(
-  getAlbumEntries(lang).map(async (entry) => {
+  albumEntries.map(async (entry) => {
     const meta = albumImageModules['/src/content/album/' + entry.file];
     let thumb: string | undefined;
     if (meta) {
@@ -201,6 +233,7 @@ const albumItems = await Promise.all(
     }
     return {
       kind: 'album' as const,
+      file: entry.file,
       id: 'album-' + entry.id,
       title: entry.title,
       meta: [entry.date, entry.location].filter(Boolean).join(' · '),
@@ -212,51 +245,124 @@ const albumItems = await Promise.all(
       imageUrl: entry.src,
       videoUrl: entry.kind === 'video' ? entry.src : undefined,
       mediaType: entry.kind,
-      group: entry.file.includes('/') ? entry.file.split('/')[0] : '',
     };
   })
 );
 
-const items = [...preparedPosts, ...albumItems].sort((a, b) => {
-  const byDate = b.date.localeCompare(a.date);
-  return byDate || a.title.localeCompare(b.title);
-});
-
 const portfolioCards = getAlbumHomeItems(lang).filter(
   (item): item is PortfolioCard => 'type' in item && item.type === 'portfolio'
 );
-const portfolioItems = portfolioCards
-  .slice(0, 3)
-  .map((item) => {
-    const cover = albumItems.find((album) => album.group === item.folder && Boolean(album.thumb));
-    return { id: cover?.id ?? item.id, title: item.title || item.folder, image: cover?.thumb ?? '' };
-  })
-  .filter((item) => Boolean(item.image));
+const preparedPortfolios = await Promise.all(portfolioCards.map(async (portfolio) => {
+  const referenced = new Set<string>();
+  const resolveMedia = (url: string) => {
+    const asset = resolvePortfolioAsset(portfolio.folder, url);
+    if (asset) referenced.add(asset.file);
+    return asset;
+  };
+  const { html } = await renderMarkdown(portfolio.markdown, {
+    resolveImage: async (url) => {
+      const asset = resolveMedia(url);
+      if (!asset || asset.kind === 'video') return undefined;
+      const image = albumItems.find((item) => item.file === asset.file);
+      return { ...asset, src: image?.thumb ?? asset.src, original: asset.src, openLabel: t('content.openImage', lang) };
+    },
+    resolveMedia,
+    resolveLink: (url) => resolvePortfolioAsset(portfolio.folder, url)?.src,
+  });
+  const members = albumEntries.filter((entry) => entry.file.startsWith(portfolio.folder + '/'));
+  const ordered = [...members.filter((entry) => entry.file === portfolio.coverFile), ...members.filter((entry) => entry.file !== portfolio.coverFile)];
+  const media = await Promise.all(ordered.filter((entry) => !referenced.has(entry.file)).map(async (entry) => {
+    const { aperture, shutterSpeed, iso, focalLength, exposureCompensation } = entry.exif;
+    const lens = /^\d+(?:\.\d+)?[-–]\d+(?:\.\d+)?$/.test(entry.exif.lens)
+      ? `${entry.exif.lens.replace('-', '–')}mm` : entry.exif.lens;
+    const settings = [
+      aperture ? (/^f\//i.test(aperture) ? aperture : `f/${aperture.replace(/^f\/?/i, '')}`) : '',
+      shutterSpeed ? (/(?:s|sec)$/i.test(shutterSpeed) ? shutterSpeed : `${shutterSpeed}s`) : '',
+      iso ? `ISO${iso.replace(/^iso\s*/i, '')}` : '',
+    ].filter(Boolean).join(' · ');
+    const optics = [
+      focalLength ? (/mm$/i.test(focalLength) ? focalLength : `${focalLength}mm`) : '',
+      exposureCompensation ? (/ev$/i.test(exposureCompensation) ? exposureCompensation : `${exposureCompensation} EV`) : '',
+    ].filter(Boolean).join(' · ');
+    return {
+      ...entry,
+      thumb: albumItems.find((item) => item.file === entry.file)?.thumb,
+      lens,
+      settings,
+      optics,
+      html: entry.text ? (await renderMarkdown(entry.text, { resolveMedia })).html : '',
+    };
+  }));
+  const cover = albumItems.find((item) => item.file === portfolio.coverFile);
+  return {
+    ...portfolio,
+    kind: 'portfolio' as const,
+    sheetKey: 'portfolio:' + portfolio.id,
+    image: cover?.image,
+    thumb: cover?.thumb,
+    palette: paletteFor(portfolio.folder),
+    ratio: portfolio.width && portfolio.height ? portfolio.width / portfolio.height : 1.5,
+    html,
+    media,
+  };
+}));
 
-const folderGroups = [
+const items = [...albumItems, ...preparedPortfolios].sort((a, b) => {
+  const byDate = b.date.localeCompare(a.date);
+  return byDate || a.title.localeCompare(b.title);
+});
+const grids = [
   {
+    id: 'projects',
     label: 'Projects',
-    kind: 'project' as const,
-    items: langProjects.slice(0, 3).map((project) => ({ id: project.slug, title: project.title, image: project.cover })),
+    empty: t('content.projects.empty', lang),
+    items: langProjects.map((project) => ({
+      id: project.slug, title: project.title, image: project.cover, sheetKey: project.sheetKey,
+      subtitle: [project.category, project.year].filter(Boolean).join(' · '), accent: project.accent,
+    })),
   },
   {
+    id: 'posts',
     label: 'Posts',
-    kind: 'post' as const,
-    items: preparedPosts
-      .filter((post) => Boolean(post.thumb))
-      .slice(0, 3)
-      .map((post) => ({ id: post.slug, title: post.title, image: post.thumb! })),
-  },
-  {
-    label: 'Portofio',
-    kind: 'media' as const,
-    items: portfolioItems,
+    empty: t('content.posts.empty', lang),
+    items: [...preparedPosts].sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title)).map((post) => ({
+      id: post.slug, title: post.title, image: post.cover, sheetKey: post.sheetKey,
+      subtitle: post.meta, accent: post.accent,
+    })),
   },
 ];
 ---
 
 <section id="content" class="content-flow" data-section data-content-depth aria-label={lang === 'zh' ? '内容' : lang === 'ja' ? 'コンテンツ' : 'Content'}>
-  <FolderGateway client:only="react" groups={folderGroups} />
+  <div class="content-catalog">
+    {grids.map((grid) => (
+      <section id={grid.id} class="content-collection" data-content-grid data-expanded="false" aria-labelledby={grid.id + '-title'}>
+        <header class="content-collection__header">
+          <h2 id={grid.id + '-title'}>{grid.label}</h2>
+          <span class="content-collection__count">{String(grid.items.length).padStart(2, '0')}</span>
+          <button
+            type="button"
+            class="content-collection__toggle"
+            data-grid-toggle
+            data-expand-label={t('content.expand', lang)}
+            data-collapse-label={t('content.collapse', lang)}
+            data-collection-label={grid.label}
+            aria-label={`${t('content.expand', lang)} ${grid.label}`}
+            aria-expanded="false"
+            aria-controls={grid.id + '-grid'}
+            disabled={grid.items.length <= 3}
+          >
+            <span data-grid-toggle-label>{t('content.expand', lang)}</span>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+          </button>
+        </header>
+        <div id={grid.id + '-grid'} class="content-collection__viewport" data-grid-viewport>
+          <ChromaGrid client:load items={grid.items} cardRadius={6} columns={3} minCardWidth={230} gap={20} />
+        </div>
+        {grid.items.length === 0 && <p class="content-collection__empty">{grid.empty}</p>}
+      </section>
+    ))}
+  </div>
 
   <div class="content-wall">
     {items.map((item, index) => {
@@ -274,33 +380,34 @@ const folderGroups = [
         <span class="content-art" aria-hidden="true"></span>
       );
 
-      if (item.kind === 'album') {
-        return (
+      return (
+        item.kind === 'portfolio' ? (
           <button
             type="button"
-            class:list={['content-tile', 'content-tile--media', { 'content-tile--video': Boolean(item.videoUrl) }]}
-            data-media-tile
-            data-media-id={item.id}
-            data-src={item.imageUrl ?? ''}
-            data-video={item.videoUrl ?? ''}
-            data-caption={item.title}
-            data-meta={item.meta ?? ''}
+            class="content-tile content-tile--portfolio"
+            data-content-sheet-trigger={item.sheetKey}
             data-ratio={item.ratio.toFixed(4)}
             style={style}
-            aria-label={item.title}
+            aria-label={`${t('content.portfolio', lang)}: ${item.title}`}
             aria-haspopup="dialog"
-            data-reveal
           >
             {cover}
+            <span class="portfolio-badge" data-portfolio-badge>
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="3" y="6" width="13" height="11" rx="1.5"/><path d="M6 3h10a1 1 0 0 1 1 1v10M8 1h9a2 2 0 0 1 2 2v9"/></svg>
+              <span>{t('content.portfolio', lang)} · {item.count}</span>
+            </span>
           </button>
-        );
-      }
-
-      return (
+        ) : (
         <button
           type="button"
-          class="content-tile content-tile--article"
-          data-content-sheet-trigger={item.sheetKey}
+          class:list={['content-tile', 'content-tile--media', { 'content-tile--video': Boolean(item.videoUrl) }]}
+          data-media-tile
+          data-media-id={item.id}
+          data-src={item.imageUrl ?? ''}
+          data-video={item.videoUrl ?? ''}
+          data-caption={item.title}
+          data-meta={item.meta ?? ''}
+          data-ratio={item.ratio.toFixed(4)}
           style={style}
           aria-label={item.title}
           aria-haspopup="dialog"
@@ -308,6 +415,7 @@ const folderGroups = [
         >
           {cover}
         </button>
+        )
       );
     })}
   </div>
@@ -329,10 +437,6 @@ const folderGroups = [
       <div class="detail-body" set:html={project.html}></div>
     </article>
   </template>
-))}
-
-{langProjects.map((project) => (
-  <button type="button" hidden data-content-sheet-trigger={project.sheetKey}></button>
 ))}
 
 {preparedPosts.map((post) => (
@@ -364,18 +468,97 @@ const folderGroups = [
   </template>
 ))}
 
-<div class="content-sheet" data-content-sheet-root hidden role="dialog" aria-modal="true" aria-label={t('nav.home', lang)}>
+{preparedPortfolios.map((portfolio) => (
+  <template data-content-sheet={portfolio.sheetKey} data-content-kind="portfolio">
+    <article class="sheet-article sheet-portfolio" data-portfolio-content>
+      <header class="portfolio-intro" data-fade-content>
+        <p class="detail-kicker">
+          <span>{t('content.portfolio', lang)}</span>
+          {portfolio.category && <span>{portfolio.category}</span>}
+          {portfolio.date && <span>{portfolio.date}</span>}
+          <span>{portfolio.count} {t('content.mediaCount', lang)}</span>
+        </p>
+        <h1 class="detail-title">{portfolio.title}</h1>
+        {portfolio.description && <p class="detail-summary">{portfolio.description}</p>}
+      </header>
+      {portfolio.html && <div class="detail-body portfolio-narrative" data-portfolio-narrative set:html={portfolio.html}></div>}
+      <div class="portfolio-sequence">
+        {portfolio.media.map((media, index) => (
+          <section class:list={['portfolio-entry', { 'portfolio-entry--reverse': index % 2 === 1 }]} data-fade-content>
+            <div class="portfolio-visual">
+              {media.kind === 'video' ? (
+                <video src={media.src} controls playsinline preload="metadata" aria-label={media.title || portfolio.title}></video>
+              ) : (
+                <button type="button" class="portfolio-image" data-media-ref={'album-' + media.id} aria-label={`${t('content.openImage', lang)}: ${media.title}`}>
+                  <img src={media.thumb ?? media.src} alt={media.title} width={media.width} height={media.height} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+                </button>
+              )}
+            </div>
+            <aside class="portfolio-info">
+              <p class="portfolio-info__index">{String(index + 1).padStart(2, '0')} / {String(portfolio.media.length).padStart(2, '0')}</p>
+              <h2>{media.title}</h2>
+              {[media.date, media.location, media.photographer, media.category].some(Boolean) && (
+                <div class="portfolio-info__facts">
+                  {media.date && (
+                    <div class="portfolio-info__fact" aria-label={`${t('content.date', lang)}: ${media.date}`}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                      <time>{media.date}</time>
+                    </div>
+                  )}
+                  {media.location && (
+                    <div class="portfolio-info__fact" aria-label={`${t('content.location', lang)}: ${media.location}`}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                      <span>{media.location}</span>
+                    </div>
+                  )}
+                  {media.photographer && (
+                    <div class="portfolio-info__fact" aria-label={`${t('content.photographer', lang)}: ${media.photographer}`}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                      <span>by {media.photographer}</span>
+                    </div>
+                  )}
+                  {media.category && (
+                    <div class="portfolio-info__fact" aria-label={`${t('content.category', lang)}: ${media.category}`}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="8" cy="8" r="1.5"/></svg>
+                      <span class="portfolio-info__category">{media.category}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {[media.exif.camera, media.exif.lens, media.settings, media.optics].some(Boolean) && (
+                <div class="portfolio-info__specs">
+                  {media.exif.camera && <p>{media.exif.camera}</p>}
+                  {media.lens && <p>{media.lens}</p>}
+                  {media.settings && <p>{media.settings}</p>}
+                  {media.optics && <p>{media.optics}</p>}
+                </div>
+              )}
+              {(media.description || media.html) && (
+                <div class="portfolio-info__copy">
+                  {media.description && <p class="portfolio-info__description">{media.description}</p>}
+                  {media.html && <div class="detail-body portfolio-text" set:html={media.html}></div>}
+                </div>
+              )}
+            </aside>
+          </section>
+        ))}
+      </div>
+    </article>
+  </template>
+))}
+
+<div class="content-sheet" data-content-sheet-root hidden role="dialog" aria-modal="true" aria-label={t('content.reader', lang)}>
   <div class="content-sheet__bar">
     <button class="content-sheet__close" type="button" data-content-sheet-close aria-label={t('aria.close', lang)}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
   </div>
-  <div class="content-sheet__scroll" data-lenis-prevent tabindex="0" role="region" aria-label={t('nav.home', lang)}>
+  <div class="content-sheet__scroll" data-content-sheet-scroll data-lenis-prevent tabindex="0" role="region" aria-label={t('content.reader', lang)}>
     <div class="content-sheet__inner" data-content-sheet-content></div>
   </div>
 </div>
 
-<dialog class="media-viewer" data-media-viewer aria-label="Media viewer" tabindex="-1">
+<dialog class="media-viewer" data-media-viewer data-lenis-prevent aria-label="Media viewer" tabindex="-1">
   <div class="media-viewer__stage">
     <div class="media-viewer__media" data-viewer-stage></div>
     <div class="media-viewer__caption">
@@ -402,282 +585,6 @@ const folderGroups = [
   </div>
 </dialog>
 
-<style>
-  .content-flow {
-    position: relative;
-    padding: clamp(3.4rem, 8vh, 6.5rem) 0 clamp(4rem, 9vh, 8rem);
-  }
-  .folder-gateway {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: clamp(420px, 58vh, 640px);
-    padding: 1rem var(--gutter) clamp(3.5rem, 8vh, 7rem);
-  }
-  .folder-gateway__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: center;
-    gap: clamp(1.2rem, 3.2vw, 3rem);
-  }
-  .folder-gateway__item { display: flex; flex: 0 0 auto; justify-content: center; }
-  @media (max-width: 760px) {
-    .folder-gateway { min-height: 0; padding-block: 2rem 4rem; }
-    .folder-gateway__row { gap: 2rem; }
-  }
-  .content-wall {
-    --row: 17rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding-inline: var(--gutter);
-  }
-  .content-wall::after {
-    content: '';
-    flex: 1000000 1 0;
-  }
-  .content-tile {
-    position: relative;
-    display: block;
-    flex: calc(var(--r) * 1000) 1 calc(var(--r) * var(--row));
-    min-width: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    aspect-ratio: var(--r);
-    overflow: hidden;
-    border-radius: 8px;
-    color: inherit;
-    text-align: left;
-    background:
-      radial-gradient(120% 100% at 28% 18%, var(--p3), transparent 58%),
-      linear-gradient(145deg, var(--p2), var(--p1));
-    box-shadow: 0 18px 40px -32px rgb(0 0 0 / .55);
-    isolation: isolate;
-    cursor: pointer;
-  }
-  .content-tile :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: saturate(.95) contrast(1.02);
-    transition: transform .8s var(--ease-soft), opacity .4s ease;
-  }
-  .content-tile::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    border-radius: inherit;
-    background: linear-gradient(180deg, transparent 62%, rgb(0 0 0 / .16));
-    opacity: .55;
-    transition: opacity .4s ease;
-    pointer-events: none;
-  }
-  .content-tile--video::before {
-    content: '';
-    position: absolute;
-    z-index: 3;
-    left: 14px;
-    bottom: 14px;
-    width: 0;
-    height: 0;
-    border-top: 7px solid transparent;
-    border-bottom: 7px solid transparent;
-    border-left: 11px solid rgb(255 255 255 / .8);
-    filter: drop-shadow(0 1px 4px rgb(0 0 0 / .35));
-    pointer-events: none;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .content-tile :global(img) { will-change: transform; }
-    .content-tile:hover :global(img) { transform: scale(1.025); }
-    .content-tile:hover::after { opacity: .8; }
-    .content-wall:has(.content-tile:hover) .content-tile:not(:hover) { opacity: .62; }
-    .content-tile { transition: opacity .35s ease; }
-  }
-  @media (max-width: 700px) {
-    .content-wall { --row: 9rem; gap: 8px; }
-    .content-tile { border-radius: 6px; }
-  }
-
-  .media-viewer {
-    width: 100vw;
-    max-width: none;
-    height: 100svh;
-    max-height: none;
-    margin: 0;
-    padding: clamp(22px, 4vw, 56px) clamp(18px, 4vw, 56px) clamp(92px, 10vh, 118px);
-    border: 0;
-    background: transparent;
-    color: var(--text);
-  }
-  .media-viewer:focus,
-  .media-viewer:focus-visible { outline: none; }
-  .media-viewer::backdrop {
-    background: color-mix(in srgb, var(--bg) 94%, transparent);
-    backdrop-filter: blur(18px) saturate(1.08);
-  }
-  .media-viewer__stage {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(12px, 1.8vw, 20px);
-    width: 100%;
-    height: 100%;
-  }
-  .media-viewer__media {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-height: calc(100svh - clamp(210px, 26vh, 270px));
-  }
-  .media-viewer__media :global(img),
-  .media-viewer__media :global(video) {
-    display: block;
-    width: auto;
-    height: auto;
-    max-width: 92vw;
-    max-height: calc(100svh - clamp(210px, 26vh, 270px));
-    object-fit: contain;
-    border-radius: 4px;
-    box-shadow: 0 34px 80px -42px rgb(0 0 0 / .55);
-  }
-  :global(.media-viewer__fallback) {
-    width: min(82vw, 1080px);
-    height: min(64svh, 620px);
-    border-radius: 8px;
-    background:
-      radial-gradient(120% 100% at 28% 18%, var(--p3), transparent 58%),
-      linear-gradient(145deg, var(--p2), var(--p1));
-    box-shadow: 0 34px 80px -42px rgb(0 0 0 / .45);
-  }
-  .media-viewer__caption {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    max-width: min(92vw, 900px);
-    text-align: center;
-  }
-  .media-viewer__title {
-    font-family: var(--font-display);
-    font-size: clamp(1.1rem, 1.8vw, 1.45rem);
-    line-height: 1.2;
-    color: var(--text);
-  }
-  .media-viewer__meta {
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .media-viewer__ui {
-    position: fixed;
-    left: 50%;
-    bottom: clamp(18px, 3vw, 32px);
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--surface-2) 82%, transparent);
-    backdrop-filter: blur(16px) saturate(1.1);
-    box-shadow: var(--shadow);
-    transform: translateX(-50%);
-  }
-  .media-viewer__btn {
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    transition: background-color .3s var(--ease-soft), color .3s var(--ease-soft);
-  }
-  .media-viewer__btn:hover {
-    background: color-mix(in srgb, var(--surface) 75%, transparent);
-    color: var(--accent);
-  }
-  .media-viewer__btn svg { width: 19px; height: 19px; }
-  .media-viewer__close { margin-left: 4px; border: 1px solid var(--border-strong); }
-  .media-viewer__counter {
-    display: inline-flex;
-    align-items: center;
-    gap: .4em;
-    padding-inline: 10px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: .12em;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-  .media-viewer__sep { opacity: .5; }
-  :global(html.is-media-open) { overflow: hidden; }
-
-  .sheet-cover {
-    margin: clamp(1.5rem, 3vw, 2.5rem) auto 0;
-    max-width: 880px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .sheet-cover :global(img) { display: block; width: 100%; height: auto; }
-  .sheet-chapter {
-    margin-top: clamp(2.5rem, 6vw, 5rem);
-    padding-top: clamp(1.4rem, 3vw, 2.4rem);
-    border-top: 1px solid var(--border);
-    scroll-margin-top: 96px;
-  }
-  .sheet-chapter > h2 {
-    font-family: var(--font-display);
-    font-size: clamp(1.6rem, 3vw, 2.2rem);
-    font-weight: 400;
-    letter-spacing: -.02em;
-    margin-bottom: 1.2rem;
-  }
-</style>
-
-<style is:global>
-  .folder-gateway {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: clamp(420px, 58vh, 640px);
-    padding: 1rem var(--gutter) clamp(3.5rem, 8vh, 7rem);
-  }
-  .folder-gateway__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: center;
-    gap: clamp(3rem, 8vw, 9rem);
-  }
-  .folder-gateway__item {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex: 0 0 auto;
-    justify-content: center;
-  }
-  .folder-gateway__item.is-active { z-index: 20; }
-  @media (max-width: 760px) {
-    .folder-gateway { min-height: 0; padding-block: 2rem 4rem; }
-    .folder-gateway__row { gap: 2rem; }
-  }
-</style>
 
 <script>
   function initMediaViewer() {
@@ -694,6 +601,8 @@ const folderGroups = [
     const prev = dialog.querySelector<HTMLButtonElement>('[data-viewer-prev]');
     const next = dialog.querySelector<HTMLButtonElement>('[data-viewer-next]');
     if (!media || !titleEl || !metaEl || !indexEl || !totalEl || !tiles.length) return;
+    const controller = new AbortController();
+    const { signal } = controller;
 
     let current = -1;
     totalEl.textContent = String(tiles.length).padStart(2, '0');
@@ -708,7 +617,7 @@ const folderGroups = [
       if (video) {
         const player = document.createElement('video');
         player.src = video;
-        if (src) player.poster = src;
+        if (src && src !== video) player.poster = src;
         player.controls = true;
         player.autoplay = true;
         player.muted = true;
@@ -755,6 +664,16 @@ const folderGroups = [
     tiles.forEach((tile, index) => {
       tile.addEventListener('click', () => openAt(index));
     });
+    document.addEventListener('click', (event) => {
+      const image = event.target instanceof Element
+        ? event.target.closest<HTMLElement>('[data-media-ref], [data-portfolio-content] [data-post-original]') : null;
+      if (!image) return;
+      const index = tiles.findIndex((tile) => image.dataset.mediaRef
+        ? tile.dataset.mediaId === image.dataset.mediaRef : tile.dataset.src === image.dataset.postOriginal);
+      if (index < 0) return;
+      event.preventDefault();
+      openAt(index);
+    }, { signal });
     dialog.querySelectorAll('[data-viewer-close]').forEach((button) => {
       button.addEventListener('click', () => dialog.close());
     });
@@ -770,6 +689,12 @@ const folderGroups = [
       current = -1;
     });
     document.addEventListener('keydown', (event) => {
+      if (!dialog.open && (event.key === 'Enter' || event.key === ' ')
+        && event.target instanceof HTMLElement && event.target.matches('[data-portfolio-content] [data-post-original]')) {
+        event.preventDefault();
+        event.target.click();
+        return;
+      }
       if (!dialog.open) return;
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
@@ -778,11 +703,19 @@ const folderGroups = [
         event.preventDefault();
         step(1);
       }
-    });
+    }, { signal });
+    document.addEventListener('astro:before-swap', () => controller.abort(), { once: true, signal });
   }
 
   document.addEventListener('astro:page-load', initMediaViewer);
   initMediaViewer();
+</script>
+
+<script>
+  import { initContentGrids } from '../scripts/contentGrids';
+
+  document.addEventListener('astro:page-load', initContentGrids);
+  initContentGrids();
 </script>
 
 <script>

@@ -7,6 +7,21 @@ import { siteConfig } from '../../SiteConfig';
 export const messages = {
   'nav.home': { zh: '首页', en: 'Home', ja: 'ホーム' },
 
+  'content.projects': { zh: '项目', en: 'Projects', ja: 'プロジェクト' },
+  'content.posts': { zh: '文章', en: 'Posts', ja: '記事' },
+  'content.projects.empty': { zh: '项目正在酝酿中。', en: 'Projects are taking shape.', ja: 'プロジェクトは準備中です。' },
+  'content.posts.empty': { zh: '文字还在路上。', en: 'Stories are on their way.', ja: '記事は準備中です。' },
+  'content.portfolio': { zh: '作品集', en: 'Portfolio', ja: '作品集' },
+  'content.mediaCount': { zh: '项影像', en: 'media', ja: '点の作品' },
+  'content.openImage': { zh: '查看原图', en: 'View original image', ja: '元の画像を表示' },
+  'content.reader': { zh: '内容阅读', en: 'Content reader', ja: 'コンテンツを読む' },
+  'content.date': { zh: '日期', en: 'Date', ja: '日付' },
+  'content.location': { zh: '地点', en: 'Location', ja: '場所' },
+  'content.photographer': { zh: '摄影', en: 'Photographer', ja: '撮影者' },
+  'content.category': { zh: '分类', en: 'Category', ja: 'カテゴリ' },
+  'content.expand': { zh: '展开', en: 'Show more', ja: 'もっと見る' },
+  'content.collapse': { zh: '收起', en: 'Show less', ja: '折りたたむ' },
+
 
   'hero.scroll.dawn': siteConfig.hero.scrollCue.dawn,
   'hero.scroll.sea': siteConfig.hero.scrollCue.sea,

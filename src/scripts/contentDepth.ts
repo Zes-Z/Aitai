@@ -102,6 +102,11 @@ export function initContentDepth(): void {
     el.type = 'button';
     el.className = 'depth-item';
     el.setAttribute('aria-label', label);
+    const sheetKey = tile.dataset.contentSheetTrigger;
+    if (sheetKey) {
+      el.dataset.contentSheetTrigger = sheetKey;
+      el.setAttribute('aria-haspopup', 'dialog');
+    }
     el.style.setProperty('--r', ratio.toFixed(4));
     el.style.setProperty('--p1', tile.style.getPropertyValue('--p1'));
     el.style.setProperty('--p2', tile.style.getPropertyValue('--p2'));
@@ -121,13 +126,17 @@ export function initContentDepth(): void {
       art.setAttribute('aria-hidden', 'true');
       el.append(art);
     }
+    const badge = tile.querySelector('[data-portfolio-badge]');
+    if (badge) el.append(badge.cloneNode(true));
 
     el.addEventListener('click', (event) => {
       if (performance.now() < suppressClickUntil) {
         event.preventDefault();
+        event.stopPropagation();
         return;
       }
       event.preventDefault();
+      if (sheetKey) return; // The delegated sheet handler uses this visible card as its source.
       tile.click();
     });
 

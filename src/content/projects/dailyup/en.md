@@ -6,6 +6,7 @@ role: "Design + Front-end"
 summary: "A small tool that nudges you once a day, turning “later” into “a little now”."
 tags: ["Astro","GSAP","Supabase"]
 palette: ["#0b1026","#243a8f","#8fb3ff"]
+draft: true
 ---
 
 A small tool that nudges you once a day, turning “later” into “a little now”.

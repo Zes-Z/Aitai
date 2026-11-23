@@ -1,0 +1,255 @@
+/* Chroma Grid — React Bits; license notice in ChromaGrid.tsx. */
+.chroma-grid {
+  container-type: inline-size;
+  --chroma-frame: var(--surface);
+  --chroma-frame-edge: var(--border);
+  --chroma-frame-highlight: var(--border-strong);
+  --chroma-frame-shadow: var(--shadow);
+  --chroma-tile: var(--surface-2);
+  --chroma-tile-edge: var(--border);
+  --chroma-tile-highlight: color-mix(in srgb, var(--text) 5%, transparent);
+  --chroma-tile-shadow: 0 12px 32px -24px color-mix(in srgb, var(--text) 28%, transparent);
+  --chroma-media-edge: var(--border);
+  --chroma-well: var(--bg-2);
+  --chroma-ink: var(--text);
+  --chroma-muted: var(--muted);
+  --chroma-hover: brightness(1.035);
+  --chroma-press: brightness(0.95);
+  --chroma-x: -9999px;
+  --chroma-y: -9999px;
+  --chroma-power: 0;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chroma-grid.has-frame {
+  padding: 10px;
+  border-radius: calc(var(--chroma-radius) + 10px);
+  background: var(--chroma-frame);
+  box-shadow: var(--chroma-frame-shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+}
+
+.chroma-frame-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px var(--chroma-frame-edge),
+    inset 0 1px 0 var(--chroma-frame-highlight);
+  pointer-events: none;
+}
+
+.chroma-grid-inner {
+  display: grid;
+  gap: var(--chroma-gap);
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(
+      min(
+        100%,
+        max(var(--chroma-min), calc((100% - (var(--chroma-cols) - 1) * var(--chroma-gap)) / var(--chroma-cols)))
+      ),
+      1fr
+    )
+  );
+}
+
+.chroma-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  border-radius: var(--chroma-radius);
+  background: var(--chroma-tile);
+  box-shadow: var(--chroma-tile-shadow);
+  color: var(--chroma-ink);
+  text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  transition: filter 0.25s ease;
+}
+
+.chroma-card:hover {
+  filter: var(--chroma-hover);
+}
+
+.chroma-card:active {
+  filter: var(--chroma-press);
+}
+
+.chroma-card:focus-visible {
+  outline: 2px solid var(--chroma-ink);
+  outline-offset: 2px;
+}
+
+.chroma-wash,
+.chroma-color,
+.chroma-card-glow {
+  -webkit-mask-image: radial-gradient(
+    circle var(--chroma-r) at calc(var(--chroma-x) - var(--chroma-ox, 0px))
+      calc(var(--chroma-y) - var(--chroma-oy, 0px)),
+    var(--chroma-stops)
+  );
+  mask-image: radial-gradient(
+    circle var(--chroma-r) at calc(var(--chroma-x) - var(--chroma-ox, 0px))
+      calc(var(--chroma-y) - var(--chroma-oy, 0px)),
+    var(--chroma-stops)
+  );
+}
+
+.chroma-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(130% 70% at 50% 100%, var(--chroma-accent), transparent 72%);
+  opacity: calc(var(--chroma-glow) * var(--chroma-power) * 0.45);
+}
+
+.chroma-media {
+  position: relative;
+  z-index: 1;
+  aspect-ratio: var(--chroma-ratio);
+  border-radius: max(2px, calc(var(--chroma-radius) - 2px));
+  overflow: hidden;
+  background: var(--chroma-well);
+}
+
+.chroma-media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.chroma-mono {
+  filter: grayscale(var(--chroma-gray)) brightness(calc(1 - var(--chroma-dim)));
+}
+
+.chroma-color {
+  opacity: var(--chroma-power);
+}
+
+.chroma-media-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--chroma-media-edge);
+  pointer-events: none;
+}
+
+.chroma-info {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 2px 6px 4px;
+}
+
+.chroma-title {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.6em;
+  overflow-wrap: anywhere;
+}
+
+.chroma-subtitle {
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--chroma-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chroma-card-rim,
+.chroma-card-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.chroma-card-rim {
+  box-shadow:
+    inset 0 0 0 1px var(--chroma-tile-edge),
+    inset 0 1px 0 var(--chroma-tile-highlight);
+}
+
+.chroma-card-glow {
+  box-shadow:
+    inset 0 0 0 1.25px color-mix(in srgb, var(--chroma-accent) 78%, var(--text)),
+    inset 0 0 24px -8px var(--chroma-accent);
+  opacity: calc(var(--chroma-border) * var(--chroma-power));
+}
+
+.chroma-grid[data-chroma-reveal='card'] .chroma-wash,
+.chroma-grid[data-chroma-reveal='card'] .chroma-color,
+.chroma-grid[data-chroma-reveal='card'] .chroma-card-glow {
+  -webkit-mask-image: none;
+  mask-image: none;
+  opacity: 0;
+  transition: opacity var(--chroma-fade) ease;
+}
+
+.chroma-grid[data-chroma-reveal='card'] .chroma-card:hover .chroma-wash {
+  opacity: calc(var(--chroma-glow) * 0.45);
+  transition-duration: 0.3s;
+}
+
+.chroma-grid[data-chroma-reveal='card'] .chroma-card:hover .chroma-color {
+  opacity: 1;
+  transition-duration: 0.3s;
+}
+
+.chroma-grid[data-chroma-reveal='card'] .chroma-card:hover .chroma-card-glow {
+  opacity: var(--chroma-border);
+  transition-duration: 0.3s;
+}
+
+.chroma-info { gap: 3px; padding: 3px 6px 6px; flex: 1; }
+.chroma-title {
+  display: block;
+  min-height: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: .92rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.chroma-subtitle { font-family: var(--font-mono); font-size: .65rem; line-height: 1.4; }
+@media (hover: none) {
+  .chroma-mono { filter: none; }
+  .chroma-card:hover { filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chroma-card, .chroma-color, .chroma-card-glow, .chroma-wash { transition: none !important; }
+}
+

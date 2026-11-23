@@ -8,7 +8,6 @@ import AvatarDock from '../components/AvatarDock.astro';
 import ThemeOrb from '../components/ThemeOrb.astro';
 import ThemeTransition from '../components/ThemeTransition.astro';
 import PageTransition from '../components/PageTransition.astro';
-import Cursor from '../components/Cursor.astro';
 import Toast from '../components/Toast.astro';
 import ScrollProgress from '../components/ScrollProgress.astro';
 import { siteConfig } from '../../SiteConfig';
@@ -43,7 +42,6 @@ const { lang, title, description, page = 'page' } = Astro.props;
     </main>
     <ThemeTransition />
     <PageTransition />
-    <Cursor />
     <Toast />
     <ScrollProgress />
     <div class="grain" aria-hidden="true"></div>

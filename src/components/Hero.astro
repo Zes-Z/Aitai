@@ -42,16 +42,20 @@ const backImage = withBase(siteConfig.identity.lanyard.backImage);
   <div class="hero-inner">
     <div class="hero-copy">
       <div class="hero-eyebrow eyebrow">AITAI / 会いたい</div>
-      <h1 id="hero-title" class="hero-title">
-        <span class="latin">{siteConfig.identity.name}</span>
-      </h1>
+      <h1 class="sr-only">{siteConfig.site.title} · {siteConfig.site.titleJa}</h1>
       <p class="hero-tagline">{tagline}</p>
 
-      <div class="hero-motto" data-typewriter data-lines={JSON.stringify(mottoLines)}>
+      <a
+        class="hero-motto"
+        href={withBase(`/${lang}/welcome-site/`)}
+        aria-label={`打开欢迎页：${mottoLines.join(' / ')}`}
+        data-typewriter
+        data-lines={JSON.stringify(mottoLines)}
+      >
         <span class="sr-only">{mottoLines[0]}</span>
         <span aria-hidden="true" data-typewriter-text></span>
         <span class="caret" aria-hidden="true"></span>
-      </div>
+      </a>
 
       <div class="hero-actions">
         {resume && <a class="btn btn-primary" href={resume} download>

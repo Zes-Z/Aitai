@@ -1,5 +1,6 @@
 import type { ImageMetadata } from 'astro';
 import matter from 'gray-matter';
+import { posix } from 'node:path';
 import type { Lang } from '../types';
 import { withBase } from './paths';
 
@@ -39,6 +40,9 @@ export interface PortfolioCard {
   category: string;
   description: string;
   src: string;
+  coverFile: string;
+  date: string;
+  markdown: string;
   width?: number;
   height?: number;
   count: number;
@@ -159,8 +163,9 @@ function photoExif(value: unknown): AlbumExif {
   };
 }
 
-function photoRecordsFromBody(body: string): [string, Record<string, any>][] {
+function photoRecordsFromBody(body: string) {
   const records: [string, Record<string, any>][] = [];
+  const ranges: Array<[number, number]> = [];
   const pattern = /"((?:\\.|[^"\\])+\.(?:jpe?g|png|webp|avif|gif|mp4|webm|mov|m4v))"\s*:\s*\{/giu;
   let match: RegExpExecArray | null;
 
@@ -191,23 +196,32 @@ function photoRecordsFromBody(body: string): [string, Record<string, any>][] {
     if (end < 0) continue;
     try {
       const record = JSON.parse(body.slice(start, end));
-      if (record && typeof record === 'object' && !Array.isArray(record)) records.push([file, record]);
+      if (record && typeof record === 'object' && !Array.isArray(record)) {
+        records.push([file, record]);
+        ranges.push([match.index, end]);
+      }
     } catch {
       // Ignore prose and examples that only resemble photo metadata.
     }
     pattern.lastIndex = end;
   }
 
-  return records;
+  let markdown = body;
+  for (const [start, end] of ranges.reverse()) markdown = markdown.slice(0, start) + markdown.slice(end);
+  // Older portfolio files store photo records in a JSON-like array after the
+  // frontmatter. Keep the prose around it, without exposing configuration.
+  if (records.length) markdown = markdown.replace(/^\s*\[\s*(?:,\s*)*\]\s*$/gm, '');
+  return { records, markdown: markdown.trim() };
 }
 
 function portfolioMetadata(folder: string, lang: Lang) {
   const path = `${albumContentRoot}${folder}/portfolio.md`;
   const source = portfolioFiles[path];
-  if (!source) return { title: folder, category: '', description: '', related: [] as string[], draft: false, heroImage: '' };
+  const fallback = { title: folder, category: '', description: '', related: [] as string[], draft: false, heroImage: '', markdown: '', date: '' };
+  if (!source) return fallback;
 
   try {
-    const { data } = matter(source);
+    const { data, content } = matter(source);
     return {
       title: localizedField(data.title, lang, folder),
       category: typeof data.category === 'string' ? data.category.trim() : '',
@@ -217,10 +231,29 @@ function portfolioMetadata(folder: string, lang: Lang) {
         : [],
       draft: data.draft === true,
       heroImage: typeof data.heroImage === 'string' ? data.heroImage.trim() : '',
+      markdown: photoRecordsFromBody(content).markdown,
+      date: data.pubDate instanceof Date
+        ? data.pubDate.toISOString().slice(0, 10)
+        : String(data.pubDate ?? data.date ?? '').slice(0, 10),
     };
   } catch {
-    return { title: folder, category: '', description: '', related: [] as string[], draft: false, heroImage: '' };
+    return fallback;
   }
+}
+
+export function resolvePortfolioAsset(folder: string, ref: string) {
+  if (!ref || /^(?:[a-z][\w+.-]*:|\/|#)/i.test(ref)) return undefined;
+  let clean = ref.split(/[?#]/, 1)[0];
+  try { clean = decodeURIComponent(clean); } catch { /* keep the original filename */ }
+  const file = posix.normalize(posix.join(folder, clean.replaceAll('\\', '/')));
+  const url = albumAssets[albumContentRoot + file];
+  if (!url) return undefined;
+  return {
+    file,
+    src: withBase(url),
+    kind: /\.(mp4|webm|mov|m4v)$/i.test(file) ? 'video' : 'photo',
+    ...getAlbumImageDimensions(file),
+  };
 }
 
 export function getAlbumEntries(lang: Lang): AlbumEntry[] {
@@ -267,7 +300,7 @@ export function getAlbumEntries(lang: Lang): AlbumEntry[] {
       if (data.photos && typeof data.photos === 'object' && !Array.isArray(data.photos)) {
         for (const [file, record] of Object.entries(data.photos)) records.set(file, record);
       }
-      for (const [file, record] of photoRecordsFromBody(content)) records.set(file, record);
+      for (const [file, record] of photoRecordsFromBody(content).records) records.set(file, record);
       addRecords(directory, [...records]);
     } catch { /* The gallery sync command reports malformed portfolio Markdown. */ }
   }
@@ -285,25 +318,23 @@ export function getAlbumEntries(lang: Lang): AlbumEntry[] {
       description: '', text: '', exif: photoExif(undefined), related: [],
     });
   }
-  return [...entries.values()];
+  const hiddenFolders = Object.keys(portfolioFiles)
+    .map((path) => path.slice(albumContentRoot.length, -'/portfolio.md'.length))
+    .filter((folder) => portfolioMetadata(folder, lang).draft);
+  return [...entries.values()].filter((entry) => !hiddenFolders.some((folder) => entry.file.startsWith(folder + '/')));
 }
 
 export function getAlbumHomeItems(lang: Lang): Array<AlbumEntry | PortfolioCard> {
   const entries = getAlbumEntries(lang);
   const home: Array<AlbumEntry | PortfolioCard> = [...entries];
-  const groups = new Map<string, AlbumEntry[]>();
-  for (const entry of entries) {
-    const [directory] = entry.file.split('/');
-    if (!entry.file.includes('/')) continue;
-    const group = groups.get(directory) ?? [];
-    group.push(entry);
-    groups.set(directory, group);
-  }
-  for (const [directory, photos] of groups) {
+  const folders = Object.keys(portfolioFiles).map((path) => path.slice(albumContentRoot.length, -'/portfolio.md'.length));
+  for (const directory of folders) {
+    const photos = entries.filter((entry) => entry.file.startsWith(directory + '/'));
     const metadata = portfolioMetadata(directory, lang);
     if (metadata.draft) continue;
     const requestedCover = metadata.heroImage.includes('/') ? metadata.heroImage : `${directory}/${metadata.heroImage}`;
-    const cover = photos.find((photo) => photo.file === requestedCover) ?? photos[0];
+    const cover = photos.find((photo) => photo.file === requestedCover)
+      ?? photos.find((photo) => photo.kind !== 'video') ?? photos[0];
     if (!cover) continue;
     home.push({
       type: 'portfolio',
@@ -313,6 +344,9 @@ export function getAlbumHomeItems(lang: Lang): Array<AlbumEntry | PortfolioCard>
       category: metadata.category,
       description: metadata.description,
       src: cover.src,
+      coverFile: cover.file,
+      date: metadata.date,
+      markdown: metadata.markdown,
       width: cover.width,
       height: cover.height,
       count: photos.length,

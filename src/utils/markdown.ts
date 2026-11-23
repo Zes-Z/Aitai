@@ -56,6 +56,13 @@ interface ResolvedMarkdownImage {
 }
 
 interface RenderOptions {
+  /** Resolve embedded portfolio images, videos and video posters after raw HTML is parsed. */
+  resolveMedia?: (url: string) => {
+    src: string;
+    kind?: string;
+    width?: number;
+    height?: number;
+  } | undefined;
   /**
    * Resolve relative image references.
    *
@@ -70,6 +77,36 @@ interface RenderOptions {
   resolveLink?: (
     url: string,
   ) => string | undefined;
+}
+
+function rehypeResolveMedia(resolveMedia?: RenderOptions['resolveMedia']) {
+  return (tree: any) => {
+    if (!resolveMedia) return;
+    visit(tree, 'element', (node: any) => {
+      if (!['img', 'video', 'source'].includes(node.tagName)) return;
+      const properties = node.properties ??= {};
+      for (const key of node.tagName === 'video' ? ['src', 'poster'] : ['src']) {
+        const ref = properties[key];
+        if (typeof ref !== 'string' || /^(?:[a-z][\w+.-]*:|\/|#)/i.test(ref)) continue;
+        const media = resolveMedia(ref);
+        if (!media) continue;
+        properties[key] = media.src;
+        if (key === 'src' && node.tagName === 'img' && media.kind === 'video') {
+          node.tagName = 'video';
+          properties.controls = true;
+          properties.playsInline = true;
+          properties.preload = 'metadata';
+          if (properties.alt) properties.ariaLabel = properties.alt;
+          delete properties.alt;
+        } else if (node.tagName === 'img') {
+          properties.width = media.width;
+          properties.height = media.height;
+          properties.loading = 'lazy';
+          properties.decoding = 'async';
+        }
+      }
+    });
+  };
 }
 
 /* =========================================================
@@ -793,6 +830,7 @@ export async function renderMarkdown(
        * Raw HTML.
        */
       .use(rehypeRaw)
+      .use(rehypeResolveMedia, options.resolveMedia)
 
       /*
        * Math.

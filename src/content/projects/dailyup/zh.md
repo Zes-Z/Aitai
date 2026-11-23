@@ -6,6 +6,7 @@ role: "设计 + 前端"
 summary: "一个每天推你一把的小工具。把“明天再说”变成“现在做一点”。"
 tags: ["Astro","GSAP","Supabase"]
 palette: ["#0b1026","#243a8f","#8fb3ff"]
+draft: true
 ---
 
 一个每天推你一把的小工具。把“明天再说”变成“现在做一点”。

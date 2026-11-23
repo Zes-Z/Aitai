@@ -6,6 +6,7 @@ role: "正在做"
 summary: "你正在看的这个站。三界、四幅、一个头像。"
 tags: ["Astro","GSAP","Canvas"]
 palette: ["#120a20","#4d2a63","#ffd9a0"]
+draft: true
 ---
 
 你正在看的这个站。三界、四幅、一个头像。

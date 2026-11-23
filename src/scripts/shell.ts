@@ -309,54 +309,6 @@ function initAnchors() {
   });
 }
 
-function initCursor() {
-  if (reduced() || window.matchMedia('(hover: none)').matches) return;
-  const dot = document.querySelector<HTMLElement>('[data-cursor-dot]');
-  const ring = document.querySelector<HTMLElement>('[data-cursor-ring]');
-  const label = document.querySelector<HTMLElement>('.cursor-label');
-  if (!dot || !ring) return;
-
-  let x = window.innerWidth / 2;
-  let y = window.innerHeight / 2;
-  let rx = x;
-  let ry = y;
-  let raf = 0;
-
-  const loop = () => {
-    rx += (x - rx) * 0.16;
-    ry += (y - ry) * 0.16;
-    dot.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
-    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%)`;
-    if (label) label.style.transform = `translate3d(${rx + 18}px, ${ry + 18}px, 0)`;
-    raf = requestAnimationFrame(loop);
-  };
-  const onMove = (event: PointerEvent) => { x = event.clientX; y = event.clientY; };
-  const onOver = (event: PointerEvent) => {
-    const target = (event.target as HTMLElement).closest<HTMLElement>('a, button, [data-cursor]');
-    if (!target) return;
-    ring.classList.add('is-active');
-    if (label) {
-      const text = target.dataset.cursorLabel;
-      if (text) { label.textContent = text; label.classList.add('is-visible'); }
-    }
-  };
-  const onOut = () => {
-    ring.classList.remove('is-active');
-    label?.classList.remove('is-visible');
-  };
-
-  window.addEventListener('pointermove', onMove, { passive: true });
-  document.addEventListener('pointerover', onOver);
-  document.addEventListener('pointerout', onOut);
-  raf = requestAnimationFrame(loop);
-
-  addCleanup(() => {
-    window.removeEventListener('pointermove', onMove);
-    document.removeEventListener('pointerover', onOver);
-    document.removeEventListener('pointerout', onOut);
-    if (raf) cancelAnimationFrame(raf);
-  });
-}
 
 function initCounters() {
   const els = document.querySelectorAll<HTMLElement>('[data-count]');
@@ -679,7 +631,6 @@ function initPage() {
   initActiveNav();
   initCopy();
   initAnchors();
-  initCursor();
   initProgress();
 }
 

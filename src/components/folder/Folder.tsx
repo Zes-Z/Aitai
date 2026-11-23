@@ -21,6 +21,8 @@ export interface FolderItem {
   description?: string;
   image?: string;
   alt?: string;
+  /** Natural width / height of the image, when known. */
+  ratio?: number;
   content?: ReactNode;
 }
 
@@ -36,6 +38,10 @@ export interface FolderProps {
   tabPosition?: 'left' | 'center' | 'right';
   layout?: 'spread' | 'stack' | 'row';
   size?: number;
+  /** Document (photo) aspect ratio as width/height. Defaults to the original portrait frame. */
+  docRatio?: number;
+  /** Optional per-item ratios (width/height), cycled across the documents. */
+  docRatios?: number[];
   openOn?: 'click' | 'hover';
   open?: boolean;
   defaultOpen?: boolean;
@@ -51,6 +57,8 @@ export interface FolderProps {
   speed?: number;
   frost?: number;
   closeOnOutsideClick?: boolean;
+  /** Keep the folder open when the pointer leaves (hover-open folders). */
+  closeOnPointerLeave?: boolean;
   theme?: 'dark' | 'light';
   className?: string;
   style?: CSSProperties;
@@ -240,6 +248,7 @@ interface Settings {
   draggable: boolean;
   zoomOnClick: boolean;
   closeOnOutsideClick: boolean;
+  closeOnPointerLeave: boolean;
   onItemClick?: (item: FolderEntry, index: number) => void;
   onItemDrop?: (item: FolderEntry, index: number, inside: boolean) => void;
   tilt: number;
@@ -258,6 +267,7 @@ interface Settings {
   depth: number;
   view: View;
   g: Geometry;
+  docSizes: { w: number; h: number }[];
 }
 
 interface Engine {
@@ -271,7 +281,7 @@ interface Engine {
 
 const TAU = Math.PI * 2;
 const STEP = 1 / 240;
-const MAX_ITEMS = 6;
+const MAX_ITEMS = 64;
 const DEFAULT_ITEMS: FolderEntry[] = [{ title: 'Brand guidelines' }, { title: 'Launch plan' }, { title: 'Moodboard' }];
 
 const PILE_TURN = [0.5, -1.1, 1.5, -0.7, 1.2, -1.6];
@@ -375,7 +385,8 @@ const measureFolder = (
   scale: number,
   labelWidth: number,
   hasLabel: boolean,
-  tabPosition: string
+  tabPosition: string,
+  docRatio: number
 ): Geometry => {
   const w = (book ? 180 : 224) * scale;
   const h = (book ? 232 : 176) * scale;
@@ -407,7 +418,7 @@ const measureFolder = (
     frontTop,
     frontH: tabH + h - frontTop,
     docW,
-    docH: docW * (book ? 1.28 : 1.22)
+    docH: docW / Math.max(0.2, docRatio)
   };
 };
 
@@ -998,7 +1009,9 @@ const placeBook = (rank: number, count: number, phase: Phase, layout: string, g:
       return { x: g.w, y: top + (g.docH * fit) / 2 - rank * strip, z: 0, r: 0, ry: 0, s: fit };
     }
     const fit = count > 4 ? 0.58 : count > 3 ? 0.64 : 0.72;
-    const span = count === 2 ? g.w : Math.min(g.w * 1.3, g.w * 0.6 * (count - 1));
+    /* Any number of documents stays within the folder's left/right edges;
+       large collections simply become a tighter pile. */
+    const span = count === 2 ? g.w * 0.42 : g.w * 0.14;
     const x = count > 1 ? span / 2 - (rank * span) / (count - 1) : g.w * 0.5;
     return { x: g.w / 2 + x, y: pileY + SPREAD_DROP[rank] * g.h, z: 0, r: SPREAD_TURN[rank], ry: 0, s: fit };
   }
@@ -1070,6 +1083,8 @@ const Folder = ({
   tabPosition = 'right',
   layout = 'spread',
   size = 1,
+  docRatio = 0.82,
+  docRatios,
   openOn = 'click',
   open,
   defaultOpen = false,
@@ -1085,6 +1100,7 @@ const Folder = ({
   speed = 1,
   frost = 0.25,
   closeOnOutsideClick = true,
+  closeOnPointerLeave = true,
   theme = 'dark',
   className = '',
   style,
@@ -1112,13 +1128,36 @@ const Folder = ({
 
   const entries = useMemo<FolderEntry[]>(() => {
     const custom = Children.toArray(children).filter(isValidElement);
-    const source = custom.length ? custom : items?.length ? items : DEFAULT_ITEMS;
+    const source = custom.length ? custom : items ? items : DEFAULT_ITEMS;
     return source.slice(0, MAX_ITEMS);
   }, [children, items]);
   const count = entries.length;
 
   const scale = Math.max(0.3, Number(size) || 1);
-  const g = measureFolder(book, scale, labelWidth, Boolean(label), tabPosition);
+  const baseG = measureFolder(book, scale, labelWidth, Boolean(label), tabPosition, docRatio);
+  /* Each document is fitted into the folder's width / body height (a little
+     inset), so the cards can mix 3:2, 1:1 and 2:3 without wasting space. */
+  /* Keep enough room for the fan/rotation so documents never spill past the
+     folder's left/right edges. */
+  const maxDocW = baseG.w * (book ? 0.74 : 0.62);
+  const maxDocH = baseG.h * 0.8;
+  const ratios = docRatios?.length ? docRatios : [docRatio];
+  const docSizes = entries.map((entry, index) => {
+    const natural =
+      entry && typeof entry === 'object' && 'ratio' in entry
+        ? Number((entry as FolderItem).ratio)
+        : Number.NaN;
+    const ratio = Number.isFinite(natural) && natural > 0
+      ? natural
+      : Math.max(0.2, ratios[index % ratios.length] ?? docRatio);
+    const w = Math.min(maxDocW, maxDocH * ratio);
+    return { w, h: w / ratio };
+  });
+  const g = {
+    ...baseG,
+    docW: Math.max(baseG.docW, ...docSizes.map((item) => item.w)),
+    docH: Math.max(baseG.docH, ...docSizes.map((item) => item.h))
+  };
   const total = g.tabH + g.h;
   const view = book
     ? { x: -0.75 * g.w, y: -0.25 * total, width: 2.5 * g.w, height: 1.5 * total }
@@ -1166,6 +1205,7 @@ const Folder = ({
     draggable,
     zoomOnClick,
     closeOnOutsideClick,
+    closeOnPointerLeave,
     onItemClick,
     onItemDrop,
     tilt: clamp(tilt, 0, 1.5),
@@ -1180,10 +1220,11 @@ const Folder = ({
     insideTop,
     insideBottom,
     insideTone: [mixRgb(rgb, [0, 0, 0], 0.08).map(v => v / 255), backTone.map(v => v / 255)],
-    content: `${mode}|${scale}|${paperColor}|${color}|${g.tabX}|${g.tabW}`,
+    content: `${mode}|${scale}|${paperColor}|${color}|${g.tabX}|${g.tabW}|${docSizes.map((item) => item.w.toFixed(1) + 'x' + item.h.toFixed(1)).join(',')}`,
     depth: Math.round(Math.max(g.w, g.h) * 5),
     view,
-    g
+    g,
+    docSizes
   };
 
   useEffect(() => {
@@ -1647,6 +1688,7 @@ const Folder = ({
     const write = () => {
       const s = settingsRef.current;
       const { w, h, tabH, frontTop, frontH, docW, docH, scale, book: isBook } = s.g;
+      const sizeAt = (index: number) => s.docSizes[index] ?? { w: docW, h: docH };
       const pivotX = w / 2;
       const pivotY = tabH + h / 2;
       const theta = state.front.value;
@@ -1722,6 +1764,7 @@ const Folder = ({
       const matrices: { index: number; matrix: Matrix; layer: number; alpha: number; inside: boolean }[] = [];
       state.items.forEach((item, index) => {
         const node = itemRefs.current[index];
+        const size = sizeAt(index);
         const z = 3 * scale + item.z.value + item.hover.value * 26 * scale;
         const matrix = chain(
           desk,
@@ -1729,7 +1772,7 @@ const Folder = ({
           turnY(item.ry.value),
           turnZ(item.r.value),
           stretch(item.s.value, item.s.value),
-          move(-docW / 2, -docH / 2)
+          move(-size.w / 2, -size.h / 2)
         );
         let layer = 10 + s.count - item.rank;
         if (item.layer === 'inside' && state.phase === 'open' && state.hoveredItem === index) layer = 30;
@@ -1740,6 +1783,8 @@ const Folder = ({
         if (!node) return;
         node.style.transform = toCss(matrix);
         node.style.zIndex = String(layer);
+        node.style.setProperty('--folder-doc-w', `${size.w}px`);
+        node.style.setProperty('--folder-doc-h', `${size.h}px`);
         node.style.setProperty('--folder-lift', clamp(item.hover.value, 0, 2.4).toFixed(3));
         node.style.opacity = item.alpha.value < 0.995 ? Math.max(0, item.alpha.value).toFixed(3) : '';
       });
@@ -1755,15 +1800,16 @@ const Folder = ({
         matrices
           .filter(entry => entry.inside)
           .sort((a, b) => a.layer - b.layer)
-          .forEach(entry =>
+          .forEach(entry => {
+            const size = sizeAt(entry.index);
             layers.push({
               key: `item-${entry.index}`,
               matrix: entry.matrix,
-              width: docW,
-              height: docH,
+              width: size.w,
+              height: size.h,
               alpha: entry.alpha
-            })
-          );
+            });
+          });
       }
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       renderer.render({
@@ -1922,7 +1968,7 @@ const Folder = ({
       state.hovered = false;
       state.pressed = false;
       state.hoveredItem = -1;
-      if (settingsRef.current.openOn === 'hover') setOpenRef.current(false);
+      if (settingsRef.current.openOn === 'hover' && settingsRef.current.closeOnPointerLeave) setOpenRef.current(false);
       wake();
     };
 

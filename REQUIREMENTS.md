@@ -973,7 +973,7 @@ docked   (◯40) AITAI ····· 四幅锚点 ····· 项目 影像 随想  
 | G2 | WorldCanvas | 星空/海月/朝凪 三套世界；指针视差；跨页持久 | Three.js；自研 | P0 |
 | G3 | ThemeOrb | 玻璃球主题切换器；展开三界；拖动预览 | Cult UI Dynamic Island 思路；复刻 | P0 |
 | G4 | LangSwitch | 三语切换；Ink 墨换 | 自研 | P0 |
-| G5 | CustomCursor | 点 + 环 + 上下文标签；磁吸 | Codrops hover；复刻 | P0 |
+| G5 | NativeCursor | 使用浏览器原生光标 | 原生 | P0 |
 | G6 | Header | 自动隐藏（休眠时保留 AvatarDock 与右侧控件）；锚点高亮；玻璃胶囊；与 AvatarDock 共享同一套滚动进度 | 自研 | P0 |
 | G7 | MobileDock | 五个入口；当前项凸起 | 自研 | P0 |
 | G8 | ScrollProgress | 左侧星座线 / 深度计；随主题变色 | 自研 | P1 |
@@ -1402,7 +1402,7 @@ aitai/
 │  └─ fonts/                  # 拉丁展示字体子集
 ├─ src/
 │  ├─ components/
-│  │  ├─ global/              # Header, AvatarDock, ThemeOrb, Cursor, Dock, Toast...
+│  │  ├─ global/              # Header, AvatarDock, ThemeOrb, Dock, Toast...
 │  │  ├─ sections/            # Tide, Driftage, Realms, Harbor
 │  │  ├─ motion/              # SplitText, Magnetic, Tilt, Marquee, Trail...
 │  │  ├─ ui/                  # Card, Pill, Button, Tag, Divider...

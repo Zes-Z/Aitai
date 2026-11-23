@@ -24,8 +24,10 @@ export const collections = {
       year: z.string(),
       role: z.string(),
       summary: z.string(),
+      cover: z.string().optional(),
       tags: z.array(z.string()).default([]),
       palette,
+      draft: z.boolean().default(false),
     }),
   }),
 

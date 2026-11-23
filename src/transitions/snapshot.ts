@@ -29,7 +29,7 @@ function pageStyles() {
 
 function freeze(node: Node, incoming: boolean): Node | null {
   if (!(node instanceof Element)) return node.cloneNode();
-  if (node.matches('script, template, style, link, iframe, audio, embed, object, [data-page-transition], [data-theme-transition], .cursor-dot, .cursor-ring, .cursor-label, .skip-link')) return null;
+  if (node.matches('script, template, style, link, iframe, audio, embed, object, [data-page-transition], [data-theme-transition], .skip-link')) return null;
 
   if (node instanceof HTMLCanvasElement || node instanceof HTMLVideoElement) {
     const image = document.createElement('img');
