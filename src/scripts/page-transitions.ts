@@ -31,6 +31,7 @@ const KINDS = new Set<Kind>(['tide', 'constellate', 'develop', 'veil', 'language
 const SCROLL_KEYS = new Set([' ', 'PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown']);
 let booted = false;
 let active: Session | null = null;
+let languageScroll: { x: number; y: number } | null = null;
 
 function lenis() {
   return (window as Window & { __lenis?: Lenis }).__lenis;
@@ -42,6 +43,26 @@ function restoreScroll(session: Session) {
   // Keep Lenis' target in sync so restarting it cannot pull the viewport back.
   lenis()?.resize();
   if (history.state) history.replaceState({ ...history.state, scrollX, scrollY }, '');
+}
+
+function restoreLanguageScroll(final = false) {
+  if (!languageScroll) return;
+  const target = languageScroll;
+  const apply = () => {
+    const maxY = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+    const y = Math.min(target.y, maxY);
+    window.scrollTo({ left: target.x, top: y, behavior: 'instant' });
+    lenis()?.resize();
+    try { lenis()?.scrollTo(y, { immediate: true }); } catch { /* window scroll is enough */ }
+  };
+  requestAnimationFrame(apply);
+  window.setTimeout(apply, 120);
+  if (final) {
+    window.setTimeout(() => {
+      apply();
+      languageScroll = null;
+    }, 420);
+  }
 }
 
 function lock(session: Session) {
@@ -164,7 +185,10 @@ export function initPageTransitions() {
 
     // Language switches render immediately; no per-theme overlay animation.
     const languageRequested = e.sourceElement?.closest('[data-transition]')?.getAttribute('data-transition') === 'language';
-    if (languageRequested || changesLanguage(e.from, e.to)) return;
+    if (languageRequested || changesLanguage(e.from, e.to)) {
+      languageScroll = { x: scrollX, y: scrollY };
+      return;
+    }
 
     const root = document.querySelector<HTMLElement>('[data-page-transition]');
     if (!root || e.signal.aborted) return;
@@ -245,6 +269,7 @@ export function initPageTransitions() {
     e.newDocument.documentElement.dataset.transitionMode = active.kind;
   });
   document.addEventListener('astro:after-swap', () => {
+    restoreLanguageScroll();
     if (!active) return;
     active.phase = 'swapped';
     lock(active);
@@ -252,6 +277,7 @@ export function initPageTransitions() {
     restoreScroll(active);
   });
   document.addEventListener('astro:page-load', () => {
+    restoreLanguageScroll(true);
     if (active) void enter(active).catch((error) => console.warn('Transition reveal skipped:', error));
   });
   document.addEventListener('wheel', (event) => { if (active) event.preventDefault(); }, { passive: false });

@@ -32,7 +32,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **内容集合**：完整采用 Zes4U 结构：`src/content/posts/<slug>/{zh,en,ja}.md` 为顶层文章，`<slug>/<chapter>/{zh,en,ja}.md` 为子章节；`zestLoader` 自动标记 `isSubpage`，同时复制 `welcome-site`、`friends.json`。
 - **相册**：`src/content/album` 整体复制，`utils/album.ts` 直接读取 `photo-video.json`、`portfolio.md` 和文件夹资源；相册条目不进 content collection，与 Zes4U 的 gallery 管线一致。
 - **页面转场**：Tide / Constellate / Develop / Veil 四种；ClientRouter 负责导航，自研 overlay + Web Animations API 负责「封面 + 揭示」；支持返回、中断、reduced-motion；Astro 默认转场已关闭。
-- **语言切换**：朝凪用暖杏色 `Frame`，外框先展开、新页面随后显露；海月用深青色双层 `Curtain`，幕布升起覆盖旧页、再收起揭示新页；星空用蓝紫色 `Slices`，桌面五列、手机三列错峰推进新旧页面。Frame / Slices 使用隔离的静态页面快照，包含当时的背景画布；语言切换保留滚动位置，目标页较短时限制在可滚动范围内，返回时恢复各页保存的位置并反向播放。切换期间锁定输入，结束后恢复语言按钮焦点。支持中断恢复、慢速加载及减少动态效果。
+- **语言切换**：不再播放主题内转场（Frame / Curtain / Slices 已停用）。通过 ClientRouter 原地换页，页面不刷新、不闪白、不锁定滚动；切换后保留当前滚动位置，URL 更新到目标语言路径。
 - **页面范围**：只生成三语首页、根跳转与 404，共 5 页；项目/相册/随想的归档页和详情页已移除。
 - **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、轨道拖拽、复制邮箱 Toast；浏览器页面滚动条隐藏。
 - **角落长按**：控制球与左上角头像不再依赖 `setPointerCapture`，改用窗口级 `pointerup/pointercancel` + 420ms 指针抬起兜底；鼠标允许 36px 抖动、触控 18px，避免轻微移动取消长按；按钮 `touch-action: none`。
