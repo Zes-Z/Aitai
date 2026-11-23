@@ -1783,14 +1783,6 @@ section[id] { scroll-margin-top: calc(var(--header-h) + 16px); }
   color: var(--text);
 }
 .detail-body p { margin: 0 0 1.4rem; }
-.detail-body p:first-child::first-letter {
-  float: left;
-  margin: 0.12em 0.12em 0 0;
-  font-family: var(--font-display);
-  font-size: 3.4em;
-  line-height: 0.8;
-  color: var(--accent);
-}
 .detail-next {
   display: flex;
   align-items: center;

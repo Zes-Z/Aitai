@@ -227,3 +227,459 @@ html.is-sheet-open .theme-orb {
 .sheet-article .detail-body .markdown-alert-title { font-weight: 600; margin-bottom: .35em; }
 
 .sheet-article .sheet-chapter { max-width: 760px; margin-inline: auto; }
+
+/* ============================================================
+   Zes4U prose / directives / code blocks (ported)
+   ============================================================ */
+.sheet-article .detail-body {
+  --text-soft: var(--muted);
+  --accent-strong: var(--accent);
+  --hover: var(--accent);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --transition-fast: .2s ease;
+}
+.sheet-article .detail-body {
+  font-size: 1.02rem;
+  line-height: 1.85;
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+.sheet-article .detail-body > *:first-child {
+  margin-top: 0;
+}
+
+/* ---------- headings ---------- */
+
+.sheet-article .detail-body h1,
+.sheet-article .detail-body h2,
+.sheet-article .detail-body h3,
+.sheet-article .detail-body h4 {
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 1.9em 0 0.7em;
+  scroll-margin-top: calc(var(--header-h) + 14px);
+}
+
+.sheet-article .detail-body h1 {
+  font-size: 1.7rem;
+}
+
+.sheet-article .detail-body h2 {
+  display: table;
+  font-size: 1.42rem;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid #d4e302;
+}
+
+.sheet-article .detail-body h3 {
+  font-size: 1.18rem;
+  display: table;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid #d4e302;
+}
+
+.sheet-article .detail-body h4 {
+  font-size: 1.05rem;
+  display: table;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid #d4e302;
+}
+
+.sheet-article .detail-body p {
+  margin: 0.85em 0;
+}
+
+/* ---------- links ---------- */
+
+.sheet-article .detail-body a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+.sheet-article .detail-body a:hover {
+  color: var(--hover);
+}
+
+/* ---------- lists ---------- */
+
+.sheet-article .detail-body ul,
+.sheet-article .detail-body ol {
+  padding-left: 1.6em;
+  margin: 0.85em 0;
+}
+
+.sheet-article .detail-body ul {
+  list-style: disc;
+}
+
+.sheet-article .detail-body ol {
+  list-style: decimal;
+}
+
+.sheet-article .detail-body li {
+  margin: 0.3em 0;
+}
+
+.sheet-article .detail-body li::marker {
+  color: var(--accent);
+}
+
+/* ---------- blockquote ---------- */
+
+.sheet-article .detail-body blockquote {
+  margin: 1.1em 0;
+  padding: 0.6em 1.1em;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--surface-2);
+  color: var(--text-soft);
+}
+
+/* ============================================================
+   Directives
+   ============================================================ */
+
+.sheet-article .detail-body .directive {
+  margin: 1.2em 0;
+  padding: 0.95em 1.15em;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.sheet-article .detail-body .directive > p {
+  margin: 0.45em 0;
+}
+
+.sheet-article .detail-body .directive > p:first-child {
+  margin-top: 0;
+}
+
+.sheet-article .detail-body .directive > p:last-child {
+  margin-bottom: 0;
+}
+
+.sheet-article .detail-body .directive-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.4em;
+  font-weight: 700;
+  font-size: 1.02em;
+}
+
+/* ---------- directive colors + icons ---------- */
+
+.sheet-article .detail-body .directive-tip {
+  border-left-color: #10b981;
+  background: color-mix(in srgb, #10b981 8%, var(--surface));
+}
+.sheet-article .detail-body .directive-tip .directive-title::before {
+  content: '✨';
+}
+
+.sheet-article .detail-body .directive-note {
+  border-left-color: #3b82f6;
+  background: color-mix(in srgb, #3b82f6 8%, var(--surface));
+}
+.sheet-article .detail-body .directive-note .directive-title::before {
+  content: '📖';
+}
+
+.sheet-article .detail-body .directive-defi {
+  border-left-color: #38bdf8;
+  background: color-mix(in srgb, #38bdf8 9%, var(--surface));
+}
+.sheet-article .detail-body .directive-defi .directive-title::before {
+  content: '📌';
+}
+
+.sheet-article .detail-body .directive-vital {
+  border-left-color: #f6f95b;
+  background: color-mix(in srgb, #f6f95b 24%, var(--surface));
+}
+.sheet-article .detail-body .directive-vital .directive-title::before {
+  content: '⭐';
+}
+
+.sheet-article .detail-body .directive-caution {
+  border-left-color: #f59e0b;
+  background: color-mix(in srgb, #f59e0b 8%, var(--surface));
+}
+.sheet-article .detail-body .directive-caution .directive-title::before {
+  content: '⚠️';
+}
+
+.sheet-article .detail-body .directive-warning {
+  border-left-color: #ef4444;
+  background: color-mix(in srgb, #ef4444 8%, var(--surface));
+}
+.sheet-article .detail-body .directive-warning .directive-title::before {
+  content: '⛔';
+}
+
+
+/* ============================================================
+   Definition lists
+   ============================================================ */
+
+.sheet-article .detail-body dl {
+  margin: 1em 0;
+}
+
+.sheet-article .detail-body dl dt {
+  margin-top: 0.6em;
+  font-weight: 700;
+}
+
+.sheet-article .detail-body dl dd {
+  margin: 0 0 0.4em 1.2em;
+  color: var(--text-soft);
+}
+
+/* ============================================================
+   Task lists
+   ============================================================ */
+
+.sheet-article .detail-body ul.contains-task-list {
+  padding-left: 0.2em;
+}
+
+.sheet-article .detail-body .task-list-item {
+  list-style: none;
+}
+
+.sheet-article .detail-body .task-list-item input[type='checkbox'] {
+  accent-color: var(--accent);
+  margin-right: 0.5em;
+}
+
+/* ============================================================
+   Footnotes
+   ============================================================ */
+
+.sheet-article .detail-body .footnotes {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid var(--border);
+  font-size: 0.85em;
+  color: var(--text-soft);
+}
+
+.sheet-article .detail-body .footnotes hr {
+  display: none;
+}
+
+/* ============================================================
+   Media
+   ============================================================ */
+
+.sheet-article .detail-body img {
+  display: block;
+  margin: 1.2em auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.sheet-article .detail-body video {
+  display: block;
+  width: 100%;
+  margin: 1.2em auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  background: #000;
+}
+
+.sheet-article .detail-body iframe {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: var(--radius);
+}
+
+/* Markdown --- */
+.sheet-article .detail-body hr {
+  border-color: #40d400;
+}
+
+/* ============================================================
+   Tables
+   ============================================================ */
+
+.sheet-article .detail-body table {
+  width: 100%;
+  margin: 1.2em 0;
+  border-collapse: collapse;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  font-size: 0.95rem;
+}
+
+.sheet-article .detail-body th,
+.sheet-article .detail-body td {
+  border: 1px solid var(--border);
+  padding: 0.5em 0.85em;
+}
+
+.sheet-article .detail-body th {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Inline code
+   ============================================================ */
+
+.sheet-article .detail-body :not(pre) > code {
+  /* font-family: var(--font-mono); */
+  padding: 0.1em 0.1em;
+  border-radius: 6px;
+  background: #c0f000;
+ 
+  color: #000000;
+}
+
+/* ============================================================
+   Code blocks
+   ============================================================ */
+
+.sheet-article .detail-body .code-block {
+  position: relative;
+  margin: 1.3em 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.sheet-article .detail-body .code-block-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.3rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  user-select: none;
+}
+
+.sheet-article .detail-body .code-block-lang {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.sheet-article .detail-body .code-block-filename {
+  color: var(--text-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-article .detail-body .code-block-spacer {
+  flex: 1;
+}
+
+/* 所有复制按钮共用 */
+.sheet-article .detail-body .code-block-copy,
+.sheet-article .detail-body .code-block-copy--float {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.sheet-article .detail-body .code-block-copy:hover,
+.sheet-article .detail-body .code-block-copy--float:hover {
+  color: var(--hover);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+/* 无语言/无文件名代码块的悬浮复制按钮 */
+.sheet-article .detail-body .code-block-copy--float {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  opacity: 0;
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  transition:
+    opacity 0.18s ease,
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.sheet-article .detail-body .code-block:hover .code-block-copy--float {
+  opacity: 1;
+}
+
+/* ---------- code content ---------- */
+
+.sheet-article .detail-body .code-block pre,
+.sheet-article .detail-body pre.shiki {
+  margin: 0;
+  padding: 1em 1.15em 1em 1.6em;
+  border: 0;
+  border-radius: 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.sheet-article .detail-body .code-block pre code,
+.sheet-article .detail-body pre.shiki code {
+  display: block;
+  min-width: max-content;
+}
+
+/* ---------- Shiki ---------- */
+
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+html[data-code-scheme='dark'] .shiki,
+html[data-code-scheme='dark'] .shiki span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+/* ============================================================
+   Math
+   ============================================================ */
+
+.sheet-article .detail-body .katex-display {
+  margin: 1.2em 0;
+  padding: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.sheet-article .detail-body .katex {
+  font-size: 1.05em;
+}
+
+/* ============================================================
+   Copy toast

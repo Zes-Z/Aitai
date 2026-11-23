@@ -161,6 +161,11 @@ export function initPageTransitions() {
   document.addEventListener('astro:before-preparation', (event) => {
     const e = event as Preparation;
     if (active) finish(active);
+
+    // Language switches render immediately; no per-theme overlay animation.
+    const languageRequested = e.sourceElement?.closest('[data-transition]')?.getAttribute('data-transition') === 'language';
+    if (languageRequested || changesLanguage(e.from, e.to)) return;
+
     const root = document.querySelector<HTMLElement>('[data-page-transition]');
     if (!root || e.signal.aborted) return;
     const attr = e.sourceElement?.closest('[data-transition]')?.getAttribute('data-transition') as Kind | null;

@@ -1,5 +1,5 @@
 ---
-import { getImage, Image } from 'astro:assets';
+import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { posix } from 'node:path';
 import { t } from '../i18n';
@@ -128,6 +128,15 @@ const preparedPosts = await Promise.all(
         ? entry.data.pubDate.toISOString().slice(0, 10).replaceAll('-', '.')
         : '';
 
+      let thumb: string | undefined;
+      if (image) {
+        try {
+          thumb = (await getImage({ src: image, width: 900, format: 'avif', quality: 90 })).src;
+        } catch {
+          thumb = undefined;
+        }
+      }
+
       return {
         kind: 'post' as const,
         id: 'post-' + slug,
@@ -139,6 +148,7 @@ const preparedPosts = await Promise.all(
         ratio: image ? image.width / image.height : 1.5,
         date,
         image,
+        thumb,
         description: entry.data.description ?? '',
         category: entry.data.category,
         tags: entry.data.tag,
@@ -151,12 +161,12 @@ const preparedPosts = await Promise.all(
 const albumItems = await Promise.all(
   getAlbumEntries(lang).map(async (entry) => {
     const meta = albumImageModules['/src/content/album/' + entry.file];
-    let imageUrl = entry.src;
+    let thumb: string | undefined;
     if (meta) {
       try {
-        imageUrl = (await getImage({ src: meta, width: 2000, format: 'webp', quality: 80 })).src;
+        thumb = (await getImage({ src: meta, width: 900, format: 'avif', quality: 90 })).src;
       } catch {
-        imageUrl = entry.src;
+        thumb = undefined;
       }
     }
     return {
@@ -168,7 +178,8 @@ const albumItems = await Promise.all(
       ratio: meta ? meta.width / meta.height : (entry.width && entry.height ? entry.width / entry.height : 1.5),
       date: entry.date,
       image: meta,
-      imageUrl,
+      thumb,
+      imageUrl: entry.src,
       videoUrl: entry.kind === 'video' ? entry.src : undefined,
       mediaType: entry.kind,
     };
@@ -186,11 +197,11 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
     {items.map((item, index) => {
       const style = `--r: ${item.ratio.toFixed(4)}; --p1: ${item.palette[0]}; --p2: ${item.palette[1]}; --p3: ${item.palette[2]}; --reveal-delay: ${Math.min(index, 8) * 0.04}s`;
       const cover = item.image ? (
-        <Image
-          src={item.image}
+        <img
+          src={item.thumb ?? ''}
           alt=""
-          widths={[480, 800, 1200]}
-          sizes="(max-width: 700px) 46vw, 30vw"
+          width={item.image.width}
+          height={item.image.height}
           loading={index < 4 ? 'eager' : 'lazy'}
           decoding="async"
         />
@@ -247,9 +258,9 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
       <h1 class="detail-title">{post.title}</h1>
       {post.description && <p class="detail-summary">{post.description}</p>}
 
-      {post.image && (
+      {post.thumb && (
         <figure class="sheet-cover">
-          <Image src={post.image} alt="" widths={[640, 960, 1280]} sizes="(max-width: 700px) 92vw, 880px" loading="lazy" decoding="async" />
+          <img src={post.thumb} alt="" loading="lazy" decoding="async" />
         </figure>
       )}
 
@@ -646,4 +657,34 @@ const items = [...preparedPosts, ...albumItems].sort((a, b) => {
 
   document.addEventListener('astro:page-load', initContentSheet);
   initContentSheet();
+</script>
+
+<script>
+  function copyTextFallback(text: string, done: () => void) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch { /* ignore */ }
+    ta.remove();
+  }
+
+  document.addEventListener('click', (event) => {
+    const btn = event.target instanceof Element ? event.target.closest('[data-copy-code]') : null;
+    if (!(btn instanceof HTMLButtonElement)) return;
+    const code = btn.closest('.code-block')?.querySelector('pre code');
+    if (!code) return;
+    const text = code.textContent ?? '';
+    const done = () => {
+      btn.textContent = '✓';
+      window.setTimeout(() => { btn.textContent = '⧉'; }, 1400);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => copyTextFallback(text, done));
+    } else {
+      copyTextFallback(text, done);
+    }
+  });
 </script>
