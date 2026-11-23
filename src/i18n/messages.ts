@@ -17,8 +17,8 @@ export const messages = {
 
 
 
-  'harbor.title': { zh: '又见面了。', en: 'See you again.', ja: 'またね。' },
-  'harbor.intro': { zh: '如果你也刚好路过，留一句话，或者写一封邮件。', en: 'If you happen to pass by, leave a word, or write me an email.', ja: 'もし通りかかったなら、ひとこと、あるいはメールを。' },
+  'harbor.title': { zh: '下次再见。', en: 'See you.', ja: 'またね。' },
+  'harbor.intro': { zh: '感谢来访。', en: 'Thanks for your visit.', ja: 'ご訪問ありがとうございます。' },
   'harbor.contact': { zh: '漂流瓶', en: 'Message in a bottle', ja: '漂流瓶' },
   'harbor.email': { zh: '复制邮箱', en: 'Copy email', ja: 'メールをコピー' },
   'harbor.backToTop': { zh: '回到水面', en: 'Back to surface', ja: '水面へ戻る' },
