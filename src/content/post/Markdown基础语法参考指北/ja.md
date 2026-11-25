@@ -7,7 +7,7 @@ tag: [markdown,introduction]
 
 postImage: "./码头木桥.jpg"
 homepined: true
-pinedまたはder: 2
+pinedOrder: 2
 draft: false
 ---
 

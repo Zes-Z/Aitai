@@ -208,6 +208,8 @@ const preparedPosts = await Promise.all(
         accent,
         ratio: image ? image.width / image.height : 1.5,
         date,
+        homepined: entry.data.homepined,
+        pinedOrder: entry.data.pinedOrder,
         image,
         thumb,
         description: entry.data.description ?? '',
@@ -311,6 +313,14 @@ const items = [...albumItems, ...preparedPortfolios].sort((a, b) => {
   const byDate = b.date.localeCompare(a.date);
   return byDate || a.title.localeCompare(b.title);
 });
+const orderedPosts = [...preparedPosts].sort((a, b) => {
+  if (a.homepined !== b.homepined) return a.homepined ? -1 : 1;
+  if (a.homepined) {
+    const byPinnedOrder = a.pinedOrder - b.pinedOrder;
+    if (byPinnedOrder) return byPinnedOrder;
+  }
+  return b.date.localeCompare(a.date) || a.title.localeCompare(b.title) || a.slug.localeCompare(b.slug);
+});
 const grids = [
   {
     id: 'projects',
@@ -325,7 +335,7 @@ const grids = [
     id: 'posts',
     label: 'Posts',
     empty: t('content.posts.empty', lang),
-    items: [...preparedPosts].sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title)).map((post) => ({
+    items: orderedPosts.map((post) => ({
       id: post.slug, title: post.title, image: post.cover, sheetKey: post.sheetKey,
       subtitle: post.meta, accent: post.accent,
     })),
@@ -439,7 +449,7 @@ const grids = [
   </template>
 ))}
 
-{preparedPosts.map((post) => (
+{orderedPosts.map((post) => (
   <template data-content-sheet={post.sheetKey}>
     <article class="sheet-article">
       <p class="detail-kicker">
