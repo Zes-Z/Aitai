@@ -12,12 +12,6 @@ export const siteConfig = {
     email: 'zes234@proton.me',
     location: { zh: '京都', en: 'KyoTo', ja: '京都' } satisfies L10n,
     timezone: 'Asia/Tokyo',
-    age: 24,
-    lanyard: {
-      /** public 下的路径；换成自己的封底图后只改这里 */
-      backImage: '/IMG_1199_1.JPG',
-    },
-    occupation: 'C++ / Python / Golang',
     status: {
       zh: '正在做 Aitai',
       en: 'Building Aitai',

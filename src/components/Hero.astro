@@ -3,8 +3,6 @@ import { siteConfig } from '../../SiteConfig';
 import { t } from '../i18n';
 import { withBase } from '../utils/paths';
 import type { Lang } from '../types';
-import HeroLanyard from './lanyard/HeroLanyard';
-import { makeLanyardFront } from './lanyard/faces';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -18,27 +16,9 @@ const status = siteConfig.identity.status[lang];
 const location = siteConfig.identity.location[lang];
 const timezone = siteConfig.identity.timezone;
 
-const faceData = {
-  lang,
-  name: siteConfig.identity.name,
-  nameJa: siteConfig.identity.nameJa,
-  age: siteConfig.identity.age,
-  location,
-  motto: siteConfig.hero.motto[1][lang],
-  occupation: siteConfig.identity.occupation,
-};
-const faces = {
-  dawn: makeLanyardFront(faceData, 'dawn'),
-  sea: makeLanyardFront(faceData, 'sea'),
-  star: makeLanyardFront(faceData, 'star'),
-};
-const backImage = withBase(siteConfig.identity.lanyard.backImage);
-
 ---
 
 <section id="tide" class="hero" data-section aria-labelledby="hero-title">
-  <HeroLanyard client:only="react" faces={faces} backImage={backImage} />
-
   <div class="hero-inner">
     <div class="hero-copy">
       <div class="hero-eyebrow eyebrow">AITAI / 会いたい</div>

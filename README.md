@@ -36,7 +36,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 - **页面范围**：只生成三语首页、根首页与 404，共 5 页；根路径不再显示 meta refresh 预加载页；项目/相册/随想的归档页和详情页已移除。
 - **交互**：Lenis 平滑滚动、自定义光标、滚动揭示、数字滚动、轨道拖拽、复制邮箱 Toast；浏览器页面滚动条隐藏。
 - **角落长按**：控制球与左上角头像不再依赖 `setPointerCapture`，改用窗口级 `pointerup/pointercancel` + 420ms 指针抬起兜底；鼠标允许 36px 抖动、触控 18px，避免轻微移动取消长按；按钮 `touch-action: none`。
-- **首页 Lanyard**：ReactBits Lanyard 原始源码直接挂在 hero 的全屏透明画布上；landscape、`anchor=right`、`elasticity=.1`、`damping=.3`、`gravity=.25`、`breeze=0`、`intro=false`、`strapLength=.6`（视觉上带子更长、卡片上下居中）、plain strap。正面**只有三行**：名字·年龄·居住地 / 座右铭 / 职业内容；没有 header、标签、编号、分割线、条码、页脚或水印。背面使用 `SiteConfig.identity.lanyard.backImage` 指向的图片（默认 ReactBits 原始封底图）；图片放在 `public/lanyard/`，推荐 1440×1024，其他比例会按 `cover` 裁切。年龄和职业在 `SiteConfig.identity` 中修改。≤1400px 收窄文案列，≤1100px 隐藏卡片。
+- **首页 Hero**：标题、副标题、欢迎页引用链接、简历/写信/GitHub 操作及状态与地点信息在宽窄屏幕上居中排列。
 - **Folder 入口**：图片流上方新增三枚 ReactBits Folder（Projects / Posts / Portofio），直接复制源码，`glass` / `#e3ff7a` / `openOn=hover` / `tilt=.3` / `frost=.3` / `tabPosition=left` / `size=1.2`。三枚默认同层（`z-index:1`），打开者置顶（`z-index:20`），间距 `clamp(3rem,8vw,9rem)`。内容源：`content/projects` → project Sheet；`content/post` → post Sheet；`content/album/*` → 相册 lightbox。
 - **内容流**：移植 funiki 02 Life in Frames 的 **depth field**——图片按深度散落、滚动穿越、鼠标磁性倾斜、可拖拽；reduced-motion / 无 JS 时回退到 justified 图片墙。Zes4U posts 与 album 按日期混合，无任何标题与提示。album 单图 / 视频点击打开 funiki lightbox 风格查看器；post 点击后用全屏 Sheet 原地渲染主 md + 所有子章节，不跳转页面。缩略图统一生成 **AVIF 质量 90 / 900px**，点击查看器再加载原始 JPG。
 - **主题球**：46px 控制球；单击切换语言（按主题选择 Frame / Curtain / Slices），长按 460ms 按「朝凪 → 海月 → 星空」循环主题；键盘 Space / ↓ 切主题，Enter 切语言。朝凪恢复 CSS 太阳（从 12px 放大到 20px），去掉球内轨道圆圈，太阳沿 7 个关键点的闭合路径绕球心游走；海月直接使用 ReactBits Crystalized Ball（`eclipse` / `#DDEBFA` / 3 strands / 500 particles，按 46px 容器把 size 调到 0.9）；星空是 WebGL 三维光线追踪的黑洞与吸积盘。朝凪是轻量 CSS，海月是 ogl，星空是持久化 WebGL。
@@ -51,7 +51,7 @@ GitHub Pages 地址为 <https://zes-z.github.io/Aitai/>。`astro.config.mjs` 会
 
 ```
 src/
-  components/      AvatarDock, ThemeOrb, Hero, ContentFlow, FolderGateway, Harbor, PageTransition..., folder/ (ReactBits Folder), lanyard/ (React + Three), backgrounds/Galaxy + SideRays + GradientWaves, orb/CrystalizedBall (React + ogl)
+  components/      AvatarDock, ThemeOrb, Hero, ContentFlow, FolderGateway, Harbor, PageTransition..., folder/ (ReactBits Folder), backgrounds/Galaxy + SideRays + GradientWaves, orb/CrystalizedBall (React + ogl)
   content/post/           md posts/<slug>/{zh,en,ja}.md + 子章节
   content/projects/       项目 md（project Sheet 数据源）
   content/welcome-site/  Zes4U welcome markdown
